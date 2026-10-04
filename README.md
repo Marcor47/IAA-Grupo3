@@ -109,7 +109,7 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Resultados:** el ensamble fue el mejor; en prueba obtuvo F1 = 0.435, AUC-PR = 0.368 y Kappa = 0.407 (desempeño "moderado"). Siete de las nueve variables se asociaron con la fatalidad: tipo de choque (atropello y camión-moto, los más letales), severidad, cluster espacial y hora (madrugada).
 - **Aporte a nuestro proyecto:** métricas para clases desbalanceadas (F1, AUC-PR, Kappa), SMOTE, comparación de modelos de clase y ranking de variables con chi-cuadrado. Usa una idea de agrupación espacial que podemos imitar por departamento o vía. **Limitación:** no incluye clima.
 
-### Paper 3 · [integrante 3]
+### Paper 3 · Raul
 **L. Babaoglu y C. Babaoglu**, "Prediction of Fatalities in Vehicle Collisions in Canada", *Promet – Traffic&Transportation*, vol. 33, n.º 5, 2021. DOI: [10.7307/ptt.v33i5.3782](https://doi.org/10.7307/ptt.v33i5.3782)
 
 - **Problema:** predecir si un accidente tendrá fallecidos y descubrir las causas de la fatalidad en las carreteras de Canadá.
