@@ -8,7 +8,7 @@
 - [x] Propuesta de modelos (README, sección 4)
 
 ## Datos
-- [ ] `data/raw/accidentes_transito_carreteras.csv` subido al repo (archivo completo)
+- [x] `data/raw/accidentes_transito_carreteras.csv` subido al repo (archivo completo)
 - [x] `data/raw/diccionario_de_datos.docx` (diccionario oficial de SUTRAN)
 - [ ] `data/raw/clima_open_meteo.csv` generado al ejecutar `01_eda.ipynb`
 

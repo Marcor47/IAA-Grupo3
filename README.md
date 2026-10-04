@@ -86,7 +86,7 @@ El registro de accidentes no tiene clima ni coordenadas. La lluvia se obtiene de
 
 Cada integrante revisó un artículo revisado por pares sobre predicción de fatalidad o gravedad de accidentes viales, que no usa el mismo dataset que nosotros. Los PDF están en [`papers/`](papers/). Los resúmenes se basan en el texto o resumen de cada paper; antes de la entrega, cada integrante debe contrastar el suyo con el PDF.
 
-### Paper 1 · Marco
+### Paper 1 · Marco Rodriguez
 **K. V. Mhetre y A. D. Thube**, "Count Data Modeling for Predicting Crash Severity on Indian Highways", *Engineering, Technology & Applied Science Research*, vol. 13, n.º 5, pp. 11816-11820, 2023. DOI: [10.48084/etasr.6172](https://doi.org/10.48084/etasr.6172)
 
 - **Problema:** predecir la fatalidad de accidentes en una carretera nacional rural de la India (NH-48, Maharashtra, ~265 km) según la naturaleza del choque, el horario (AM/PM) y el clima.
@@ -109,7 +109,7 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Resultados:** el ensamble fue el mejor; en prueba obtuvo F1 = 0.435, AUC-PR = 0.368 y Kappa = 0.407 (desempeño "moderado"). Siete de las nueve variables se asociaron con la fatalidad: tipo de choque (atropello y camión-moto, los más letales), severidad, cluster espacial y hora (madrugada).
 - **Aporte a nuestro proyecto:** métricas para clases desbalanceadas (F1, AUC-PR, Kappa), SMOTE, comparación de modelos de clase y ranking de variables con chi-cuadrado. Usa una idea de agrupación espacial que podemos imitar por departamento o vía. **Limitación:** no incluye clima.
 
-### Paper 3 · Raul
+### Paper 3 · Raul Malaver
 **L. Babaoglu y C. Babaoglu**, "Prediction of Fatalities in Vehicle Collisions in Canada", *Promet – Traffic&Transportation*, vol. 33, n.º 5, 2021. DOI: [10.7307/ptt.v33i5.3782](https://doi.org/10.7307/ptt.v33i5.3782)
 
 - **Problema:** predecir si un accidente tendrá fallecidos y descubrir las causas de la fatalidad en las carreteras de Canadá.
