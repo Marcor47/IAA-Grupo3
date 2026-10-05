@@ -4,7 +4,7 @@ Tarea Académica de Inteligencia Artifical Aplicada
 # Mortalidad en carreteras del Perú según el nivel de precipitación
 
 **Curso:** Inteligencia Artificial Aplicada (1INF62) · PUCP · 2026-2
-**Integrantes:** Marco Rodriguez, [integrante 2], [integrante 3], [integrante 4]
+**Integrantes:** Marco Rodriguez, Angel Cerdán, [integrante 3], [integrante 4]
 
 ## Contenido
 1. [Problema y objetivo](#1-problema-y-objetivo)
@@ -84,7 +84,7 @@ El registro de accidentes no tiene clima ni coordenadas. La lluvia se obtiene de
 
 ## 3. Revisión de literatura
 
-Cada integrante revisó un artículo revisado por pares sobre predicción de fatalidad o gravedad de accidentes viales, que no usa el mismo dataset que nosotros. Los PDF están en [`papers/`](papers/). Los resúmenes se basan en el texto o resumen de cada paper; antes de la entrega, cada integrante debe contrastar el suyo con el PDF.
+Cada integrante revisó un artículo revisado por pares sobre predicción de fatalidad o gravedad, o sobre búsqueda de patrones en accidentes viales, que no usa el mismo dataset que nosotros. Los PDF están en [`papers/`](papers/). Los resúmenes se basan en el texto o resumen de cada paper; antes de la entrega, cada integrante debe contrastar el suyo con el PDF.
 
 ### Paper 1 · Marco Rodriguez
 **K. V. Mhetre y A. D. Thube**, "Count Data Modeling for Predicting Crash Severity on Indian Highways", *Engineering, Technology & Applied Science Research*, vol. 13, n.º 5, pp. 11816-11820, 2023. DOI: [10.48084/etasr.6172](https://doi.org/10.48084/etasr.6172)
@@ -95,19 +95,20 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Resultados:** la naturaleza del choque y el clima resultaron significativos; lluvia ligera y fuerte, neblina, tiempo fino y nublado aparecen asociados positivamente con la fatalidad. Los modelos 2 y 4 ajustaron mejor.
 - **Aporte a nuestro proyecto:** respalda modelar `NUM_FALLECIDOS` como **conteo** (usamos Poisson como baseline y proponemos binomial negativa para el final) y confirma el clima como variable relevante. **Crítica:** usa el clima como categorías y no aísla un efecto propio de la lluvia; nosotros usamos precipitación continua en mm y evaluamos en datos de prueba.
 
-### Paper 2 · [integrante 2]
-**A. J. Ghandour, H. Hammoud y S. Al-Hajj**, "Analyzing Factors Associated with Fatal Road Crashes: A Machine Learning Approach", *International Journal of Environmental Research and Public Health*, vol. 17, n.º 11, art. 4111, 2020. DOI: [10.3390/ijerph17114111](https://doi.org/10.3390/ijerph17114111)
+### Paper 2 · Angel Cerdán
+**E. G. Muñoz Muñoz, D. A. Verduga Alcívar, Y. F. Guerrero Alcívar, M. A. Lapo Palacios y O. Zorrilla Briones**, "Búsqueda de patrones con machine learning en datos de siniestros de tránsito", *Ciencia Latina Revista Científica Multidisciplinar*, vol. 8, n.º 2, pp. 1617-1637, 2024. DOI: [10.37811/cl_rcm.v8i2.10592](https://doi.org/10.37811/cl_rcm.v8i2.10592)
 
-- **Problema:** identificar y ordenar los factores asociados a que un accidente sea fatal en Líbano.
-- **Datos:** Lebanese Road Accidents Platform (LRAP), 8 482 accidentes (feb. 2015 - feb. 2019); solo ~5 % son fatales (relación 1:19). Nueve variables de entrada (mes, día, día de la semana, hora, AM/PM, tipo de choque, severidad de lesión, tipo de vía y un *cluster* espacial creado con K-means) y salida fatal / no fatal.
+- **Problema:** identificar patrones en los siniestros de tránsito (lugar, hora, causa, condiciones del entorno) para orientar intervenciones de seguridad vial focalizadas. Es un análisis **no supervisado**: no hay etiqueta que predecir.
+- **Datos:** 21 352 siniestros de la base de la Agencia Nacional de Tránsito (organizada por provincia y cantón, como en Ecuador). 12 columnas: año, mes, día, hora, provincia, cantón, zona, clase de siniestro, causa, número de fallecidos, número de lesionados y total de víctimas. El artículo no precisa el periodo cubierto.
 - **Técnicas:**
-  - *Desbalance:* SMOTE (sobremuestreo sintético) combinado con submuestreo de la clase mayoritaria, solo sobre el entrenamiento.
-  - *Modelos individuales:* SMO (variante de SVM), Random Forest, red neuronal (ANN), regresión logística y Naive Bayes.
-  - *Modelo final:* ensamble híbrido que vota SMO con *bagging* de 100 árboles J48.
-  - *Validación:* 20 % de prueba y 10-fold cross-validation. Métricas: F1, AUC-PR y Kappa de Cohen (el artículo explica que accuracy y AUC-ROC engañan con clases desbalanceadas).
-  - *Importancia de variables:* ranking por chi-cuadrado y análisis de sensibilidad.
-- **Resultados:** el ensamble fue el mejor; en prueba obtuvo F1 = 0.435, AUC-PR = 0.368 y Kappa = 0.407 (desempeño "moderado"). Siete de las nueve variables se asociaron con la fatalidad: tipo de choque (atropello y camión-moto, los más letales), severidad, cluster espacial y hora (madrugada).
-- **Aporte a nuestro proyecto:** métricas para clases desbalanceadas (F1, AUC-PR, Kappa), SMOTE, comparación de modelos de clase y ranking de variables con chi-cuadrado. Usa una idea de agrupación espacial que podemos imitar por departamento o vía. **Limitación:** no incluye clima.
+  - *Preprocesamiento:* limpieza (faltantes, errores tipográficos en categóricas, duplicados), normalización de las variables numéricas y **codificación binaria** de las categóricas (de 11 a 39 variables).
+  - *EDA:* distribuciones por mes, día de la semana, zona, clase, causa y hora; **mapa coroplético** de siniestros por zona y **diagrama de Sankey** tiempo → causa/ubicación → víctimas.
+  - *Clustering:* **K-Means** (minimiza la suma de distancias cuadradas dentro del cluster, WCSS). El número de clusters se eligió con el **método del codo** (inflexión entre 3 y 5) y el **análisis de silueta**; se fijó K = 4.
+  - *Reducción de dimensionalidad:* **PCA** de 39 a 2 y 3 componentes para visualizar los clusters.
+  - *Complemento supervisado:* **Random Forest** con gráfico de **importancia de variables** y visualización de un **árbol de decisión** individual del bosque.
+- **Resultados:** cuatro clusters: (0) urbano, tarde/noche, distracción del conductor (5 563 casos); (1) rural, fines de semana, noche/madrugada, exceso de velocidad y alcohol (3 560); (2) intersecciones urbanas en horas punta, incumplimiento de señales (6 317); (3) carreteras y zonas periurbanas con mal estado de la vía y **clima adverso** (5 912). En el Random Forest las variables más importantes fueron el número de lesionados y el total de víctimas, seguidas de provincia, cantón, mes y hora.
+- **Aporte a nuestro proyecto:** el cluster 3 (carreteras + clima adverso) es justamente nuestro caso de estudio y respalda incluir el clima y la ubicación. Tomamos dos ideas: (a) agrupar con **K-Means** los departamentos (o vías) según su régimen de lluvia y su siniestralidad, y usar el cluster como variable espacial más compacta que el one-hot de 25 departamentos; (b) usar **PCA** en el EDA para visualizar la estructura de los accidentes y la **importancia de variables** de modelos de árboles para ordenar los predictores. También valida el preprocesamiento que ya hacemos (limpieza de "N.I.", codificación de categóricas, escalado).
+- **Crítica:** el estudio no valida los clusters con métricas reportadas (menciona la silueta, pero no da su valor) y no compara modelos. El Random Forest aparece sin definir su variable objetivo ni sus métricas, y usa como predictores conteos de víctimas que son consecuencia del siniestro (fuga de información; equivale a nuestra distinción entre Set A y Set B). Además, describe los clusters con clima y alcohol, aunque el clima no figura entre las 12 columnas del dataset. Nosotros medimos la lluvia de forma explícita (mm diarios de Open-Meteo) y evaluamos los modelos supervisados en datos de prueba.
 
 ### Paper 3 · Raul Malaver
 **L. Babaoglu y C. Babaoglu**, "Prediction of Fatalities in Vehicle Collisions in Canada", *Promet – Traffic&Transportation*, vol. 33, n.º 5, 2021. DOI: [10.7307/ptt.v33i5.3782](https://doi.org/10.7307/ptt.v33i5.3782)
@@ -132,17 +133,16 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 | Técnica | Dónde aparece | Para qué sirve |
 |---|---|---|
 | Regresión binomial negativa / Poisson | Mhetre y Thube | Modelar conteo de fallecidos con sobredispersión |
-| Regresión logística | Ghandour (modelo individual) | Baseline interpretable de fatal / no fatal |
-| Árboles de decisión (J48) y *bagging* | Ghandour | Clasificación robusta; base del ensamble final |
-| Random Forest, ANN, Naive Bayes, SMO (SVM) | Ghandour | Modelos de comparación |
 | Lasso (regresión con penalización L1) | Babaoglu | Selección de variables y clasificación |
 | XGBoost (*boosting*) | Babaoglu | Mejor clasificador del paper (83 % de exactitud) |
+| Random Forest y árbol de decisión | Muñoz et al. | Clasificación e interpretación (importancia de variables, lectura de un árbol) |
 | CNN y ensambles por votación | Emu et al. | Clasificación con grandes volúmenes y desbalance |
-| SMOTE + submuestreo | Ghandour | Balancear clases solo en entrenamiento |
+| K-Means + método del codo y silueta | Muñoz et al. | Agrupar accidentes o zonas con perfiles similares; elegir K |
+| PCA | Muñoz et al. | Reducir dimensionalidad y visualizar en 2D/3D |
+| Codificación de categóricas y normalización | Muñoz et al. | Preparar variables para modelos basados en distancia |
+| Mapa coroplético y diagrama de Sankey | Muñoz et al. | EDA espacial y de flujos tiempo → causa → víctimas |
 | Reglas de asociación | Babaoglu | Descubrir factores de riesgo en el EDA |
-| Chi-cuadrado, análisis de sensibilidad, importancia de variables | Ghandour, Babaoglu, Emu et al. | Ordenar variables por su relación con la fatalidad |
-| K-means para variable espacial | Ghandour | Resumir la ubicación en un *cluster* |
-| F1, AUC-PR, Kappa | Ghandour | Métricas para clases desbalanceadas |
+| Importancia de variables / contenido de información | Muñoz et al., Babaoglu, Emu et al. | Ordenar variables por su relación con la fatalidad |
 | AIC, BIC, MAD, RMSE, MAPE | Mhetre y Thube | Evaluar modelos de conteo |
 
 ---
@@ -152,26 +152,61 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 **Metodología**
 1. Limpieza y tipificación del CSV de accidentes (`01_eda.ipynb`).
 2. Descarga de precipitación diaria por departamento y unión por departamento + fecha.
-3. EDA: lluvia vs. fatalidad, controlando por departamento.
+3. EDA: lluvia vs. fatalidad, controlando por departamento; búsqueda de patrones con K-Means y PCA (Muñoz et al., 2024).
 4. Baseline con partición estratificada 80/20, validación cruzada de 5 particiones y partición temporal de robustez (`02_modelos.ipynb`).
-5. Dos conjuntos de variables: **Set A** (lluvia, hora, mes, día, departamento, vía, kilómetro; todo conocido antes del accidente) y **Set B** (A + `MODALIDAD`, que solo se conoce después).
-6. Métricas: ROC-AUC, PR-AUC, F1, recall y balanced accuracy (clasificación); MAE, RMSE y devianza de Poisson (conteo).
+5. Dos conjuntos de variables (sección 4.1): **Set A**, conocido antes del accidente, y **Set B** (A + `MODALIDAD`, que solo se conoce después).
+6. Métricas según la tarea (sección 4.3).
 
-**Modelos**
+### 4.1 Variables candidatas
+
+Muñoz et al. (2024) encuentran que los accidentes se separan por **franja horaria, fin de semana, zona (urbana / rural / carretera), causa y clima**, y que la ubicación, el mes y la hora pesan en la importancia de variables. Llevamos esos patrones a las columnas que tiene nuestro dataset:
+
+| Variable | Origen | Patrón que la respalda | Set | Estado |
+|---|---|---|---|---|
+| Precipitación diaria (mm; en el modelo como `PRECIP_LOG` = log(1 + mm)) | Open-Meteo | Cluster 3 de Muñoz (carretera + clima adverso); Mhetre y Thube | A | En uso |
+| Nivel de lluvia (seco / ligera / moderada / fuerte) | Derivada de la anterior | Mhetre y Thube usan el clima por categorías | A | En uso en el EDA; candidata para los modelos |
+| `HORA` (codificada como seno/coseno) y franja horaria (madrugada, mañana, tarde, noche) | SUTRAN | Clusters 0, 1 y 2 de Muñoz se distinguen por franja | A | Hora en uso; franja candidata |
+| Día de la semana y fin de semana | Derivada de `FECHA` | Cluster 1 de Muñoz (rural, fin de semana, noche) | A | Día en uso; fin de semana candidata |
+| Mes (seno/coseno) y temporada de lluvias (dic.-mar.) | Derivada de `FECHA` | Importancia del mes en Muñoz | A | Mes en uso; temporada candidata |
+| `DEPARTAMENTO` | SUTRAN | Provincia y cantón entre las variables más importantes en Muñoz | A | En uso |
+| Cluster del departamento (K-Means por lluvia media y tasa de fatalidad) | Derivada | Agrupación de Muñoz; resume 25 departamentos en pocos grupos | A | Candidata |
+| `CODIGO_VIA`, tipo de vía (nacional / departamental) y `KILOMETRO` | SUTRAN | "Zona" de Muñoz: el entorno vial cambia el tipo de accidente | A | Vía y km en uso; tipo de vía candidata |
+| `MODALIDAD` (choque, despiste, volcadura, atropello...) | SUTRAN | Equivale a la "clase" de siniestro en Muñoz | B | En uso (Set B) |
+| `NUM_HERIDOS` | SUTRAN | — | Excluida | Es consecuencia del accidente: usarla filtra el resultado (Muñoz la usa y por eso domina su importancia de variables) |
+
+### 4.2 Modelos candidatos
 
 | Modelo | Tarea | Respaldo | Estado |
 |---|---|---|---|
-| Regresión logística (`class_weight` balanceado) | A | Curso; Ghandour (2020) | **Implementado (baseline)** |
+| Regresión logística (`class_weight` balanceado) | A | Curso | **Implementado (baseline)** |
 | Regresión de Poisson | B | Mhetre y Thube (2023) | **Implementado (baseline)** |
-| Árbol de decisión | A y B | Curso; Ghandour (2020) | Propuesto |
+| Regresión logística con penalización L1 (Lasso) | A | Babaoglu y Babaoglu (2021) | Propuesto |
+| Árbol de decisión (+ importancia de variables) | A y B | Curso; Muñoz et al. (2024) | Propuesto |
 | KNN | A y B | Curso | Propuesto |
 | MLP | A y B | Curso; Emu et al. (2022) | Propuesto |
 | Regresión binomial negativa | B | Mhetre y Thube (2023) | Propuesto |
-| SMOTE / `class_weight` | A | Ghandour (2020) | Parcial (`class_weight`) |
-| Regresión logística con penalización L1 (Lasso) | A | Babaoglu y Babaoglu (2021) | Propuesto |
-| Ranking de variables por chi-cuadrado | A | Ghandour (2020) | Propuesto |
+| K-Means (+ PCA para visualizar) | Exploratoria / variable espacial | Muñoz et al. (2024) | Propuesto |
+| Manejo del desbalance (`class_weight`, ensambles por votación) | A | Emu et al. (2022) | Parcial (`class_weight`) |
 
-*Nota:* los papers usan también Random Forest y XGBoost; se evaluará con el profesor si se permiten como extensión de árboles.
+*Nota:* los papers usan también Random Forest y XGBoost (Muñoz et al.; Babaoglu y Babaoglu); se evaluará con el profesor si se permiten como extensión de árboles.
+
+### 4.3 Métricas de evaluación
+
+Los papers revisados no comparten un esquema de evaluación: Babaoglu y Emu reportan solo **exactitud** (83 % y ~75 %), Mhetre y Thube evalúan modelos de conteo con criterios de ajuste y error, y Muñoz evalúa clusters con el codo y la silueta. Elegimos las métricas según la tarea y según lo que muestra nuestro EDA: **solo ~12 % de los accidentes es fatal** (11.7 % en el conjunto de prueba), así que un modelo que siempre dice "no fatal" tiene 88 % de exactitud sin aprender nada. Por eso no usamos la exactitud como métrica principal.
+
+| Tarea | Métrica | Por qué | Referencia |
+|---|---|---|---|
+| A · Clasificación | **PR-AUC** (principal) | Se centra en la clase fatal; se compara con la prevalencia (0.117 = modelo al azar) | Desbalance observado en el EDA |
+| | ROC-AUC | Capacidad de ordenar fatales sobre no fatales, independiente del umbral | Curso |
+| | Recall, precisión y F1 de la clase fatal | Cuántos accidentes fatales detecta el modelo y con cuántas falsas alarmas | Curso |
+| | Balanced accuracy | Reemplaza a la exactitud: promedia el acierto de ambas clases | Crítica a Babaoglu y Emu (solo exactitud) |
+| B · Conteo | MAE, RMSE | Error en número de fallecidos por accidente | Mhetre y Thube (2023) |
+| | Devianza de Poisson | Error adecuado para conteos con muchos ceros | Curso; scikit-learn |
+| | AIC, BIC | Comparar Poisson vs. binomial negativa (sobredispersión) | Mhetre y Thube (2023) |
+| Exploratoria · Clusters | Inercia (método del codo) y silueta | Elegir K y medir la separación de los grupos | Muñoz et al. (2024) |
+| | % fatal y lluvia media por cluster | Comprobar si los grupos difieren en lo que nos interesa | Propio |
+
+No usamos el MAPE de Mhetre y Thube porque la mayoría de accidentes tiene 0 fallecidos y el MAPE divide entre el valor real. Todas las métricas supervisadas se reportan contra un modelo trivial (`Dummy`) y en las tres particiones: aleatoria 80/20, validación cruzada de 5 particiones y temporal.
 
 ---
 
