@@ -116,7 +116,8 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Datos:** National Collision Database de Canadá, 1999-2017.
 - **Técnicas:** análisis exploratorio con minería de datos y **reglas de asociación** para hallar factores clave; luego dos clasificadores supervisados, **regresión Lasso** (regresión con penalización L1 que selecciona variables) y **XGBoost** (árboles con *boosting*). Se interpretan las variables más importantes del modelo ganador.
 - **Resultados:** XGBoost fue el mejor clasificador con 83 % de exactitud. Las variables más importantes fueron la configuración de la colisión y el uso de dispositivos de seguridad, por encima de año del vehículo, hora, edad o sexo. Los choques frontales fuera de intersecciones y sin control de tránsito resultaron los más letales, y **la mayoría de las muertes ocurre con clima y condiciones de vía no extremos**.
-- **Aporte a nuestro proyecto:** ejemplo de pipeline EDA + Lasso + XGBoost y de interpretación por importancia de variables. Su hallazgo sobre clima no extremo es un contrapunto a nuestra hipótesis: conviene controlar por exposición y por departamento antes de atribuir efectos a la lluvia. **Limitación:** la exactitud sola no es suficiente con clases desbalanceadas.
+- **Aporte a nuestro proyecto:** ejemplo de pipeline EDA + Lasso + XGBoost y de interpretación por importancia de variables. Su hallazgo sobre clima no extremo es un contrapunto a nuestra hipótesis: conviene controlar por exposición y por departamento antes de atribuir efectos a la lluvia.
+- **Limitación:** la exactitud sola no es suficiente con clases desbalanceadas.
 
 ### Paper 4 · Fernando De La Cruz
 **M. Emu et al.**, "Fatality Prediction for Motor Vehicle Collisions: Mining Big Data Using Deep Learning and Ensemble Methods", *IEEE Open Journal of Intelligent Transportation Systems*, 2022. DOI: [10.1109/OJITS.2022.3160404](https://doi.org/10.1109/OJITS.2022.3160404)
@@ -125,7 +126,8 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Datos:** base de choques de Canadá con 5.8 millones de registros.
 - **Técnicas:** ensambles por **votación mayoritaria y soft voting** para tratar el desbalance de clases, y **redes neuronales convolucionales (CNN)**; además un análisis del contenido de información de cada atributo para identificar los factores que más distinguen choques fatales de no fatales.
 - **Resultados:** exactitud cercana al 75 % con CNN. Los factores más influyentes incluyen las características de la vía y **las condiciones climáticas al momento del choque**, tipo de vehículo, hora, clase y posición del usuario, uso de dispositivos de seguridad y estado del control de tránsito.
-- **Aporte a nuestro proyecto:** respalda usar redes neuronales (MLP) y ensambles, e incluir el clima como variable de entrada; sugiere medir la importancia de cada variable. **Limitación:** conjunto de datos y contexto muy distintos (Canadá, millones de registros); la exactitud ~75 % sola no refleja el desbalance.
+- **Aporte a nuestro proyecto:** respalda usar redes neuronales (MLP) y ensambles, e incluir el clima como variable de entrada; sugiere medir la importancia de cada variable.
+- **Limitación:** conjunto de datos y contexto muy distintos (Canadá, millones de registros); la exactitud ~75 % sola no refleja el desbalance.
 
 ### 3.1 Técnicas encontradas
 
@@ -187,7 +189,6 @@ Muñoz et al. (2024) encuentran que los accidentes se separan por **franja horar
 | K-Means (+ PCA para visualizar) | Exploratoria / variable espacial | Muñoz et al. (2024) | Propuesto |
 | Manejo del desbalance (`class_weight`, ensambles por votación) | A | Emu et al. (2022) | Parcial (`class_weight`) |
 
-*Nota:* los papers usan también Random Forest y XGBoost (Muñoz et al.; Babaoglu y Babaoglu); se evaluará con el profesor si se permiten como extensión de árboles.
 
 ### 4.3 Métricas de evaluación
 
@@ -211,8 +212,7 @@ No usamos el MAPE de Mhetre y Thube porque la mayoría de accidentes tiene 0 fal
 
 ## 5. Cómo ejecutar
 
-```bash
-python -m venv .venv && source .venv/bin/activate    # en Windows: .venv\Scripts\activate
+```
 pip install -r requirements.txt
 jupyter notebook
 ```
@@ -232,4 +232,3 @@ notebooks/       01_eda.ipynb, 02_modelos.ipynb
 results/         metrics.csv, plots/
 papers/          PDF de los 4 papers revisados
 ```
-Estado de la entrega: ver [`ENTREGABLE_PARCIAL.md`](ENTREGABLE_PARCIAL.md).

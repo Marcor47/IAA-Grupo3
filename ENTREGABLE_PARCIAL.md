@@ -20,4 +20,3 @@
 ## Observaciones
 - La lluvia se mide en la capital de cada departamento (el dataset no trae coordenadas).
 - Los datos cubren 2020-2021.
-
