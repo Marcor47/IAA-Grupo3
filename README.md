@@ -4,7 +4,7 @@ Tarea Académica de Inteligencia Artifical Aplicada
 # Mortalidad en carreteras del Perú según el nivel de precipitación
 
 **Curso:** Inteligencia Artificial Aplicada (1INF62) · PUCP · 2026-2
-**Integrantes:** Marco Rodriguez, Angel Cerdán, [integrante 3], [integrante 4]
+**Integrantes:** Marco Rodriguez, Angel Cerdán, Raul Malaver, Fernando De La Cruz
 
 ## Contenido
 1. [Problema y objetivo](#1-problema-y-objetivo)
@@ -47,7 +47,7 @@ Los accidentes en carreteras causan muertes y heridos cada año en el Perú. El 
 - **Contenido:** accidentes en vías nacionales y departamentales reportados por la Policía Nacional del Perú (PNP) y el Centro de Gestión y Monitoreo (CGM) de SUTRAN. Cada fila es un accidente.
 - **Corte de la información:** 22/12/2021 (`FECHA_CORTE = 20211222`); el portal indica última modificación el 28/01/2022.
 - **Licencia:** Open Data Commons Attribution (ODC-By). Es un dato público sin datos personales; se puede usar citando la fuente. No se requiere consentimiento adicional.
-- **Tamaño:** [completar con el número de filas tras ejecutar `01_eda.ipynb`] registros, 9 columnas.
+- **Tamaño:** 8117 registros, 9 columnas.
 - **Archivo en el repo:** `data/raw/accidentes_transito_carreteras.csv` y su diccionario oficial en `data/raw/diccionario_de_datos.docx`.
 
 ### 2.2 Variables (según el diccionario de datos oficial)
