@@ -1,5 +1,5 @@
 # IAA-Grupo3
-Tarea Académica de Inteligencia Artifical Aplicada
+Tarea Académica de Inteligencia Artificial Aplicada
 
 # Mortalidad en carreteras del Perú según el nivel de precipitación
 
@@ -11,8 +11,9 @@ Tarea Académica de Inteligencia Artifical Aplicada
 2. [Dataset](#2-dataset)
 3. [Revisión de literatura](#3-revisión-de-literatura)
 4. [Metodología y propuesta de modelos](#4-metodología-y-propuesta-de-modelos)
-5. [Cómo ejecutar](#5-cómo-ejecutar)
-6. [Estructura del repositorio](#6-estructura-del-repositorio)
+5. [Resultados parciales](#5-resultados-parciales)
+6. [Cómo ejecutar](#6-cómo-ejecutar)
+7. [Estructura del repositorio](#7-estructura-del-repositorio)
 
 ---
 
@@ -47,7 +48,8 @@ Los accidentes en carreteras causan muertes y heridos cada año en el Perú. El 
 - **Contenido:** accidentes en vías nacionales y departamentales reportados por la Policía Nacional del Perú (PNP) y el Centro de Gestión y Monitoreo (CGM) de SUTRAN. Cada fila es un accidente.
 - **Corte de la información:** 22/12/2021 (`FECHA_CORTE = 20211222`); el portal indica última modificación el 28/01/2022.
 - **Licencia:** Open Data Commons Attribution (ODC-By). Es un dato público sin datos personales; se puede usar citando la fuente. No se requiere consentimiento adicional.
-- **Tamaño:** 8117 registros, 9 columnas.
+- **Tamaño:** 8155 registros y 9 columnas en el CSV original. Tras la limpieza quedan 8 117 (se descartan 3 sin dato de fallecidos y 35 duplicados exactos) y 8 110 tienen dato de lluvia (los 7 restantes no tienen departamento).
+- **Periodo real de los accidentes:** 01/01/2020 – 30/09/2021. La fecha de corte es el 22/12/2021, pero el archivo no contiene accidentes posteriores al 30/09/2021.
 - **Archivo en el repo:** `data/raw/accidentes_transito_carreteras.csv` y su diccionario oficial en `data/raw/diccionario_de_datos.docx`.
 
 ### 2.2 Variables (según el diccionario de datos oficial)
@@ -77,7 +79,7 @@ El registro de accidentes no tiene clima ni coordenadas. La lluvia se obtiene de
 - **Resolución espacial de la lluvia:** el dataset no trae coordenadas, solo departamento, vía y kilómetro. La lluvia se mide en la capital del departamento, lo que es un proxy grueso en departamentos extensos (Loreto, Cusco, Puno, Junín).
 - **Origen de la lluvia:** los valores de la API provienen de datos de reanálisis, no de estaciones; pueden diferir de las mediciones de SENAMHI, sobre todo en la zona andina.
 - **Solo accidentes:** no hay información de tráfico ni de días sin accidentes, por lo que no se puede estimar la probabilidad de que ocurra un accidente, solo su gravedad.
-- **Periodo 2020-2021:** coincide con la pandemia (restricciones de movilidad).
+- **Periodo enero 2020 – septiembre 2021:** coincide con la pandemia (restricciones de movilidad); en el EDA, abril de 2020 cae a ≈ 20 fallecidos, coherente con la cuarentena.
 - **Datos faltantes y posible subregistro** (valores "N.I.").
 
 ---
@@ -192,25 +194,85 @@ Muñoz et al. (2024) encuentran que los accidentes se separan por **franja horar
 
 ### 4.3 Métricas de evaluación
 
-Los papers revisados no comparten un esquema de evaluación: Babaoglu y Emu reportan solo **exactitud** (83 % y ~75 %), Mhetre y Thube evalúan modelos de conteo con criterios de ajuste y error, y Muñoz evalúa clusters con el codo y la silueta. Elegimos las métricas según la tarea y según lo que muestra nuestro EDA: **solo ~12 % de los accidentes es fatal** (11.7 % en el conjunto de prueba), así que un modelo que siempre dice "no fatal" tiene 88 % de exactitud sin aprender nada. Por eso no usamos la exactitud como métrica principal.
+Los papers revisados no comparten un esquema de evaluación: Babaoglu y Emu destacan la **exactitud** (83 % y ~75 %) como medida de desempeño, Mhetre y Thube evalúan modelos de conteo con criterios de ajuste y error, y Muñoz evalúa clusters con el codo y la silueta. Elegimos las métricas según la tarea y según lo que muestra nuestro EDA: **solo ~12 % de los accidentes es fatal** (11.7 % en el conjunto de prueba), así que un modelo que siempre dice "no fatal" tiene 88 % de exactitud sin aprender nada. Por eso no usamos la exactitud como métrica principal.
 
 | Tarea | Métrica | Por qué | Referencia |
 |---|---|---|---|
 | A · Clasificación | **PR-AUC** (principal) | Se centra en la clase fatal; se compara con la prevalencia (0.117 = modelo al azar) | Desbalance observado en el EDA |
 | | ROC-AUC | Capacidad de ordenar fatales sobre no fatales, independiente del umbral | Curso |
 | | Recall, precisión y F1 de la clase fatal | Cuántos accidentes fatales detecta el modelo y con cuántas falsas alarmas | Curso |
-| | Balanced accuracy | Reemplaza a la exactitud: promedia el acierto de ambas clases | Crítica a Babaoglu y Emu (solo exactitud) |
+| | Balanced accuracy | Reemplaza a la exactitud: promedia el acierto de ambas clases | Evita depender solo de la exactitud, que es la cifra que destacan Babaoglu y Emu |
 | B · Conteo | MAE, RMSE | Error en número de fallecidos por accidente | Mhetre y Thube (2023) |
 | | Devianza de Poisson | Error adecuado para conteos con muchos ceros | Curso; scikit-learn |
 | | AIC, BIC | Comparar Poisson vs. binomial negativa (sobredispersión) | Mhetre y Thube (2023) |
 | Exploratoria · Clusters | Inercia (método del codo) y silueta | Elegir K y medir la separación de los grupos | Muñoz et al. (2024) |
 | | % fatal y lluvia media por cluster | Comprobar si los grupos difieren en lo que nos interesa | Propio |
 
-No usamos el MAPE de Mhetre y Thube porque la mayoría de accidentes tiene 0 fallecidos y el MAPE divide entre el valor real. Todas las métricas supervisadas se reportan contra un modelo trivial (`Dummy`) y en las tres particiones: aleatoria 80/20, validación cruzada de 5 particiones y temporal.
+No usamos el MAPE de Mhetre y Thube porque la mayoría de accidentes tiene 0 fallecidos y el MAPE divide entre el valor real. En el baseline, las métricas se reportan contra un modelo trivial (`Dummy`) en la partición aleatoria 80/20; la validación cruzada de 5 particiones (PR-AUC) y la partición temporal (regresión logística, Set A) se usan como chequeos de robustez. Para el entregable final se reportarán todas las métricas de cada modelo en las tres particiones.
 
 ---
 
-## 5. Cómo ejecutar
+## 5. Resultados parciales
+
+Los resultados completos están en `notebooks/01_eda.ipynb` (EDA) y `notebooks/02_modelos.ipynb` (baseline); las figuras, en `results/plots/` y las métricas, en `results/metrics.csv`.
+
+### 5.1 EDA
+
+- **Datos:** 8 110 accidentes con dato de lluvia, 1 375 fallecidos y 10 635 heridos. El **11.7 %** de los accidentes tiene al menos un fallecido (0.17 fallecidos por accidente; máximo 33 en un solo accidente). El 48.4 % ocurrió en un día con lluvia > 0 mm, aunque la mediana de lluvia es 0 mm.
+- **Lluvia vs. fatalidad: no hay una tendencia clara.**
+
+| Lluvia diaria (mm) | Accidentes | % fatal (IC 95 %) | Fallecidos por accidente |
+|---|---|---|---|
+| 0 | 4 188 | 12.0 (11.1–13.0) | 0.171 |
+| 0–1 | 1 557 | 13.0 (11.5–14.8) | 0.180 |
+| 1–5 | 1 305 | 9.3 (7.8–11.0) | 0.130 |
+| 5–10 | 646 | 13.6 (11.2–16.5) | 0.252 |
+| 10–20 | 314 | 7.3 (4.9–10.8) | 0.096 |
+| >20 | 100 | 13.0 (7.8–21.0) | 0.160 |
+
+  El chi² rechaza que las proporciones sean iguales (p = 0.002), pero la diferencia no sigue un orden con la lluvia. Con la lluvia como variable continua no hay asociación significativa (Spearman ρ = −0.015, p = 0.19; Mann-Whitney p = 0.18).
+
+  ![% fatal según lluvia](results/plots/eda_06_lluvia_vs_fatalidad.png)
+
+- **Dentro de cada departamento el signo cambia:** con lluvia el % fatal es mayor en Cajamarca, Arequipa, Lima y Áncash, menor en Ica y Puno, y casi igual en Cusco y Junín. Además hay confusión por geografía: en la costa (Lima, Ica) casi todos los accidentes ocurren sin lluvia.
+
+  ![% fatal con y sin lluvia por departamento](results/plots/eda_07_lluvia_por_departamento.png)
+
+- **Variables más ligadas a la fatalidad:** la **modalidad** (atropello: 42.9 % fatal; choque: 13.6 %; despiste: 7.4 %), la **hora** (≈ 17–19 % fatal entre las 0 y las 3 h frente a ≈ 8 % a las 17–18 h) y el **departamento** (La Libertad, Huancavelica, Piura y Puno con las tasas más altas).
+- **Vista agregada (departamento-día):** el promedio de fallecidos por departamento-día no sigue un patrón con la lluvia (0.28, 0.27, 0.19, 0.39, 0.14 y 0.25 de menor a mayor rango) y los accidentes por día son ≈ 1.5 en todos los rangos.
+
+### 5.2 Baseline
+
+Partición estratificada 80/20 (1 622 accidentes de prueba, 11.7 % fatales), regresión logística con `class_weight` balanceado:
+
+| Modelo | ROC-AUC | PR-AUC | F1 | Precisión | Recall | Balanced acc. |
+|---|---|---|---|---|---|---|
+| Dummy (prior) | 0.500 | 0.117 | 0.000 | 0.000 | 0.000 | 0.500 |
+| Reg. logística · Set A (ex-ante) | 0.616 | 0.185 | 0.237 | 0.149 | 0.574 | 0.570 |
+| Reg. logística · Set B (+ `MODALIDAD`) | 0.659 | 0.253 | 0.261 | 0.172 | 0.537 | 0.597 |
+| Reg. logística · Set A, partición temporal (corte 24/06/2021) | 0.600 | 0.163 | 0.229 | 0.143 | 0.566 | 0.570 |
+
+La validación cruzada de 5 particiones da una PR-AUC de 0.160 ± 0.010 (Set A) y 0.262 ± 0.024 (Set B). Para conteo de fallecidos (Tarea B):
+
+| Modelo | MAE | RMSE | Devianza de Poisson |
+|---|---|---|---|
+| Dummy (media) | 0.301 | 0.793 | 0.847 |
+| Regresión de Poisson · Set A | 0.296 | 0.792 | 0.829 |
+
+![Curva de respuesta del baseline a la lluvia](results/plots/modelo_02_curva_lluvia.png)
+
+### 5.3 Lectura de los resultados
+
+- El baseline **supera al modelo trivial, pero por poco**: la PR-AUC (0.185) es ≈ 1.6 veces la prevalencia (0.117) y la precisión es baja (de cada 100 accidentes marcados como fatales, ≈ 15 lo son). La mejora de Poisson sobre el Dummy es marginal (≈ 2 % en devianza).
+- **La lluvia no aporta de forma significativa:** con control por departamento y hora, el odds ratio de log(1 + lluvia) es 0.948 (IC 95 % 0.862–1.043; p = 0.27). Con esta medición de la lluvia no hay evidencia de que aumente ni reduzca la fatalidad de un accidente.
+- **Conocer la modalidad ayuda** (PR-AUC 0.185 → 0.253), pero solo se conoce una vez ocurrido el accidente, por lo que el Set B es una referencia y no un modelo ex-ante.
+- **La partición temporal cae un poco** (PR-AUC 0.163 sobre una prevalencia de 0.112, ≈ 1.5 veces el azar), sin un deterioro fuerte.
+- **Cuidado al interpretar:** son asociaciones, no efectos causales. El resultado está condicionado a medir la lluvia en la capital del departamento, y el dataset solo contiene accidentes (no hay tráfico ni días sin accidentes).
+- **Siguientes pasos:** modelos no lineales (árbol de decisión, KNN, MLP, binomial negativa), interacción lluvia × departamento, K-Means de departamentos, ajuste del umbral o remuestreo, y mejorar la medición de la lluvia (coordenadas por vía y kilómetro o estaciones del SENAMHI).
+
+---
+
+## 6. Cómo ejecutar
 
 ```
 pip install -r requirements.txt
@@ -224,7 +286,7 @@ Requiere internet en la primera ejecución (Open-Meteo). El clima queda en cach�
 
 ---
 
-## 6. Estructura del repositorio
+## 7. Estructura del repositorio
 ```
 data/raw/        CSV de accidentes, diccionario de datos y caché de clima
 data/processed/  accidentes_clima.csv
