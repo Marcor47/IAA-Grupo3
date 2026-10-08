@@ -150,8 +150,8 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 ## 4. Metodología y propuesta de modelos
 
 **Metodología**
-1. Limpieza y tipificación del CSV de accidentes (`01_eda.ipynb`).
-2. Descarga de precipitación diaria por departamento y unión por departamento + fecha.
+1. Limpieza y tipificación del CSV de accidentes (`src/preprocessing.py`; las decisiones se justifican en `01_eda.ipynb`).
+2. Descarga de precipitación diaria por departamento y unión por departamento + fecha (`src/preprocessing.py`).
 3. EDA: lluvia vs. fatalidad, controlando por departamento. La búsqueda de patrones con K-Means y PCA (Muñoz et al., 2024) está **propuesta para el entregable final** (aún no implementada).
 4. Baseline con partición estratificada 80/20, validación cruzada de 5 particiones y partición temporal de robustez (`02_modelos.ipynb`).
 5. Dos conjuntos de variables (sección 4.1): **Set A**, conocido antes del accidente, y **Set B** (A + `MODALIDAD`, que solo se conoce después).
@@ -231,7 +231,8 @@ Los resultados completos están en `notebooks/01_eda.ipynb` (EDA) y `notebooks/0
 
   ![% fatal según lluvia](results/plots/eda_06_lluvia_vs_fatalidad.png)
 
-- **Dentro de cada departamento el signo cambia:** con lluvia el % fatal es mayor en Cajamarca, Arequipa, Lima y Áncash, menor en Ica y Puno, y casi igual en Cusco y Junín. Además hay confusión por geografía: en la costa (Lima, Ica) casi todos los accidentes ocurren sin lluvia.
+- **Sensibilidad a accidentes extremos:** el pico de fallecidos por accidente en 5–10 mm (0.252) se debe en parte a dos accidentes con 16 y 20 fallecidos; sin los accidentes de ≥ 10 fallecidos baja a 0.197 y el patrón sigue sin orden.
+- **Dentro de cada departamento el signo cambia:** con lluvia (> 0.1 mm) el % fatal es mayor en Cajamarca, Arequipa, Lima y Áncash, menor en Ica y Puno, y casi igual en Cusco y Junín. El resultado depende del umbral: con > 0 mm, la diferencia en Ica pasa de −5.7 a 0.0 puntos y en Cusco de −0.2 a +3.0. Además hay confusión por geografía: en la costa (Lima, Ica) casi todos los accidentes ocurren sin lluvia.
 
   ![% fatal con y sin lluvia por departamento](results/plots/eda_07_lluvia_por_departamento.png)
 
@@ -273,10 +274,11 @@ La validación cruzada de 5 particiones da una PR-AUC de 0.160 ± 0.010 (Set A) 
 
 ```
 pip install -r requirements.txt
+python -m src.preprocessing      # opcional: solo genera data/processed/accidentes_clima.csv
 jupyter notebook
 ```
-Ejecutar en orden desde la carpeta `notebooks/`:
-1. `01_eda.ipynb`: lee `data/raw/accidentes_transito_carreteras.csv` (si no existe, lo descarga), descarga el clima, genera `data/processed/accidentes_clima.csv` y las figuras.
+La preparación de datos (lectura, limpieza y unión con el clima) está en `src/preprocessing.py`. Ejecutar en orden desde la carpeta `notebooks/`:
+1. `01_eda.ipynb`: usa `src/preprocessing.py` para leer `data/raw/accidentes_transito_carreteras.csv` (si no existe, lo descarga), limpiarlo y unirlo con el clima; documenta cada decisión, genera `data/processed/accidentes_clima.csv` y las figuras.
 2. `02_modelos.ipynb`: baseline y `results/metrics.csv`.
 
 Requiere internet en la primera ejecución (Open-Meteo). El clima queda en caché en `data/raw/clima_open_meteo.csv`.
@@ -293,5 +295,5 @@ data/processed/        accidentes_clima.csv
 notebooks/             01_eda.ipynb, 02_modelos.ipynb
 results/               metrics.csv, plots/
 papers/                paper_integrante1..4.pdf, resumen del paper 2 e índice (README.md)
-src/                   (vacío) módulos preprocessing.py, models.py y evaluation.py para el entregable final
+src/                   preprocessing.py (lectura, limpieza y unión con el clima); models.py y evaluation.py llegan en el entregable final
 ```
