@@ -69,11 +69,15 @@ Los accidentes en carreteras causan muertes y heridos cada año en el Perú. El 
 - Fecha como `AAAAMMDD` y hora como `HH:MM`.
 - Los valores "N.I." se tratan como datos faltantes.
 
-### 2.3 Dataset complementario: precipitación
-El registro de accidentes no tiene clima ni coordenadas. La lluvia se obtiene de la **API histórica de Open-Meteo** (<https://open-meteo.com/en/docs/historical-weather-api>), que entrega precipitación diaria por coordenadas, sin API key. Para cada departamento se descarga la precipitación diaria acumulada (`precipitation_sum`, en mm) en la capital del departamento y se une con los accidentes por **departamento + fecha**. Open-Meteo es gratuito para uso no comercial y exige atribución (revisar los términos vigentes).
+### 2.3 Datasets complementarios: ubicación y precipitación
+El registro de accidentes no tiene clima ni coordenadas, pero sí vía (`CODIGO_VIA`) y kilómetro.
+
+- **Ubicación — Red Vial Nacional del MTC** (al 31/12/2014), publicada como servicio de mapas en el catálogo geoespacial de INGEMMET (<https://geocatmin.ingemmet.gob.pe/arcgis/rest/services/SERV_OTRAS_FUENTES/MapServer/23>). Cada tramo trae su ruta, su km de inicio y fin y su departamento. Con la vía y el kilómetro de cada accidente se interpola su posición sobre el tramo; el punto se acepta solo si el tramo está en el mismo departamento del accidente (o a ≤ 10 km de su límite). Así se ubica el **80.2 %** de los accidentes; el resto (vías departamentales, km "N.I." o km que no coincide con el kilometraje del MTC) usa la capital de su departamento. Copia en `data/raw/red_vial_nacional_mtc.json`.
+- **Precipitación — API histórica de Open-Meteo** (<https://open-meteo.com/en/docs/historical-weather-api>), gratuita para uso no comercial, sin API key y con atribución. Se descarga la precipitación diaria (`precipitation_sum`, en mm) en la **celda de 0.1° (~11 km)** que contiene a cada accidente y se une por **celda + fecha**; la API también da la **altitud** de la celda (`ELEVACION`). Copia en `data/raw/clima_celdas_open_meteo.csv`. Se conserva además la lluvia en la capital del departamento (`PRECIP_CAPITAL`, `data/raw/clima_open_meteo.csv`) para comparar.
 
 ### 2.4 Limitaciones del dataset
-- **Resolución espacial de la lluvia:** el dataset no trae coordenadas, solo departamento, vía y kilómetro. La lluvia se mide en la capital del departamento, lo que es un proxy grueso en departamentos extensos (Loreto, Cusco, Puno, Junín).
+- **Resolución espacial de la lluvia:** el dataset no trae coordenadas; la ubicación se reconstruye con la vía y el kilómetro. El 19.8 % de los accidentes no se puede ubicar y usa la lluvia de la capital de su departamento, y la lluvia se mide en celdas de ~11 km, no en el punto exacto.
+- **Kilometraje:** la capa de vías es de 2014 y en algunas rutas el kilómetro reportado por SUTRAN no coincide con el kilometraje oficial del MTC (1 059 accidentes se dejan con la capital por esa razón).
 - **Origen de la lluvia:** los valores de la API provienen de datos de reanálisis, no de estaciones; pueden diferir de las mediciones de SENAMHI, sobre todo en la zona andina.
 - **Solo accidentes:** no hay información de tráfico ni de días sin accidentes, por lo que no se puede estimar la probabilidad de que ocurra un accidente, solo su gravedad.
 - **Periodo enero 2020 – septiembre 2021:** coincide con la pandemia (restricciones de movilidad); en el EDA, abril de 2020 cae a ≈ 20 fallecidos, coherente con la cuarentena.
@@ -151,8 +155,8 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 
 **Metodología**
 1. Limpieza y tipificación del CSV de accidentes (`src/preprocessing.py`; las decisiones se justifican en `01_eda.ipynb`).
-2. Descarga de precipitación diaria por departamento y unión por departamento + fecha (`src/preprocessing.py`).
-3. EDA: lluvia vs. fatalidad, controlando por departamento. La búsqueda de patrones con K-Means y PCA (Muñoz et al., 2024) está **propuesta para el entregable final** (aún no implementada).
+2. Ubicación de cada accidente a partir de su vía y kilómetro (Red Vial Nacional del MTC), descarga de la precipitación diaria en su celda y unión por celda + fecha (`src/preprocessing.py`).
+3. EDA: lluvia vs. fatalidad, controlando por departamento y altitud, con pruebas de sensibilidad. La búsqueda de patrones con K-Means y PCA (Muñoz et al., 2024) está **propuesta para el entregable final** (aún no implementada).
 4. Baseline con partición estratificada 80/20, validación cruzada de 5 particiones y partición temporal de robustez (`02_modelos.ipynb`).
 5. Dos conjuntos de variables (sección 4.1): **Set A**, conocido antes del accidente, y **Set B** (A + `MODALIDAD`, que solo se conoce después).
 6. Métricas según la tarea (sección 4.3).
@@ -163,7 +167,8 @@ Muñoz et al. (2024) encuentran que los accidentes se separan por **franja horar
 
 | Variable | Origen | Patrón que la respalda | Set | Estado |
 |---|---|---|---|---|
-| Precipitación diaria (mm; en el modelo como `PRECIP_LOG` = log(1 + mm)) | Open-Meteo | Cluster 3 de Muñoz (carretera + clima adverso); Mhetre y Thube | A | En uso |
+| Precipitación diaria en el punto del accidente (mm; en el modelo como `PRECIP_LOG` = log(1 + mm)) | Open-Meteo + ubicación por km | Cluster 3 de Muñoz (carretera + clima adverso); Mhetre y Thube | A | En uso |
+| Altitud del punto (`ELEVACION`) | Open-Meteo + ubicación por km | En el EDA se asocia con la fatalidad y con la lluvia | A | Candidata |
 | Nivel de lluvia (seco / ligera / moderada / fuerte) | Derivada de la anterior | Mhetre y Thube usan el clima por categorías | A | En uso en el EDA; candidata para los modelos |
 | `HORA` (codificada como seno/coseno) y franja horaria (madrugada, mañana, tarde, noche) | SUTRAN | Clusters 0, 1 y 2 de Muñoz se distinguen por franja | A | Hora en uso; franja candidata |
 | Día de la semana y fin de semana | Derivada de `FECHA` | Cluster 1 de Muñoz (rural, fin de semana, noche) | A | Día en uso; fin de semana candidata |
@@ -215,58 +220,62 @@ Los resultados completos están en `notebooks/01_eda.ipynb` (EDA) y `notebooks/0
 
 ### 5.1 EDA
 
-- **Datos:** 8 110 accidentes con dato de lluvia, 1 375 fallecidos y 10 635 heridos. El **11.7 %** de los accidentes tiene al menos un fallecido (0.17 fallecidos por accidente; máximo 33 en un solo accidente). El 48.4 % ocurrió en un día con lluvia > 0 mm, aunque la mediana de lluvia es 0 mm.
-- **Lluvia vs. fatalidad: no hay una tendencia clara.**
+- **Datos:** 8 110 accidentes, 1 375 fallecidos y 10 635 heridos. El **11.7 %** de los accidentes tiene al menos un fallecido (0.17 fallecidos por accidente; máximo 33 en un solo accidente). El 51.6 % ocurrió en un día con lluvia > 0 mm en su ubicación.
+- **Ubicación:** el 80.2 % de los accidentes se ubica por vía y kilómetro; en mediana están a 73 km de la capital de su departamento (p90: 143 km). La lluvia en el punto y la de la capital tienen una correlación de solo 0.54 y no coinciden en si llovió en el 22.4 % de los accidentes ubicados: la capital era un *proxy* pobre.
 
-| Lluvia diaria (mm) | Accidentes | % fatal (IC 95 %) | Fallecidos por accidente |
+  ![Accidentes ubicados sobre la Red Vial Nacional](results/plots/eda_09_ubicacion.png)
+
+- **Lluvia vs. fatalidad: asociación negativa y muy débil.**
+
+| Lluvia diaria en el punto (mm) | Accidentes | % fatal (IC 95 %) | Fallecidos por accidente |
 |---|---|---|---|
-| 0 | 4 188 | 12.0 (11.1–13.0) | 0.171 |
-| 0–1 | 1 557 | 13.0 (11.5–14.8) | 0.180 |
-| 1–5 | 1 305 | 9.3 (7.8–11.0) | 0.130 |
-| 5–10 | 646 | 13.6 (11.2–16.5) | 0.252 |
-| 10–20 | 314 | 7.3 (4.9–10.8) | 0.096 |
-| >20 | 100 | 13.0 (7.8–21.0) | 0.160 |
+| 0 | 3 926 | 12.7 (11.7–13.8) | 0.178 |
+| 0–1 | 1 551 | 11.8 (10.3–13.5) | 0.191 |
+| 1–5 | 1 491 | 9.6 (8.2–11.2) | 0.142 |
+| 5–10 | 673 | 11.3 (9.1–13.9) | 0.152 |
+| 10–20 | 362 | 8.8 (6.3–12.2) | 0.119 |
+| >20 | 107 | 15.9 (10.2–24.0) | 0.215 |
 
-  El chi² rechaza que las proporciones sean iguales (p = 0.002), pero la diferencia no sigue un orden con la lluvia. Con la lluvia como variable continua no hay asociación significativa (Spearman ρ = −0.015, p = 0.19; Mann-Whitney p = 0.18).
+  El chi² rechaza que las proporciones sean iguales (p = 0.009). Con la lluvia como variable continua la asociación es significativa pero **negativa y muy débil** (Spearman ρ = −0.031, p = 0.005; Mann-Whitney p = 0.005): con más lluvia, los accidentes son apenas menos fatales. Se mantiene con solo los accidentes ubicados por km (ρ = −0.030, p = 0.015).
 
   ![% fatal según lluvia](results/plots/eda_06_lluvia_vs_fatalidad.png)
 
-- **Sensibilidad a accidentes extremos:** el pico de fallecidos por accidente en 5–10 mm (0.252) se debe en parte a dos accidentes con 16 y 20 fallecidos; sin los accidentes de ≥ 10 fallecidos baja a 0.197 y el patrón sigue sin orden.
-- **Dentro de cada departamento el signo cambia:** con lluvia (> 0.1 mm) el % fatal es mayor en Cajamarca, Arequipa, Lima y Áncash, menor en Ica y Puno, y casi igual en Cusco y Junín. El resultado depende del umbral: con > 0 mm, la diferencia en Ica pasa de −5.7 a 0.0 puntos y en Cusco de −0.2 a +3.0. Además hay confusión por geografía: en la costa (Lima, Ica) casi todos los accidentes ocurren sin lluvia.
+- **El pico en 5–10 mm de la versión anterior era un artefacto:** con la lluvia de la capital, ese rango tenía 0.252 fallecidos por accidente por dos accidentes con 16 y 20 fallecidos. Con la lluvia en su ubicación, ninguno de los nueve accidentes con ≥ 10 fallecidos ocurrió con más de 5 mm.
+- **Dentro de cada departamento el signo cambia:** con lluvia (> 0.1 mm) el % fatal es mayor en Junín (+3.1 puntos), Cajamarca (+2.9) y Arequipa (+0.6), y menor en Lima (−4.7), Áncash (−3.1), Cusco (−1.5), Puno (−1.2) e Ica (−0.5); los signos no dependen del umbral.
+- **Altitud:** el % fatal baja con la altitud (13.0 % en la costa frente a 9.8 % sobre 3 500 m), mientras que los días con lluvia suben con ella (25 % frente a 74 % de los accidentes). La asociación negativa entre lluvia y fatalidad es compatible con un efecto de la geografía y no de la lluvia.
 
-  ![% fatal con y sin lluvia por departamento](results/plots/eda_07_lluvia_por_departamento.png)
+  ![Fatalidad y lluvia según altitud](results/plots/eda_11_altitud.png)
 
-- **Variables más ligadas a la fatalidad:** la **modalidad** (atropello: 42.9 % fatal; choque: 13.6 %; despiste: 7.4 %), la **hora** (≈ 17–19 % fatal entre las 0 y las 3 h frente a ≈ 8 % a las 17–18 h) y el **departamento** (La Libertad, Huancavelica, Piura y Puno con las tasas más altas).
-- **Vista agregada (departamento-día):** el promedio de fallecidos por departamento-día no sigue un patrón con la lluvia (0.28, 0.27, 0.19, 0.39, 0.14 y 0.25 de menor a mayor rango) y los accidentes por día son ≈ 1.5 en todos los rangos.
+- **Variables más ligadas a la fatalidad:** la **modalidad** (atropello: 42.9 % fatal; choque: 13.6 %; despiste: 7.4 %), la **hora** (≈ 17–19 % fatal entre las 0 y las 3 h frente a ≈ 8 % a las 17–18 h), el **departamento** (La Libertad, Huancavelica, Piura y Puno con las tasas más altas) y la **altitud**.
 
 ### 5.2 Baseline
 
-Partición estratificada 80/20 (1 622 accidentes de prueba, 11.7 % fatales), regresión logística con `class_weight` balanceado:
+Partición estratificada 80/20 (1 622 accidentes de prueba, 11.7 % fatales), regresión logística con `class_weight` balanceado; la lluvia es la del punto del accidente:
 
 | Modelo | ROC-AUC | PR-AUC | F1 | Precisión | Recall | Balanced acc. |
 |---|---|---|---|---|---|---|
 | Dummy (prior) | 0.500 | 0.117 | 0.000 | 0.000 | 0.000 | 0.500 |
-| Reg. logística · Set A (ex-ante) | 0.616 | 0.185 | 0.237 | 0.149 | 0.574 | 0.570 |
-| Reg. logística · Set B (+ `MODALIDAD`) | 0.659 | 0.253 | 0.261 | 0.172 | 0.537 | 0.597 |
-| Reg. logística · Set A, partición temporal (corte 24/06/2021) | 0.600 | 0.163 | 0.229 | 0.143 | 0.566 | 0.570 |
+| Reg. logística · Set A (ex-ante) | 0.614 | 0.186 | 0.233 | 0.147 | 0.563 | 0.564 |
+| Reg. logística · Set B (+ `MODALIDAD`) | 0.657 | 0.252 | 0.260 | 0.172 | 0.532 | 0.596 |
+| Reg. logística · Set A, partición temporal (corte 24/06/2021) | 0.600 | 0.163 | 0.230 | 0.144 | 0.571 | 0.572 |
 
-La validación cruzada de 5 particiones da una PR-AUC de 0.160 ± 0.010 (Set A) y 0.262 ± 0.024 (Set B). Para conteo de fallecidos (Tarea B):
+La validación cruzada de 5 particiones da una PR-AUC de 0.159 ± 0.011 (Set A) y 0.262 ± 0.024 (Set B). Para conteo de fallecidos (Tarea B):
 
 | Modelo | MAE | RMSE | Devianza de Poisson |
 |---|---|---|---|
 | Dummy (media) | 0.301 | 0.793 | 0.847 |
-| Regresión de Poisson · Set A | 0.296 | 0.792 | 0.829 |
+| Regresión de Poisson · Set A | 0.296 | 0.792 | 0.826 |
 
 ![Curva de respuesta del baseline a la lluvia](results/plots/modelo_02_curva_lluvia.png)
 
 ### 5.3 Lectura de los resultados
 
-- El baseline **supera al modelo trivial, pero por poco**: la PR-AUC (0.185) es ≈ 1.6 veces la prevalencia (0.117) y la precisión es baja (de cada 100 accidentes marcados como fatales, ≈ 15 lo son). La mejora de Poisson sobre el Dummy es marginal (≈ 2 % en devianza).
-- **La lluvia no aporta de forma significativa:** con control por departamento y hora, el odds ratio de log(1 + lluvia) es 0.948 (IC 95 % 0.862–1.043; p = 0.27). Con esta medición de la lluvia no hay evidencia de que aumente ni reduzca la fatalidad de un accidente.
-- **Conocer la modalidad ayuda** (PR-AUC 0.185 → 0.253), pero solo se conoce una vez ocurrido el accidente, por lo que el Set B es una referencia y no un modelo ex-ante.
+- El baseline **supera al modelo trivial, pero por poco**: la PR-AUC (0.186) es ≈ 1.6 veces la prevalencia (0.117) y la precisión es baja (de cada 100 accidentes marcados como fatales, ≈ 15 lo son). La mejora de Poisson sobre el Dummy es marginal (≈ 2.5 % en devianza).
+- **La lluvia no aporta de forma significativa:** con control por departamento y hora, el odds ratio de log(1 + lluvia) es 0.929 (IC 95 % 0.847–1.018; p = 0.11). Medir la lluvia en el punto del accidente en vez de la capital casi no cambia el baseline (PR-AUC 0.185 → 0.186; odds ratio 0.948 → 0.929): mejorar la medición no hizo aparecer un efecto de la lluvia.
+- **Conocer la modalidad ayuda** (PR-AUC 0.186 → 0.252), pero solo se conoce una vez ocurrido el accidente, por lo que el Set B es una referencia y no un modelo ex-ante.
 - **La partición temporal cae un poco** (PR-AUC 0.163 sobre una prevalencia de 0.112, ≈ 1.5 veces el azar), sin un deterioro fuerte.
-- **Cuidado al interpretar:** son asociaciones, no efectos causales. El resultado está condicionado a medir la lluvia en la capital del departamento, y el dataset solo contiene accidentes (no hay tráfico ni días sin accidentes).
-- **Siguientes pasos:** modelos no lineales (árbol de decisión, KNN, MLP, binomial negativa), interacción lluvia × departamento, K-Means de departamentos, ajuste del umbral o remuestreo, y mejorar la medición de la lluvia (coordenadas por vía y kilómetro o estaciones del SENAMHI).
+- **Cuidado al interpretar:** son asociaciones, no efectos causales. La lluvia viene de reanálisis en celdas de ~11 km, el 19.8 % de los accidentes usa la de la capital, y el dataset solo contiene accidentes (no hay tráfico ni días sin accidentes).
+- **Siguientes pasos:** agregar la altitud (`ELEVACION`) y evaluar la lluvia controlando por ella; modelos no lineales (árbol de decisión, KNN, MLP, binomial negativa); interacciones lluvia × altitud y lluvia × departamento; K-Means de departamentos; ajuste del umbral o remuestreo.
 
 ---
 
@@ -277,11 +286,11 @@ pip install -r requirements.txt
 python -m src.preprocessing      # opcional: solo genera data/processed/accidentes_clima.csv
 jupyter notebook
 ```
-La preparación de datos (lectura, limpieza y unión con el clima) está en `src/preprocessing.py`. Ejecutar en orden desde la carpeta `notebooks/`:
-1. `01_eda.ipynb`: usa `src/preprocessing.py` para leer `data/raw/accidentes_transito_carreteras.csv` (si no existe, lo descarga), limpiarlo y unirlo con el clima; documenta cada decisión, genera `data/processed/accidentes_clima.csv` y las figuras.
+La preparación de datos (lectura, limpieza, ubicación y unión con el clima) está en `src/preprocessing.py`. Ejecutar en orden desde la carpeta `notebooks/`:
+1. `01_eda.ipynb`: usa `src/preprocessing.py` para leer `data/raw/accidentes_transito_carreteras.csv` (si no existe, lo descarga), limpiarlo, ubicar cada accidente y unirlo con el clima; documenta cada decisión, genera `data/processed/accidentes_clima.csv` y las figuras.
 2. `02_modelos.ipynb`: baseline y `results/metrics.csv`.
 
-Requiere internet en la primera ejecución (Open-Meteo). El clima queda en caché en `data/raw/clima_open_meteo.csv`.
+Las descargas externas ya están en el repo (`data/raw/red_vial_nacional_mtc.json`, `clima_celdas_open_meteo.csv` y `clima_open_meteo.csv`), así que los notebooks corren sin internet. Si se borran, se vuelven a descargar: la red vial tarda segundos, pero la lluvia por celda tarda ~1 hora por los límites de la API gratuita de Open-Meteo (la descarga se retoma donde quedó si se interrumpe).
 
 ---
 
@@ -290,10 +299,10 @@ Requiere internet en la primera ejecución (Open-Meteo). El clima queda en cach�
 README.md              descripción del proyecto y cómo ejecutar
 ENTREGABLE_PARCIAL.md  checklist del entregable de la semana 8
 requirements.txt       dependencias
-data/raw/              CSV de accidentes, diccionario de datos y caché de clima
+data/raw/              CSV de accidentes, diccionario de datos, red vial del MTC y cachés de clima (por celda y por capital)
 data/processed/        accidentes_clima.csv
 notebooks/             01_eda.ipynb, 02_modelos.ipynb
 results/               metrics.csv, plots/
 papers/                paper_integrante1..4.pdf, resumen del paper 2 e índice (README.md)
-src/                   preprocessing.py (lectura, limpieza y unión con el clima); models.py y evaluation.py llegan en el entregable final
+src/                   preprocessing.py (lectura, limpieza, ubicación y unión con el clima); models.py y evaluation.py llegan en el entregable final
 ```

@@ -1,7 +1,7 @@
 tarea,modelo,split,roc_auc,pr_auc,f1,precision,recall,balanced_acc,prevalencia_test,mae,rmse,poisson_deviance
 A_clasificacion,Dummy (prior),aleatorio 80/20,0.5,0.1171,0.0,0.0,0.0,0.5,0.1171,,,
-A_clasificacion,Reg. logística · Set A (ex-ante),aleatorio 80/20,0.6159,0.185,0.2367,0.1491,0.5737,0.5697,0.1171,,,
-A_clasificacion,Reg. logística · Set B (+ MODALIDAD),aleatorio 80/20,0.6586,0.2529,0.2605,0.172,0.5368,0.597,0.1171,,,
-A_clasificacion,Reg. logística · Set A,temporal (corte 2021-06-24),0.5996,0.1626,0.2289,0.1435,0.5659,0.5705,0.1117,,,
+A_clasificacion,Reg. logística · Set A (ex-ante),aleatorio 80/20,0.6141,0.1862,0.2326,0.1466,0.5632,0.5641,0.1171,,,
+A_clasificacion,Reg. logística · Set B (+ MODALIDAD),aleatorio 80/20,0.6574,0.2518,0.26,0.1721,0.5316,0.5961,0.1171,,,
+A_clasificacion,Reg. logística · Set A,temporal (corte 2021-06-24),0.6002,0.1634,0.2301,0.144,0.5714,0.5722,0.1117,,,
 B_regresion_conteo,Dummy (media),aleatorio 80/20,,,,,,,,0.3014,0.7934,0.847
-B_regresion_conteo,Regresión de Poisson · Set A,aleatorio 80/20,,,,,,,,0.2961,0.7922,0.8291
+B_regresion_conteo,Regresión de Poisson · Set A,aleatorio 80/20,,,,,,,,0.296,0.7918,0.8259
