@@ -1,6 +1,3 @@
-# IAA-Grupo3
-Tarea Académica de Inteligencia Artificial Aplicada
-
 # Mortalidad en carreteras del Perú según el nivel de precipitación
 
 **Curso:** Inteligencia Artificial Aplicada (1INF62) · PUCP · 2026-2
@@ -86,9 +83,9 @@ El registro de accidentes no tiene clima ni coordenadas. La lluvia se obtiene de
 
 ## 3. Revisión de literatura
 
-Cada integrante revisó un artículo revisado por pares sobre predicción de fatalidad o gravedad, o sobre búsqueda de patrones en accidentes viales, que no usa el mismo dataset que nosotros. Los PDF están en [`papers/`](papers/). Los resúmenes se basan en el texto o resumen de cada paper; antes de la entrega, cada integrante debe contrastar el suyo con el PDF.
+Cada integrante revisó un artículo revisado por pares sobre predicción de fatalidad o gravedad, o sobre búsqueda de patrones en accidentes viales, que no usa el mismo dataset que nosotros. Los PDF están en [`papers/`](papers/) (índice en [`papers/README.md`](papers/README.md)).
 
-### Paper 1 · Marco Rodriguez
+### Paper 1 · Marco Rodriguez · [`paper_integrante1.pdf`](papers/paper_integrante1.pdf)
 **K. V. Mhetre y A. D. Thube**, "Count Data Modeling for Predicting Crash Severity on Indian Highways", *Engineering, Technology & Applied Science Research*, vol. 13, n.º 5, pp. 11816-11820, 2023. DOI: [10.48084/etasr.6172](https://doi.org/10.48084/etasr.6172)
 
 - **Problema:** predecir la fatalidad de accidentes en una carretera nacional rural de la India (NH-48, Maharashtra, ~265 km) según la naturaleza del choque, el horario (AM/PM) y el clima.
@@ -97,7 +94,7 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Resultados:** la naturaleza del choque y el clima resultaron significativos; lluvia ligera y fuerte, neblina, tiempo fino y nublado aparecen asociados positivamente con la fatalidad. Los modelos 2 y 4 ajustaron mejor.
 - **Aporte a nuestro proyecto:** respalda modelar `NUM_FALLECIDOS` como **conteo** (usamos Poisson como baseline y proponemos binomial negativa para el final) y confirma el clima como variable relevante. **Crítica:** usa el clima como categorías y no aísla un efecto propio de la lluvia; nosotros usamos precipitación continua en mm y evaluamos en datos de prueba.
 
-### Paper 2 · Angel Cerdán
+### Paper 2 · Angel Cerdán · [`paper_integrante2.pdf`](papers/paper_integrante2.pdf) (resumen de una página: [`paper_integrante2_resumen.pdf`](papers/paper_integrante2_resumen.pdf))
 **E. G. Muñoz Muñoz, D. A. Verduga Alcívar, Y. F. Guerrero Alcívar, M. A. Lapo Palacios y O. Zorrilla Briones**, "Búsqueda de patrones con machine learning en datos de siniestros de tránsito", *Ciencia Latina Revista Científica Multidisciplinar*, vol. 8, n.º 2, pp. 1617-1637, 2024. DOI: [10.37811/cl_rcm.v8i2.10592](https://doi.org/10.37811/cl_rcm.v8i2.10592)
 
 - **Problema:** identificar patrones en los siniestros de tránsito (lugar, hora, causa, condiciones del entorno) para orientar intervenciones de seguridad vial focalizadas. Es un análisis **no supervisado**: no hay etiqueta que predecir.
@@ -111,7 +108,7 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Resultados:** cuatro clusters: (0) urbano, tarde/noche, distracción del conductor (5 563 casos); (1) rural, fines de semana, noche/madrugada, exceso de velocidad y alcohol (3 560); (2) intersecciones urbanas en horas punta, incumplimiento de señales (6 317); (3) carreteras y zonas periurbanas con mal estado de la vía y **clima adverso** (5 912). En el Random Forest las variables más importantes fueron el número de lesionados y el total de víctimas, seguidas de provincia, cantón, mes y hora.
 - **Aporte a nuestro proyecto:** el cluster 3 (carreteras + clima adverso) es justamente nuestro caso de estudio y respalda incluir el clima y la ubicación. Tomamos dos ideas: (a) agrupar con **K-Means** los departamentos (o vías) según su régimen de lluvia y su siniestralidad, y usar el cluster como variable espacial más compacta que el one-hot de 25 departamentos; (b) usar **PCA** en el EDA para visualizar la estructura de los accidentes y la **importancia de variables** de modelos de árboles para ordenar los predictores. También valida el preprocesamiento que ya hacemos (limpieza de "N.I.", codificación de categóricas, escalado).
 
-### Paper 3 · Raul Malaver
+### Paper 3 · Raul Malaver · [`paper_integrante3.pdf`](papers/paper_integrante3.pdf)
 **L. Babaoglu y C. Babaoglu**, "Prediction of Fatalities in Vehicle Collisions in Canada", *Promet – Traffic&Transportation*, vol. 33, n.º 5, 2021. DOI: [10.7307/ptt.v33i5.3782](https://doi.org/10.7307/ptt.v33i5.3782)
 
 - **Problema:** predecir si un accidente tendrá fallecidos y descubrir las causas de la fatalidad en las carreteras de Canadá.
@@ -121,7 +118,7 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Aporte a nuestro proyecto:** ejemplo de pipeline EDA + Lasso + XGBoost y de interpretación por importancia de variables. Su hallazgo sobre clima no extremo es un contrapunto a nuestra hipótesis: conviene controlar por exposición y por departamento antes de atribuir efectos a la lluvia.
 - **Limitación:** la exactitud sola no es suficiente con clases desbalanceadas.
 
-### Paper 4 · Fernando De La Cruz
+### Paper 4 · Fernando De La Cruz · [`paper_integrante4.pdf`](papers/paper_integrante4.pdf)
 **M. Emu et al.**, "Fatality Prediction for Motor Vehicle Collisions: Mining Big Data Using Deep Learning and Ensemble Methods", *IEEE Open Journal of Intelligent Transportation Systems*, 2022. DOI: [10.1109/OJITS.2022.3160404](https://doi.org/10.1109/OJITS.2022.3160404)
 
 - **Problema:** predecir si el resultado de una colisión será fatal o no, como base de un posible sistema de alerta en tiempo real.
@@ -288,9 +285,13 @@ Requiere internet en la primera ejecución (Open-Meteo). El clima queda en cach�
 
 ## 7. Estructura del repositorio
 ```
-data/raw/        CSV de accidentes, diccionario de datos y caché de clima
-data/processed/  accidentes_clima.csv
-notebooks/       01_eda.ipynb, 02_modelos.ipynb
-results/         metrics.csv, plots/
-papers/          PDF de los 4 papers revisados
+README.md              descripción del proyecto y cómo ejecutar
+ENTREGABLE_PARCIAL.md  checklist del entregable de la semana 8
+requirements.txt       dependencias
+data/raw/              CSV de accidentes, diccionario de datos y caché de clima
+data/processed/        accidentes_clima.csv
+notebooks/             01_eda.ipynb, 02_modelos.ipynb
+results/               metrics.csv, plots/
+papers/                paper_integrante1..4.pdf, resumen del paper 2 e índice (README.md)
+src/                   (vacío) módulos preprocessing.py, models.py y evaluation.py para el entregable final
 ```
