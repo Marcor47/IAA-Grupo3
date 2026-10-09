@@ -168,7 +168,7 @@ Muñoz et al. (2024) encuentran que los accidentes se separan por **franja horar
 | Variable | Origen | Patrón que la respalda | Set | Estado |
 |---|---|---|---|---|
 | Precipitación diaria en el punto del accidente (mm; en el modelo como `PRECIP_LOG` = log(1 + mm)) | Open-Meteo + ubicación por km | Cluster 3 de Muñoz (carretera + clima adverso); Mhetre y Thube | A | En uso |
-| Altitud del punto (`ELEVACION`) | Open-Meteo + ubicación por km | En el EDA se asocia con la fatalidad y con la lluvia | A | Candidata |
+| Altitud del punto (`ELEVACION`) | Open-Meteo + ubicación por km | En el EDA se asocia con la fatalidad y con la lluvia | A | En uso |
 | Nivel de lluvia (seco / ligera / moderada / fuerte) | Derivada de la anterior | Mhetre y Thube usan el clima por categorías | A | En uso en el EDA; candidata para los modelos |
 | `HORA` (codificada como seno/coseno) y franja horaria (madrugada, mañana, tarde, noche) | SUTRAN | Clusters 0, 1 y 2 de Muñoz se distinguen por franja | A | Hora en uso; franja candidata |
 | Día de la semana y fin de semana | Derivada de `FECHA` | Cluster 1 de Muñoz (rural, fin de semana, noche) | A | Día en uso; fin de semana candidata |
@@ -250,32 +250,32 @@ Los resultados completos están en `notebooks/01_eda.ipynb` (EDA) y `notebooks/0
 
 ### 5.2 Baseline
 
-Partición estratificada 80/20 (1 622 accidentes de prueba, 11.7 % fatales), regresión logística con `class_weight` balanceado; la lluvia es la del punto del accidente:
+Partición estratificada 80/20 (1 622 accidentes de prueba, 11.7 % fatales), regresión logística con `class_weight` balanceado; la lluvia es la del punto del accidente y el Set A incluye la altitud (`ELEVACION`):
 
 | Modelo | ROC-AUC | PR-AUC | F1 | Precisión | Recall | Balanced acc. |
 |---|---|---|---|---|---|---|
 | Dummy (prior) | 0.500 | 0.117 | 0.000 | 0.000 | 0.000 | 0.500 |
-| Reg. logística · Set A (ex-ante) | 0.614 | 0.186 | 0.233 | 0.147 | 0.563 | 0.564 |
-| Reg. logística · Set B (+ `MODALIDAD`) | 0.657 | 0.252 | 0.260 | 0.172 | 0.532 | 0.596 |
-| Reg. logística · Set A, partición temporal (corte 24/06/2021) | 0.600 | 0.163 | 0.230 | 0.144 | 0.571 | 0.572 |
+| Reg. logística · Set A (ex-ante) | 0.616 | 0.186 | 0.247 | 0.155 | 0.605 | 0.584 |
+| Reg. logística · Set B (+ `MODALIDAD`) | 0.658 | 0.256 | 0.262 | 0.174 | 0.532 | 0.598 |
+| Reg. logística · Set A, partición temporal (corte 24/06/2021) | 0.600 | 0.163 | 0.231 | 0.145 | 0.571 | 0.574 |
 
-La validación cruzada de 5 particiones da una PR-AUC de 0.159 ± 0.011 (Set A) y 0.262 ± 0.024 (Set B). Para conteo de fallecidos (Tarea B):
+La validación cruzada de 5 particiones da una PR-AUC de 0.159 ± 0.011 (Set A) y 0.260 ± 0.023 (Set B). Para conteo de fallecidos (Tarea B):
 
 | Modelo | MAE | RMSE | Devianza de Poisson |
 |---|---|---|---|
 | Dummy (media) | 0.301 | 0.793 | 0.847 |
-| Regresión de Poisson · Set A | 0.296 | 0.792 | 0.826 |
+| Regresión de Poisson · Set A | 0.296 | 0.792 | 0.825 |
 
 ![Curva de respuesta del baseline a la lluvia](results/plots/modelo_02_curva_lluvia.png)
 
 ### 5.3 Lectura de los resultados
 
-- El baseline **supera al modelo trivial, pero por poco**: la PR-AUC (0.186) es ≈ 1.6 veces la prevalencia (0.117) y la precisión es baja (de cada 100 accidentes marcados como fatales, ≈ 15 lo son). La mejora de Poisson sobre el Dummy es marginal (≈ 2.5 % en devianza).
-- **La lluvia no aporta de forma significativa:** con control por departamento y hora, el odds ratio de log(1 + lluvia) es 0.929 (IC 95 % 0.847–1.018; p = 0.11). Medir la lluvia en el punto del accidente en vez de la capital casi no cambia el baseline (PR-AUC 0.185 → 0.186; odds ratio 0.948 → 0.929): mejorar la medición no hizo aparecer un efecto de la lluvia.
-- **Conocer la modalidad ayuda** (PR-AUC 0.186 → 0.252), pero solo se conoce una vez ocurrido el accidente, por lo que el Set B es una referencia y no un modelo ex-ante.
+- El baseline **supera al modelo trivial, pero por poco**: la PR-AUC (0.186) es ≈ 1.6 veces la prevalencia (0.117) y la precisión es baja (de cada 100 accidentes marcados como fatales, ≈ 15 lo son). La mejora de Poisson sobre el Dummy es marginal (≈ 2.6 % en devianza).
+- **La lluvia no aporta; la altitud sí:** en un logit con control por departamento y hora, el odds ratio de log(1 + lluvia) es 0.929 (p = 0.11). Al agregar la altitud, pasa a **0.980 (IC 95 % 0.891–1.077; p = 0.67)**, mientras que cada 1 000 m de altitud reducen las odds de un accidente fatal (OR 0.855, IC 95 % 0.796–0.918; p < 0.001). El leve signo negativo de la lluvia en el EDA venía de la geografía.
+- **Conocer la modalidad ayuda** (PR-AUC 0.186 → 0.256), pero solo se conoce una vez ocurrido el accidente, por lo que el Set B es una referencia y no un modelo ex-ante.
 - **La partición temporal cae un poco** (PR-AUC 0.163 sobre una prevalencia de 0.112, ≈ 1.5 veces el azar), sin un deterioro fuerte.
 - **Cuidado al interpretar:** son asociaciones, no efectos causales. La lluvia viene de reanálisis en celdas de ~11 km, el 19.8 % de los accidentes usa la de la capital, y el dataset solo contiene accidentes (no hay tráfico ni días sin accidentes).
-- **Siguientes pasos:** agregar la altitud (`ELEVACION`) y evaluar la lluvia controlando por ella; modelos no lineales (árbol de decisión, KNN, MLP, binomial negativa); interacciones lluvia × altitud y lluvia × departamento; K-Means de departamentos; ajuste del umbral o remuestreo.
+- **Siguientes pasos:** modelos no lineales (árbol de decisión, KNN, MLP, binomial negativa); interacciones lluvia × altitud y lluvia × departamento; K-Means de departamentos; ajuste del umbral o remuestreo.
 
 ---
 
