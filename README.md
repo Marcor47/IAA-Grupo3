@@ -304,5 +304,6 @@ data/processed/        accidentes_clima.csv
 notebooks/             01_eda.ipynb, 02_modelos.ipynb
 results/               metrics.csv, plots/
 papers/                paper_integrante1..4.pdf, resumen del paper 2 e índice (README.md)
+presentación/          template del curso, figuras.py → figuras/ (gráficos de la exposición) y BRIEF_CLAUDE_DESIGN.md
 src/                   preprocessing.py (lectura, limpieza, ubicación y unión con el clima); models.py y evaluation.py llegan en el entregable final
 ```
