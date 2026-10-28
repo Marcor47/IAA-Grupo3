@@ -1,7 +1,8 @@
-tarea,modelo,split,roc_auc,pr_auc,f1,precision,recall,balanced_acc,prevalencia_test,mae,rmse,poisson_deviance
-A_clasificacion,Dummy (prior),aleatorio 80/20,0.5,0.1171,0.0,0.0,0.0,0.5,0.1171,,,
-A_clasificacion,Reg. logística · Set A (ex-ante),aleatorio 80/20,0.6163,0.1864,0.2473,0.1554,0.6053,0.5844,0.1171,,,
-A_clasificacion,Reg. logística · Set B (+ MODALIDAD),aleatorio 80/20,0.6579,0.2563,0.2617,0.1735,0.5316,0.5978,0.1171,,,
-A_clasificacion,Reg. logística · Set A,temporal (corte 2021-06-24),0.6,0.163,0.2314,0.145,0.5714,0.5739,0.1117,,,
-B_regresion_conteo,Dummy (media),aleatorio 80/20,,,,,,,,0.3014,0.7934,0.847
-B_regresion_conteo,Regresión de Poisson · Set A,aleatorio 80/20,,,,,,,,0.2958,0.7915,0.8245
+tarea,modelo,split,roc_auc,pr_auc,f1,precision,recall,balanced_acc,prevalencia_test,pr_auc_cv,pr_auc_cv_std,mae,rmse,poisson_deviance
+A_clasificacion,Dummy (prior),aleatorio 80/20,0.5,0.1171,0.0,0.0,0.0,0.5,0.1171,,,,,
+A_clasificacion,Reg. logística · Set A (ex-ante),aleatorio 80/20,0.6155,0.1859,0.2415,0.1515,0.5947,0.5763,0.1171,0.1601,0.0126,,,
+A_clasificacion,Reg. logística · Set B (+ MODALIDAD),aleatorio 80/20,0.6576,0.2478,0.2536,0.1681,0.5158,0.5886,0.1171,0.2601,0.023,,,
+A_clasificacion,Reg. logística · Set A,temporal (corte 2021-06-24),0.6004,0.1653,0.2326,0.145,0.5879,0.5759,0.1117,,,,,
+B_regresion_conteo,Dummy (media),aleatorio 80/20,,,,,,,,,,0.3014,0.7934,0.847
+B_regresion_conteo,Dummy (mediana = 0),aleatorio 80/20,,,,,,,,,,0.172,0.8118,4.6502
+B_regresion_conteo,Regresión de Poisson · Set A,aleatorio 80/20,,,,,,,,,,0.2962,0.7911,0.8217

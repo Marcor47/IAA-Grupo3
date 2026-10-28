@@ -175,7 +175,7 @@ Muñoz et al. (2024) encuentran que los accidentes se separan por **franja horar
 | Mes (seno/coseno) y temporada de lluvias (dic.-mar.) | Derivada de `FECHA` | Importancia del mes en Muñoz | A | Mes en uso; temporada candidata |
 | `DEPARTAMENTO` | SUTRAN | Provincia y cantón entre las variables más importantes en Muñoz | A | En uso |
 | Cluster del departamento (K-Means por lluvia media y tasa de fatalidad) | Derivada | Agrupación de Muñoz; resume 25 departamentos en pocos grupos | A | Candidata |
-| `CODIGO_VIA`, tipo de vía (nacional / departamental) y `KILOMETRO` | SUTRAN | "Zona" de Muñoz: el entorno vial cambia el tipo de accidente | A | Vía y km en uso; tipo de vía candidata |
+| `CODIGO_VIA`, tipo de vía (nacional / departamental) y `KILOMETRO` | SUTRAN | "Zona" de Muñoz: el entorno vial cambia el tipo de accidente | A | Vía en uso; km solo para ubicar el accidente (no entra al modelo); tipo de vía candidata |
 | `MODALIDAD` (choque, despiste, volcadura, atropello...) | SUTRAN | Equivale a la "clase" de siniestro en Muñoz | B | En uso (Set B) |
 | `NUM_HERIDOS` | SUTRAN | — | Excluida | Es consecuencia del accidente: usarla filtra el resultado (Muñoz la usa y por eso domina su importancia de variables) |
 
@@ -210,7 +210,7 @@ Los papers revisados no comparten un esquema de evaluación: Babaoglu y Emu dest
 | Exploratoria · Clusters | Inercia (método del codo) y silueta | Elegir K y medir la separación de los grupos | Muñoz et al. (2024) |
 | | % fatal y lluvia media por cluster | Comprobar si los grupos difieren en lo que nos interesa | Propio |
 
-No usamos el MAPE de Mhetre y Thube porque la mayoría de accidentes tiene 0 fallecidos y el MAPE divide entre el valor real. En el baseline, las métricas se reportan contra un modelo trivial (`Dummy`) en la partición aleatoria 80/20; la validación cruzada de 5 particiones (PR-AUC) y la partición temporal (regresión logística, Set A) se usan como chequeos de robustez. Para el entregable final se reportarán todas las métricas de cada modelo en las tres particiones.
+No usamos el MAPE de Mhetre y Thube porque la mayoría de accidentes tiene 0 fallecidos y el MAPE divide entre el valor real. En el baseline, la cifra principal es la PR-AUC en validación cruzada de 5 particiones; la partición aleatoria 80/20 y la temporal (regresión logística, Set A) se reportan como complemento, siempre frente a un modelo trivial (Dummy). Para el entregable final se reportarán todas las métricas de cada modelo en las tres particiones. El MAE tampoco es la métrica principal: con ~88 % de ceros, predecir siempre 0 lo minimiza (0.172). Usamos la devianza de Poisson.
 
 ---
 
@@ -252,28 +252,29 @@ Los resultados completos están en `notebooks/01_eda.ipynb` (EDA) y `notebooks/0
 
 Partición estratificada 80/20 (1 622 accidentes de prueba, 11.7 % fatales), regresión logística con `class_weight` balanceado; la lluvia es la del punto del accidente y el Set A incluye la altitud (`ELEVACION`):
 
-| Modelo | ROC-AUC | PR-AUC | F1 | Precisión | Recall | Balanced acc. |
-|---|---|---|---|---|---|---|
-| Dummy (prior) | 0.500 | 0.117 | 0.000 | 0.000 | 0.000 | 0.500 |
-| Reg. logística · Set A (ex-ante) | 0.616 | 0.186 | 0.247 | 0.155 | 0.605 | 0.584 |
-| Reg. logística · Set B (+ `MODALIDAD`) | 0.658 | 0.256 | 0.262 | 0.174 | 0.532 | 0.598 |
-| Reg. logística · Set A, partición temporal (corte 24/06/2021) | 0.600 | 0.163 | 0.231 | 0.145 | 0.571 | 0.574 |
+| Modelo | ROC-AUC | PR-AUC (CV 5 particiones) | PR-AUC (prueba 80/20) | F1 | Precisión | Recall | Balanced acc. |
+|---|---|---|---|---|---|---|---|
+| Dummy (prior) | 0.500 | 0.117 | 0.117 | 0.000 | 0.000 | 0.000 | 0.500 |
+| Reg. logística · Set A (ex-ante) | 0.616 | **0.160 ± 0.013** | 0.186 | 0.242 | 0.152 | 0.595 | 0.576 |
+| Reg. logística · Set B (+ MODALIDAD) | 0.658 | 0.260 ± 0.023 | 0.248 | 0.254 | 0.168 | 0.516 | 0.589 |
+| Reg. logística · Set A, partición temporal (corte 24/06/2021) | 0.600 | — | 0.165 | 0.233 | 0.145 | 0.588 | 0.576 |
 
-La validación cruzada de 5 particiones da una PR-AUC de 0.159 ± 0.011 (Set A) y 0.260 ± 0.023 (Set B). Para conteo de fallecidos (Tarea B):
+Sin la lluvia, el Set A obtiene la misma PR-AUC en CV (0.161 ± 0.012). Para conteo de fallecidos (Tarea B):
 
 | Modelo | MAE | RMSE | Devianza de Poisson |
 |---|---|---|---|
 | Dummy (media) | 0.301 | 0.793 | 0.847 |
-| Regresión de Poisson · Set A | 0.296 | 0.792 | 0.825 |
+| Dummy (mediana = 0) | 0.172 | 0.812 | 4.650 |
+| Regresión de Poisson · Set A | 0.296 | 0.791 | 0.822 |
 
 ![Curva de respuesta del baseline a la lluvia](results/plots/modelo_02_curva_lluvia.png)
 
 ### 5.3 Lectura de los resultados
 
-- El baseline **supera al modelo trivial, pero por poco**: la PR-AUC (0.186) es ≈ 1.6 veces la prevalencia (0.117) y la precisión es baja (de cada 100 accidentes marcados como fatales, ≈ 15 lo son). La mejora de Poisson sobre el Dummy es marginal (≈ 2.6 % en devianza).
+- El baseline supera al modelo trivial, pero por poco: la PR-AUC en CV (0.160) es ≈ 1.4 veces la prevalencia (0.117) y la precisión es baja (de cada 100 accidentes marcados como fatales, ≈ 15 lo son). La mejora de Poisson sobre el Dummy es marginal (≈ 3 % en devianza).
 - **La lluvia no aporta; la altitud sí:** en un logit con control por departamento y hora, el odds ratio de log(1 + lluvia) es 0.929 (p = 0.11). Al agregar la altitud, pasa a **0.980 (IC 95 % 0.891–1.077; p = 0.67)**, mientras que cada 1 000 m de altitud reducen las odds de un accidente fatal (OR 0.855, IC 95 % 0.796–0.918; p < 0.001). El leve signo negativo de la lluvia en el EDA venía de la geografía.
-- **Conocer la modalidad ayuda** (PR-AUC 0.186 → 0.256), pero solo se conoce una vez ocurrido el accidente, por lo que el Set B es una referencia y no un modelo ex-ante.
-- **La partición temporal cae un poco** (PR-AUC 0.163 sobre una prevalencia de 0.112, ≈ 1.5 veces el azar), sin un deterioro fuerte.
+- **Conocer la modalidad ayuda** (PR-AUC en CV 0.160 → 0.260), pero solo se conoce una vez ocurrido el accidente, por lo que el Set B es una referencia y no un modelo ex-ante.
+- **La partición temporal cae un poco** (PR-AUC 0.165 sobre una prevalencia de 0.112, ≈ 1.5 veces el azar), sin un deterioro fuerte.
 - **Cuidado al interpretar:** son asociaciones, no efectos causales. La lluvia viene de reanálisis en celdas de ~11 km, el 19.8 % de los accidentes usa la de la capital, y el dataset solo contiene accidentes (no hay tráfico ni días sin accidentes).
 - **Siguientes pasos:** modelos no lineales (árbol de decisión, KNN, MLP, binomial negativa); interacciones lluvia × altitud y lluvia × departamento; K-Means de departamentos; ajuste del umbral o remuestreo.
 
@@ -304,6 +305,6 @@ data/processed/        accidentes_clima.csv
 notebooks/             01_eda.ipynb, 02_modelos.ipynb
 results/               metrics.csv, plots/
 papers/                paper_integrante1..4.pdf, resumen del paper 2 e índice (README.md)
-presentación/          template del curso, figuras.py → figuras/ (gráficos de la exposición) y BRIEF_CLAUDE_DESIGN.md
 src/                   preprocessing.py (lectura, limpieza, ubicación y unión con el clima); models.py y evaluation.py llegan en el entregable final
+presentacion/          template del curso, figuras.py → figuras/ (gráficos de la exposición) y BRIEF_CLAUDE_DESIGN.md
 ```
