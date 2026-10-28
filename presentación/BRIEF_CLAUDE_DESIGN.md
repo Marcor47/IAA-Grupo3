@@ -1,6 +1,8 @@
 # Brief para Claude Design · Presentación de avances (semana 11)
 
-Pegar este archivo en Claude Design junto con las imágenes de `presentación/figuras/`.
+La presentación ya está armada como artifact de Slides (los gráficos van dibujados en la diapositiva). Este brief sirve para regenerarla o variarla en Claude Design, junto con las imágenes de `presentación/figuras/`.
+
+**Regla de títulos:** cada diapositiva lleva un título que dice la conclusión, de modo que se entienda la idea con solo leerlo.
 
 ## Encargo
 Presentación de **3 diapositivas, 16:9, máximo 5 minutos**, para el curso Inteligencia Artificial Aplicada (PUCP). Objetivo: comunicar los avances del proyecto y **justificar las decisiones** tomadas. Estilo de directorio: muy visual, poco texto, un mensaje por bloque, cifras grandes. Sin código ni párrafos.
@@ -15,7 +17,7 @@ Presentación de **3 diapositivas, 16:9, máximo 5 minutos**, para el curso Inte
 
 ## Diapositiva 1 · Problema y datos
 
-**Titular:** ¿Un accidente en carretera es más mortal cuando llueve?
+**Titular:** Predecimos si un accidente en carretera será fatal según la lluvia del lugar donde ocurrió
 
 **Bloque izquierdo, problema (3 líneas como máximo):**
 - Perú combina costa árida, sierra y selva: regímenes de lluvia muy distintos.
@@ -30,8 +32,7 @@ Presentación de **3 diapositivas, 16:9, máximo 5 minutos**, para el curso Inte
 **Diagrama de flujo de los datos (dibujarlo, 3 cajas → 1):**
 `Accidentes SUTRAN (vía, km, fecha)` + `Red Vial Nacional MTC (ubicación)` + `Open-Meteo (lluvia diaria y altitud, celda ~11 km)` → `Dataset unido: 8 110 accidentes × lluvia en el punto`
 
-**Figura principal:** `01_mapa_accidentes.png` (grande, a la derecha).
-**Figura de apoyo (pequeña, justifica la decisión):** `02_lluvia_punto_vs_capital.png` con la etiqueta *"Decisión: ubicar cada accidente, porque la lluvia de la capital no lo representa"*.
+**Figuras:** `01_dona_fatales.png` (11.7 % fatales), `02_mapa_accidentes.png` y `03_dona_capital.png` (la capital difiere en si llovió en el 22 %: justifica ubicar cada accidente).
 
 **Variables (una línea, chips):** lluvia (mm) · altitud · hora · día · mes · departamento · vía/km · *modalidad (solo después del accidente)*.
 
@@ -39,14 +40,13 @@ Presentación de **3 diapositivas, 16:9, máximo 5 minutos**, para el curso Inte
 
 ## Diapositiva 2 · Hallazgos y baseline
 
-**Titular:** La lluvia no explica la fatalidad; la altitud sí
+**Titular:** La lluvia no hace más fatales los accidentes; la altitud sí explica las diferencias
 
 **Fila superior, dos hallazgos del EDA:**
-1. `03_lluvia_vs_fatalidad.png` · etiqueta: *"El % fatal no sube con la lluvia (ρ = −0.03)"*
-2. `05_odds_ratios.png` · etiqueta: *"Al controlar por altitud, el efecto de la lluvia desaparece (OR 0.98, p = 0.67); cada 1 000 m reducen las odds de fatalidad un 15 %"*
-   (alternativa si cabe mejor: `04_altitud.png`, que lo muestra de forma descriptiva)
+1. `04_lluvia_fatalidad.png`: % fatal por nivel de lluvia (seco 12.5 %, ligera 10.8 %, media 10.4 %, fuerte 15.9 % con solo 107 casos)
+2. `05_altitud.png`: a más altura, menos fatales y más días de lluvia; al controlar por altitud el efecto de la lluvia desaparece (OR 0.98, p = 0.67)
 
-**Fila inferior, baseline:** `06_baseline_pr_auc.png` y, a su lado, tres bullets cortos:
+**Fila inferior, baseline:** `06_baseline.png` (PR-AUC frente al azar) y `07_recall_precision.png` (detecta 61 de cada 100 fatales; 16 de cada 100 alertas aciertan), con tres bullets cortos:
 - **Modelo:** regresión logística balanceada (clasificación) y Poisson (conteo). *Por qué:* interpretable, da odds ratios para medir la lluvia y es el punto de partida de la literatura.
 - **Métrica:** PR-AUC, no exactitud: un modelo que siempre dice "no fatal" acierta el 88 %.
 - **Lectura:** 1.6× el azar y estable en el tiempo (1.5×), pero precisión baja (≈ 15 de cada 100 alertas son fatales). La modalidad sube a 2.2×, pero solo se conoce después del accidente.
@@ -55,7 +55,7 @@ Presentación de **3 diapositivas, 16:9, máximo 5 minutos**, para el curso Inte
 
 ## Diapositiva 3 · Literatura y siguientes pasos
 
-**Titular:** De la literatura al modelo final
+**Titular:** La literatura nos lleva a modelos de conteo, no lineales y que manejen el desbalance
 
 **Tabla visual de 4 filas (paper → técnica → qué tomamos):**
 
