@@ -157,7 +157,7 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 1. Limpieza y tipificación del CSV de accidentes (`src/preprocessing.py`; las decisiones se justifican en `01_eda.ipynb`).
 2. Ubicación de cada accidente a partir de su vía y kilómetro (Red Vial Nacional del MTC), descarga de la precipitación diaria en su celda y unión por celda + fecha (`src/preprocessing.py`).
 3. EDA: lluvia vs. fatalidad, controlando por departamento y altitud, con pruebas de sensibilidad. La búsqueda de patrones con K-Means y PCA (Muñoz et al., 2024) está **propuesta para el entregable final** (aún no implementada).
-4. Baseline con partición estratificada 80/20, validación cruzada de 5 particiones y partición temporal de robustez (`02_modelos.ipynb`).
+4. Baseline y Modelo 1 con partición estratificada 80/20 y, como criterio principal, validación cruzada repetida 5 × 5 pareada (`02_modelos.ipynb`; modelos en `src/models.py`, métricas en `src/evaluation.py`).
 5. Dos conjuntos de variables (sección 4.1): **Set A**, conocido antes del accidente, y **Set B** (A + `MODALIDAD`, que solo se conoce después).
 6. Métricas según la tarea (sección 4.3).
 
@@ -185,10 +185,13 @@ Muñoz et al. (2024) encuentran que los accidentes se separan por **franja horar
 |---|---|---|---|
 | Regresión logística (`class_weight` balanceado) | A | Curso | **Implementado (baseline)** |
 | Regresión de Poisson | B | Mhetre y Thube (2023) | **Implementado (baseline)** |
-| Regresión logística con penalización L1 (Lasso) | A | Babaoglu y Babaoglu (2021) | Propuesto |
-| Árbol de decisión (+ importancia de variables) | A y B | Curso; Muñoz et al. (2024) | Propuesto |
-| KNN | A y B | Curso | Propuesto |
-| MLP | A y B | Curso; Emu et al. (2022) | Propuesto |
+| **Regresión logística con departamento + hora + altitud (Modelo 1)** | A | Techo de señal por grupos (§5.4) | **Implementado (Modelo 1)** |
+| Random Forest | A | Muñoz et al. (2024) | Probado (§5.4) |
+| Regresión logística con penalización L1 (Lasso) | A | Babaoglu y Babaoglu (2021) | Probado (§5.4) |
+| Gradient boosting | A | Babaoglu y Babaoglu (2021) (XGBoost) | Probado (§5.4) |
+| Árbol de decisión (+ importancia de variables) | A | Curso; Muñoz et al. (2024) | Probado (§5.4) |
+| KNN | A y B | Curso | Probado en A (§5.4) |
+| MLP | A y B | Curso; Emu et al. (2022) | Probado en A (§5.4) |
 | Regresión binomial negativa | B | Mhetre y Thube (2023) | Propuesto |
 | K-Means (+ PCA para visualizar) | Exploratoria / variable espacial | Muñoz et al. (2024) | Propuesto |
 | Manejo del desbalance (`class_weight`, ensambles por votación) | A | Emu et al. (2022) | Parcial (`class_weight`) |
@@ -210,7 +213,7 @@ Los papers revisados no comparten un esquema de evaluación: Babaoglu y Emu dest
 | Exploratoria · Clusters | Inercia (método del codo) y silueta | Elegir K y medir la separación de los grupos | Muñoz et al. (2024) |
 | | % fatal y lluvia media por cluster | Comprobar si los grupos difieren en lo que nos interesa | Propio |
 
-No usamos el MAPE de Mhetre y Thube porque la mayoría de accidentes tiene 0 fallecidos y el MAPE divide entre el valor real. En el baseline, la cifra principal es la PR-AUC en validación cruzada de 5 particiones; la partición aleatoria 80/20 y la temporal (regresión logística, Set A) se reportan como complemento, siempre frente a un modelo trivial (Dummy). Para el entregable final se reportarán todas las métricas de cada modelo en las tres particiones. El MAE tampoco es la métrica principal: con ~88 % de ceros, predecir siempre 0 lo minimiza (0.172). Usamos la devianza de Poisson.
+No usamos el MAPE de Mhetre y Thube porque la mayoría de accidentes tiene 0 fallecidos y el MAPE divide entre el valor real. En el baseline, la cifra principal es la PR-AUC en validación cruzada de 5 particiones; la partición aleatoria 80/20 y la temporal (regresión logística, Set A) se reportan como complemento, siempre frente a un modelo trivial (Dummy). El MAE tampoco es la métrica principal: con ~88 % de ceros, predecir siempre 0 lo minimiza (0.172). Usamos la devianza de Poisson. Para el entregable final, la comparación entre modelos se decide con **validación cruzada repetida 5 × 5 pareada** (mismas 25 particiones para todos) y se descarta la partición temporal: el último 20 % de fechas (24/06 – 30/09/2021) cae en la época seca, con solo 17 % de accidentes con lluvia > 1 mm frente a 36 % en el resto, así que no sirve para evaluar si la lluvia aporta.
 
 ---
 
@@ -278,6 +281,26 @@ Sin la lluvia, el Set A obtiene la misma PR-AUC en CV (0.161 ± 0.012). Para con
 - **Cuidado al interpretar:** son asociaciones, no efectos causales. La lluvia viene de reanálisis en celdas de ~11 km, el 19.8 % de los accidentes usa la de la capital, y el dataset solo contiene accidentes (no hay tráfico ni días sin accidentes).
 - **Siguientes pasos:** modelos no lineales (árbol de decisión, KNN, MLP, binomial negativa); interacciones lluvia × altitud y lluvia × departamento; K-Means de departamentos; ajuste del umbral o remuestreo.
 
+### 5.4 Avance del entregable final: Modelo 1
+
+Detalle en `notebooks/02_modelos.ipynb` (secciones 2 a 4) y en [`results/model_comparison.txt`](results/model_comparison.txt).
+
+**Techo de señal.** Si a cada accidente se le asigna el % fatal observado de su grupo (en los mismos datos, un techo optimista), departamento + franja + altitud llega a una PR-AUC de 0.217 y ningún grupo de ≥ 30 accidentes supera el 29 % de fatales. Es la combinación ex-ante con más señal, así que el **Modelo 1** usa esas tres variables. Cruzarlas (229 combinaciones) se sobreajusta (0.147 en CV); lo que generaliza es una regresión logística con la hora continua (seno/coseno) y la altitud en metros.
+
+| Modelo | PR-AUC CV 5×5 | PR-AUC test | ROC-AUC test | F1 test | Recall test |
+|---|---|---|---|---|---|
+| Dummy (prior) | — | 0.117 | 0.500 | 0.000 | 0.000 |
+| Baseline · Reg. logística (Set A, 9 variables) | 0.165 ± 0.014 | 0.186 | 0.616 | 0.225 | 0.832 |
+| **Modelo 1 · Reg. logística (depto + hora + altitud)** | **0.168 ± 0.015** | 0.184 | **0.632** | **0.255** | **0.642** |
+| Modelo 1 + lluvia del día | 0.168 ± 0.015 | 0.180 | 0.631 | 0.256 | 0.505 |
+| Random Forest (Set A) | 0.157 ± 0.012 | 0.157 | 0.594 | 0.212 | 0.353 |
+| Reg. logística · Set B (+ `MODALIDAD`, ex-post) | 0.260 ± 0.028 | 0.248 | 0.658 | 0.294 | 0.316 |
+
+- **El Modelo 1 iguala al baseline con 3 variables en lugar de 9:** +0.003 de PR-AUC (IC 95 % aprox. −0.002 a +0.008; mejor en 15 de 25 particiones) y mejor F1, precisión y balanced accuracy en test; el baseline detecta más fatales (recall 0.83) a costa de más falsas alarmas. La ganancia es de parsimonia, no de desempeño.
+- **La lluvia no aporta:** agregarla al Modelo 1 cambia la PR-AUC en +0.000. Tampoco aportan las variables del Set A+ (ubicación exacta, lluvia de los 3 días previos, horas de lluvia, tipo de vía, feriados, cuarentena): 0.168.
+- **Los modelos no lineales no ganan:** árbol de decisión, Random Forest, gradient boosting, KNN y MLP no superan al logit. La señal ex-ante es aditiva y débil.
+- **El techo lo ponen los datos:** con la modalidad (ex-post) la PR-AUC sube a 0.26. La gravedad depende de cómo ocurre el choque, y eso no se conoce antes.
+
 ---
 
 ## 6. Cómo ejecutar
@@ -289,7 +312,7 @@ jupyter notebook
 ```
 La preparación de datos (lectura, limpieza, ubicación y unión con el clima) está en `src/preprocessing.py`. Ejecutar en orden desde la carpeta `notebooks/`:
 1. `01_eda.ipynb`: usa `src/preprocessing.py` para leer `data/raw/accidentes_transito_carreteras.csv` (si no existe, lo descarga), limpiarlo, ubicar cada accidente y unirlo con el clima; documenta cada decisión, genera `data/processed/accidentes_clima.csv` y las figuras.
-2. `02_modelos.ipynb`: baseline y `results/metrics.csv`.
+2. `02_modelos.ipynb`: baseline, Modelo 1, pruebas de respaldo, `results/metrics.csv` y figuras `modelo_01` a `modelo_04` (≈ 5 min).
 
 Las descargas externas ya están en el repo (`data/raw/red_vial_nacional_mtc.json`, `clima_celdas_open_meteo.csv` y `clima_open_meteo.csv`), así que los notebooks corren sin internet. Si se borran, se vuelven a descargar: la red vial tarda segundos, pero la lluvia por celda tarda ~1 hora por los límites de la API gratuita de Open-Meteo (la descarga se retoma donde quedó si se interrumpe).
 
@@ -299,12 +322,14 @@ Las descargas externas ya están en el repo (`data/raw/red_vial_nacional_mtc.jso
 ```
 README.md              descripción del proyecto y cómo ejecutar
 ENTREGABLE_PARCIAL.md  checklist del entregable de la semana 8
+ENTREGABLE_FINAL.md    checklist del entregable de la semana 15
 requirements.txt       dependencias
 data/raw/              CSV de accidentes, diccionario de datos, red vial del MTC y cachés de clima (por celda y por capital)
 data/processed/        accidentes_clima.csv
 notebooks/             01_eda.ipynb, 02_modelos.ipynb
-results/               metrics.csv, plots/
+results/               metrics.csv, plots/, model_comparison.txt
+presentation.pdf       presentación final (5 min)
 papers/                paper_integrante1..4.pdf, resumen del paper 2 e índice (README.md)
-src/                   preprocessing.py (lectura, limpieza, ubicación y unión con el clima); models.py y evaluation.py llegan en el entregable final
-presentacion/          template del curso, figuras.py → figuras/ (gráficos de la exposición) y BRIEF_CLAUDE_DESIGN.md
+src/                   preprocessing.py (lectura, limpieza, ubicación y unión con el clima), models.py (variables y modelos), evaluation.py (métricas y CV)
+presentación/          template del curso, figuras.py → figuras/, presentacion_final.html (fuente de presentation.pdf), GUION_FINAL.md y BRIEF_CLAUDE_DESIGN.md (avances)
 ```

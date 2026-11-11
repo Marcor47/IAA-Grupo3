@@ -1,4 +1,4 @@
-"""Figuras para la presentación de avances (semana 10-11).
+"""Figuras para las presentaciones: avances (semana 11, figuras 01-07) y final (semana 15, figuras 01-10).
 
 Ejecutar desde la raíz del repo, después de los notebooks:
     python presentación/figuras.py
@@ -119,9 +119,12 @@ fig.suptitle("A más altura, más lluvia pero menos muertes", x=0.01, ha="left",
 guardar(fig, "05_altitud.png", "Por eso la lluvia parecía \"proteger\": en la regresión, al controlar por altitud su efecto desaparece (p = 0.67).")
 
 # 6 · Baseline: PR-AUC frente al azar
-cl = metricas[metricas.tarea == "A_clasificacion"].set_index("modelo")
-fila_a = cl.loc["Reg. logística · Set A (ex-ante)"]
-vals = [fila_a.prevalencia_test, fila_a.pr_auc, cl.loc["Reg. logística · Set B (+ MODALIDAD)"].pr_auc]
+cl = metricas[(metricas.tarea == "A_clasificacion") & (metricas.split == "aleatorio 80/20")].set_index("modelo")
+cv = metricas[metricas.split.str.startswith("CV")].set_index("modelo")
+BASE, M1 = "Baseline · Reg. logística · Set A", "Modelo 1 · Reg. logística (depto + hora + altitud)"
+SET_B = "Referencia · Reg. logística · Set B (+ MODALIDAD, ex-post)"
+fila_a = cl.loc[BASE]
+vals = [fila_a.prevalencia_test, fila_a.pr_auc, cl.loc[SET_B].pr_auc]
 fig, ax = plt.subplots(figsize=(8, 5.2))
 barras(ax, ["Azar", "Nuestro\nbaseline", "Con modalidad\n(post-accidente)"], vals, [GRIS, AZUL, "#9fc2ec"], fmt="{:.2f}", ymax=0.32)
 for xi, v in enumerate(vals[1:], start=1):
@@ -141,8 +144,46 @@ ax.set_yticks(y, ["Fatales que detecta", "Alertas que aciertan"], fontsize=16)
 ax.set_xticks([]), ax.set_xlim(0, 100)
 ax.tick_params(axis="y", labelsize=17, length=0)
 ax.spines["bottom"].set_visible(False)
-ax.set_title("Encuentra 6 de cada 10 fatales, con muchas falsas alarmas")
-guardar(fig, "07_recall_precision.png", "Regresión logística balanceada, umbral 0.5, test 80/20 (1 622 accidentes).")
+ax.set_title(f"Encuentra {round(10 * fila_a.recall)} de cada 10 fatales, con muchas falsas alarmas")
+guardar(fig, "07_recall_precision.png", "Regresión logística balanceada, umbral elegido por CV en train, test 80/20 (1 622 accidentes).")
+
+# 8 · Techo de señal: el grupo más letal que se puede identificar antes y después del accidente
+grupos = [("Depar-\ntamento", ["DEPARTAMENTO"]), ("+ franja\nhoraria", ["DEPARTAMENTO", "FRANJA"]),
+          ("+ altitud", ["DEPARTAMENTO", "FRANJA", "ALTITUD"]), ("Tipo de\nchoque", ["MODALIDAD"]),
+          ("Choque + depto.\n+ franja", ["MODALIDAD", "DEPARTAMENTO", "FRANJA"])]
+df["FRANJA"] = pd.cut(df.HORA_INT, [-1, 5, 11, 17, 24], labels=["madrugada", "mañana", "tarde", "noche"]).astype(object).fillna("sin hora")
+df["ALTITUD"] = pd.cut(df.ELEVACION, [-1, 500, 2500, 9000], labels=["costa", "media", "alta"]).astype(str)
+maximo = []
+for _, cols in grupos:
+    g = df.groupby(cols, dropna=False, observed=True).ES_FATAL.agg(["mean", "size"])
+    maximo.append(100 * g[g["size"] >= 30]["mean"].max())
+fig, ax = plt.subplots(figsize=(11, 5.4))
+barras(ax, [n for n, _ in grupos], maximo, [NARANJA] * 3 + [GRIS] * 2, fmt="{:.0f} %", ymax=70)
+ax.axvline(2.5, color=TINTA2, lw=1, ls=":")
+ax.text(1, 64, "Se sabe ANTES del accidente", ha="center", fontsize=14, color=NARANJA, fontweight="bold")
+ax.text(3.5, 64, "Solo se sabe DESPUÉS", ha="center", fontsize=14, color=TINTA2, fontweight="bold")
+ax.set_title("Antes del accidente no hay situación de alto riesgo")
+guardar(fig, "08_techo.png", "% fatal del grupo más letal (grupos con ≥ 30 accidentes). Ni la peor combinación de lugar, hora y altitud llega a 3 de cada 10.")
+
+# 9 · Modelo 1 vs. baseline (CV 5×5): igual desempeño con 3 variables; la lluvia no suma
+vals = [100 * df.ES_FATAL.mean() / 100, cv.loc[BASE].pr_auc, cv.loc[M1].pr_auc, cv.loc["Modelo 1 + lluvia del día"].pr_auc]
+fig, ax = plt.subplots(figsize=(10, 5.2))
+barras(ax, ["Azar", "Baseline\n9 variables", "Modelo 1\n3 variables", "Modelo 1\n+ lluvia"], vals,
+       [GRIS, "#9fc2ec", AZUL, "#9fc2ec"], fmt="{:.3f}", ymax=0.22)
+for xi, v in enumerate(vals[1:], start=1):
+    ax.text(xi, v / 2, f"{v / vals[0]:.1f}×", ha="center", fontsize=20, fontweight="bold", color=FONDO)
+ax.set_title("Con 3 variables predecimos igual que con 9, y la lluvia no suma")
+guardar(fig, "09_modelo1.png", "PR-AUC promedio en validación cruzada 5 × 5 (25 particiones). Modelo 1: departamento + hora + altitud.")
+
+# 10 · Hora: la madrugada es la franja más letal
+orden = ["madrugada", "mañana", "tarde", "noche"]
+franja = 100 * df[df.FRANJA != "sin hora"].groupby("FRANJA").ES_FATAL.mean().reindex(orden)
+fig, ax = plt.subplots(figsize=(8, 5.2))
+barras(ax, ["Madrugada\n0–5 h", "Mañana\n6–11 h", "Tarde\n12–17 h", "Noche\n18–23 h"], franja,
+       [NARANJA, GRIS, GRIS, "#f3a582"], ymax=20)
+ax.axhline(PREV, color=TINTA2, lw=1.2, ls="--", zorder=0)
+ax.set_title("De madrugada, los accidentes son más fatales")
+guardar(fig, "10_franja.png", "% de accidentes con ≥ 1 fallecido según la hora del accidente.")
 
 print("Figuras en", SALIDA)
 for p in sorted(SALIDA.glob("*.png")):

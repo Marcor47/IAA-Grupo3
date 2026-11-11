@@ -1,0 +1,118 @@
+COMPARACIÓN DE MODELOS: MORTALIDAD EN CARRETERAS DEL PERÚ SEGÚN LA PRECIPITACIÓN
+Inteligencia Artificial Aplicada (1INF62), PUCP 2026-2. Versión de avance del entregable final.
+Fuente: notebooks/02_modelos.ipynb -> results/metrics.csv
+
+1. CONFIGURACIÓN
+----------------
+- Datos: 8 110 accidentes SUTRAN (ene 2020 – sep 2021), 11.7 % con al menos un fallecido.
+- Tarea A (principal): clasificar si un accidente es fatal (ES_FATAL).
+- Tarea B: número de fallecidos por accidente (NUM_FALLECIDOS).
+- Partición: estratificada 80/20 (random_state=42; 1 622 accidentes y 190 fatales en el test).
+- Criterio principal: PR-AUC en CV estratificada repetida 5x5 pareada sobre el dataset completo
+  (todos los modelos se evalúan en las mismas 25 particiones). El test 80/20 se reporta como
+  complemento: con 190 fatales, su PR-AUC varía en torno a ±0.02.
+- PR-AUC al azar = prevalencia = 0.117.
+- Las métricas con umbral (F1, precisión, recall, balanced accuracy) usan, para cada modelo, el
+  umbral que maximiza su F1 en predicciones fuera de muestra de train.
+- Sin partición temporal: el último 20 % de fechas (24/06 – 30/09/2021) es la época seca
+  (17 % de los accidentes con lluvia > 1 mm, frente a 36 % en el resto), así que no sirve para
+  evaluar si la lluvia aporta.
+
+2. MODELOS
+----------
+- Baseline: regresión logística (class_weight="balanced") con el Set A, 9 variables ex-ante:
+  lluvia del día, altitud, hora, mes, día de la semana, departamento y vía. El kilómetro no
+  entra como número (solo tiene sentido dentro de cada vía; se usa para ubicar el accidente).
+- Modelo 1: regresión logística con solo departamento + hora (seno/coseno) + altitud (m).
+- Respaldo: Random Forest, Lasso, árbol de decisión, KNN, MLP y gradient boosting (Set A);
+  Set A+ (15 variables ex-ante); Set B (Set A + MODALIDAD, ex-post) como referencia de techo.
+- Tarea B: regresión de Poisson (Set A) frente a dos Dummy (media y mediana).
+
+3. RESULTADOS: TAREA A (clasificación)
+--------------------------------------
+Modelo                              Variables    PR-AUC CV 5x5    PR-AUC test  ROC-AUC test  F1 test  Recall test
+Dummy (prior)                       -            -                0.117        0.500         0.000    0.000
+Baseline · Reg. logística           Set A (9)    0.165 ± 0.014    0.186        0.616         0.225    0.832
+Modelo 1 · Reg. logística           3            0.168 ± 0.015    0.184        0.632         0.255    0.642
+Modelo 1 + lluvia del día           4            0.168 ± 0.015    0.180        0.631         0.256    0.505
+Random Forest                       Set A (9)    0.157 ± 0.012    0.157        0.594         0.212    0.353
+Reg. logística                      Set A+ (15)  0.168 ± 0.015    -            -             -        -
+Random Forest                       Set A+ (15)  0.161 ± 0.013    -            -             -        -
+Referencia ex-post · Reg. logística Set B (10)   0.260 ± 0.028    0.248        0.658         0.294    0.316
+Referencia ex-post · Random Forest  Set B (10)   0.263 ± 0.027    -            -             -        -
+
+Comparaciones pareadas (25 particiones, PR-AUC):
+- Modelo 1 − baseline:              +0.003 (IC95 % aprox. −0.002 a +0.008); mejor en 15 de 25.
+- (Modelo 1 + lluvia) − Modelo 1:   +0.000 (IC95 % aprox. −0.001 a +0.001); mejor en 11 de 25.
+- Random Forest − baseline:         −0.008 (IC95 % aprox. −0.013 a −0.003); mejor en 6 de 25.
+
+Selección de algoritmos (CV de 5 particiones en train, Set A, PR-AUC):
+Lasso 0.162 · Reg. logística 0.160 · Random Forest 0.160 · Gradient Boosting 0.157 ·
+Árbol 0.149 · KNN 0.141 · MLP 0.126.
+
+4. RESULTADOS: TAREA B (conteo)
+-------------------------------
+Modelo                    MAE     RMSE    Devianza de Poisson
+Dummy (media)             0.301   0.793   0.847
+Dummy (mediana = 0)       0.172   0.812   4.650
+Poisson · Set A           0.296   0.791   0.822   (−2.9 % de devianza frente al Dummy de la media)
+El MAE no sirve como métrica principal: con ~88 % de ceros, predecir siempre 0 lo minimiza.
+
+5. ANÁLISIS
+-----------
+a) ¿Qué modelo funcionó mejor y por qué?
+   El Modelo 1 es el mejor: iguala o mejora al baseline (PR-AUC +0.003 en CV; mejor ROC-AUC,
+   F1, precisión y balanced accuracy en test) con 3 variables en lugar de 9. El baseline detecta
+   más fatales en test (recall 0.83 frente a 0.64), pero con más falsas alarmas (precisión 0.13
+   frente a 0.16). La diferencia en PR-AUC no es significativa; la ventaja es la parsimonia.
+   Lluvia, mes, día de la semana y vía no aportan información sobre departamento, hora y
+   altitud, y solo agregan varianza.
+
+b) ¿Por qué los modelos no lineales no ganan?
+   Ningún algoritmo no lineal supera al logit en la CV de train, y en la CV repetida el Random
+   Forest queda por debajo del baseline (−0.008, mejor en solo 6 de 25 particiones). Con las tres variables del Modelo 1, la interacción completa
+   departamento × franja × altitud (229 combinaciones) cae a 0.147: se sobreajusta. La señal
+   que existe es aditiva y débil, y los modelos flexibles terminan ajustándose al ruido.
+
+c) ¿Por qué el desempeño absoluto es bajo?
+   Techo por grupos (in-sample, optimista): con departamento + franja + altitud, la PR-AUC
+   máxima es 0.217 y ningún grupo de ≥ 30 accidentes supera el 29 % de fatales. Antes del
+   accidente no existe una situación de alto riesgo: incluso en la peor combinación, 7 de cada
+   10 accidentes no son fatales. La fatalidad depende de cómo ocurre el choque: con la
+   modalidad (ex-post) la PR-AUC sube a 0.26 y hay grupos con 57 % de fatales. Los papers que
+   reportan 75–83 % de exactitud (Babaoglu y Babaoglu, 2021; Emu et al., 2022) tienen
+   variables del choque (configuración, dispositivos de seguridad, vehículo) que este dataset
+   no tiene.
+
+d) ¿La lluvia aporta? (pregunta del proyecto)
+   No. Agregarla al Modelo 1 no cambia la PR-AUC (+0.000) y en el logit clásico, controlando
+   por departamento, hora y altitud, el OR de log(1 + lluvia) es 0.980 (IC95 % 0.891–1.077;
+   p = 0.67). El signo negativo que mostraba el EDA venía de la geografía: llueve más en la
+   sierra alta, donde los accidentes son menos letales. La lluvia de los 3 días previos (Set A+)
+   tampoco mejora el modelo.
+
+e) Insights
+   - Altitud: OR 0.77 por cada 1 700 m. Los accidentes en la costa son más letales que en la
+     sierra alta (hipótesis no verificada con estos datos: mayor velocidad en la costa).
+   - Departamento: Huancavelica (OR 2.8), Puno (2.2) y La Libertad (1.8) tienen los
+     coeficientes más altos; Moquegua (0.2) y Loreto (0.5), los más bajos (OR relativos entre
+     departamentos, con regularización L2 y la altitud y la hora ya controladas).
+   - Hora: entre las 0 y las 3 h, ≈ 17–19 % de los accidentes son fatales, frente a ≈ 8 % a
+     las 17–18 h (EDA).
+   - El 0.186 del baseline en el test 80/20 era optimista frente a su propia CV (0.165).
+
+6. LIMITACIONES
+---------------
+- Asociaciones, no efectos causales.
+- Lluvia de reanálisis (Open-Meteo) en celdas de ~11 km; el 19.8 % de los accidentes no se
+  pudo ubicar por km y usa la lluvia de la capital del departamento.
+- Solo hay accidentes ocurridos: no hay tráfico ni exposición, así que no se puede estimar el
+  riesgo de que ocurra un accidente, solo su gravedad.
+- Periodo corto (21 meses) y afectado por la pandemia.
+- La lluvia de los 3 días previos solo está completa para el 87.3 % de los accidentes.
+- El IC de las comparaciones pareadas es aproximado (particiones solapadas).
+
+7. PENDIENTE PARA LA VERSIÓN FINAL
+----------------------------------
+- Tarea B: regresión binomial negativa frente a Poisson (sobredispersión).
+- K-Means de departamentos como variable espacial (Muñoz et al., 2024).

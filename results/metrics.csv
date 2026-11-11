@@ -1,8 +1,18 @@
-tarea,modelo,split,roc_auc,pr_auc,f1,precision,recall,balanced_acc,prevalencia_test,pr_auc_cv,pr_auc_cv_std,mae,rmse,poisson_deviance
-A_clasificacion,Dummy (prior),aleatorio 80/20,0.5,0.1171,0.0,0.0,0.0,0.5,0.1171,,,,,
-A_clasificacion,Reg. logística · Set A (ex-ante),aleatorio 80/20,0.6155,0.1859,0.2415,0.1515,0.5947,0.5763,0.1171,0.1601,0.0126,,,
-A_clasificacion,Reg. logística · Set B (+ MODALIDAD),aleatorio 80/20,0.6576,0.2478,0.2536,0.1681,0.5158,0.5886,0.1171,0.2601,0.023,,,
-A_clasificacion,Reg. logística · Set A,temporal (corte 2021-06-24),0.6004,0.1653,0.2326,0.145,0.5879,0.5759,0.1117,,,,,
-B_regresion_conteo,Dummy (media),aleatorio 80/20,,,,,,,,,,0.3014,0.7934,0.847
-B_regresion_conteo,Dummy (mediana = 0),aleatorio 80/20,,,,,,,,,,0.172,0.8118,4.6502
-B_regresion_conteo,Regresión de Poisson · Set A,aleatorio 80/20,,,,,,,,,,0.2962,0.7911,0.8217
+tarea,modelo,split,umbral,roc_auc,pr_auc,f1,precision,recall,balanced_acc,prevalencia_test,mae,rmse,poisson_deviance,pr_auc_sd
+A_clasificacion,Dummy (prior),aleatorio 80/20,0.5,0.5,0.1171,0.0,0.0,0.0,0.5,0.1171,,,,
+A_clasificacion,Baseline · Reg. logística · Set A,aleatorio 80/20,0.423,0.6155,0.1859,0.2254,0.1304,0.8316,0.5478,0.1171,,,,
+A_clasificacion,"Referencia · Reg. logística · Set B (+ MODALIDAD, ex-post)",aleatorio 80/20,0.618,0.6576,0.2478,0.2941,0.2752,0.3158,0.6027,0.1171,,,,
+A_clasificacion,Modelo 1 · Reg. logística (depto + hora + altitud),aleatorio 80/20,0.494,0.6318,0.1843,0.2547,0.1589,0.6421,0.5955,0.1171,,,,
+A_clasificacion,Modelo 1 + lluvia del día,aleatorio 80/20,0.521,0.6307,0.1805,0.2557,0.1711,0.5053,0.5903,0.1171,,,,
+A_clasificacion,Random Forest · Set A,aleatorio 80/20,0.404,0.5944,0.1567,0.2117,0.1512,0.3526,0.545,0.1171,,,,
+B_regresion_conteo,Dummy (media),aleatorio 80/20,,,,,,,,,0.3014,0.7934,0.847,
+B_regresion_conteo,Dummy (mediana = 0),aleatorio 80/20,,,,,,,,,0.172,0.8118,4.6502,
+B_regresion_conteo,Baseline · Regresión de Poisson · Set A,aleatorio 80/20,,,,,,,,,0.2962,0.7911,0.8217,
+A_clasificacion,Baseline · Reg. logística · Set A,CV 5x5 (dataset completo),,0.5923,0.1653,,,,,0.1173,,,,0.0137
+A_clasificacion,Modelo 1 · Reg. logística (depto + hora + altitud),CV 5x5 (dataset completo),,0.5978,0.1683,,,,,0.1173,,,,0.0148
+A_clasificacion,Modelo 1 + lluvia del día,CV 5x5 (dataset completo),,0.597,0.1683,,,,,0.1173,,,,0.0148
+A_clasificacion,Random Forest · Set A,CV 5x5 (dataset completo),,0.5836,0.1571,,,,,0.1173,,,,0.0123
+A_clasificacion,Reg. logística · Set A+,CV 5x5 (dataset completo),,0.5915,0.1685,,,,,0.1173,,,,0.015
+A_clasificacion,Random Forest · Set A+,CV 5x5 (dataset completo),,0.5855,0.1608,,,,,0.1173,,,,0.0126
+A_clasificacion,"Referencia · Reg. logística · Set B (+ MODALIDAD, ex-post)",CV 5x5 (dataset completo),,0.6637,0.2598,,,,,0.1173,,,,0.0277
+A_clasificacion,"Referencia · Random Forest · Set B (+ MODALIDAD, ex-post)",CV 5x5 (dataset completo),,0.6684,0.2631,,,,,0.1173,,,,0.0271

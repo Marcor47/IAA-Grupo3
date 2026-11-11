@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mortalidad vial y lluvia</title>
+<!-- Presentación final (máx. 5 min). Figuras: python presentación/figuras.py. PDF (desde la raíz del repo):
+     chromium --headless --no-pdf-header-footer --print-to-pdf=presentation.pdf presentación/presentacion_final.html -->
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  :root { --fondo: #fcfcfb; --tinta: #1b1f24; --tinta2: #52514e; --azul: #2a78d6; --naranja: #eb6834; --gris: #c9c8c2; --suave: #f1f0ec; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--fondo); color: var(--tinta); font-family: "Noto Sans", "Liberation Sans", sans-serif; }
+  .slide { width: 1280px; height: 720px; padding: 44px 60px 34px; position: relative; overflow: hidden;
+           page-break-after: always; break-after: page; display: flex; flex-direction: column; }
+  .slide:last-child { page-break-after: auto; break-after: auto; }
+  .etapa { font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--azul); margin-bottom: 8px; }
+  h1 { font-size: 34px; line-height: 1.18; font-weight: 800; max-width: 1120px; }
+  h1 em { font-style: normal; color: var(--naranja); }
+  .pie { position: absolute; bottom: 16px; left: 60px; right: 60px; font-size: 12px; color: var(--tinta2);
+         display: flex; justify-content: space-between; }
+  .cuerpo { flex: 1; display: flex; gap: 36px; margin-top: 22px; min-height: 0; }
+  .col { display: flex; flex-direction: column; min-width: 0; }
+  img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+  .kpi { font-size: 50px; font-weight: 800; line-height: 1; }
+  .kpi small { display: block; font-size: 16px; font-weight: 400; color: var(--tinta2); margin-top: 8px; line-height: 1.3; }
+  .nota { font-size: 18px; line-height: 1.45; color: var(--tinta); }
+  .nota b { color: var(--tinta); }
+  ul.puntos { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  ul.puntos li { font-size: 19px; line-height: 1.4; padding-left: 22px; position: relative; }
+  ul.puntos li::before { content: ""; position: absolute; left: 0; top: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--azul); }
+  ul.puntos li.n::before { background: var(--naranja); }
+  .caja { background: var(--suave); border-radius: 12px; padding: 18px 22px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-size: 15px; padding: 6px 12px; border-radius: 999px; background: var(--suave); }
+  .chip.on { background: var(--azul); color: #fff; font-weight: 700; }
+  .chip.off { color: var(--tinta2); text-decoration: line-through; }
+
+  /* Portada */
+  .portada { justify-content: center; }
+  .portada .pregunta { font-size: 52px; line-height: 1.12; font-weight: 800; max-width: 1050px; }
+  .portada .pregunta em { font-style: normal; color: var(--azul); }
+  .portada .sub { margin-top: 22px; font-size: 21px; color: var(--tinta2); }
+  .portada .kpis { display: flex; gap: 70px; margin-top: 54px; }
+  .portada .autores { margin-top: 50px; font-size: 16px; color: var(--tinta2); }
+
+  /* Flujo de datos */
+  .flujo { display: flex; flex-direction: column; gap: 10px; }
+  .fuente { border: 2px solid var(--gris); border-radius: 10px; padding: 10px 14px; font-size: 15px; line-height: 1.35; }
+  .fuente b { display: block; font-size: 16px; }
+  .flecha { text-align: center; font-size: 22px; color: var(--tinta2); line-height: 1; }
+  .unido { background: var(--azul); color: #fff; border-radius: 10px; padding: 12px 14px; font-size: 16px; font-weight: 700; text-align: center; }
+
+  /* Conclusión */
+  .respuesta { font-size: 30px; line-height: 1.3; font-weight: 700; max-width: 1100px; }
+  .respuesta em { font-style: normal; color: var(--naranja); }
+  .tres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 44px; }
+  .tres h3 { font-size: 15px; letter-spacing: .1em; text-transform: uppercase; color: var(--azul); margin-bottom: 10px; }
+  .tres p { font-size: 19px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- 1 · Portada: la pregunta -->
+<section class="slide portada">
+  <div class="etapa">Inteligencia Artificial Aplicada · Grupo 3</div>
+  <div class="pregunta">¿La lluvia vuelve <em>más mortales</em> los accidentes en las carreteras del Perú?</div>
+  <div class="sub">Costa árida, sierra y selva: el país tiene regímenes de lluvia muy distintos y la lluvia reduce la fricción y la visibilidad. Pero, ¿cambia la mortalidad?</div>
+  <div class="kpis">
+    <div class="kpi">8 110<small>accidentes en vías nacionales<br>SUTRAN · ene 2020 – sep 2021</small></div>
+    <div class="kpi" style="color:var(--naranja)">11.7 %<small>terminaron con al menos<br>un fallecido</small></div>
+    <div class="kpi" style="color:var(--azul)">80 %<small>ubicados en el mapa<br>por vía y kilómetro</small></div>
+  </div>
+  <div class="autores">Marco Rodriguez · Angel Cerdán · Raul Malaver · Fernando De La Cruz &nbsp;·&nbsp; PUCP 2026-2</div>
+</section>
+
+<!-- 2 · Problema y datos -->
+<section class="slide">
+  <div class="etapa">1 · Problema y datos</div>
+  <h1>Medimos la lluvia <em>donde ocurrió</em> cada accidente y predecimos si fue fatal</h1>
+  <div class="cuerpo">
+    <div class="col" style="width:330px; gap:14px">
+      <div class="flujo">
+        <div class="fuente"><b>Accidentes SUTRAN</b>fecha, hora, departamento, vía y km</div>
+        <div class="fuente"><b>Red Vial Nacional (MTC)</b>vía + km → coordenadas</div>
+        <div class="fuente"><b>Open-Meteo</b>lluvia diaria y altitud (celda ~11 km)</div>
+        <div class="flecha">↓</div>
+        <div class="unido">8 110 accidentes × lluvia en el punto</div>
+      </div>
+      <div class="caja nota" style="font-size:16px">
+        <b>Qué predecimos:</b> dado un accidente, <b>¿es fatal?</b> (≥ 1 fallecido).<br>
+        <b>Por qué ubicarlo:</b> la lluvia de la capital del departamento se equivoca sobre si llovió en 1 de cada 5 accidentes.
+      </div>
+    </div>
+    <div class="col" style="flex:1; align-items:center"><img src="figuras/02_mapa_accidentes.png" alt="Mapa de accidentes"></div>
+    <div class="col" style="width:330px; justify-content:center"><img src="figuras/01_dona_fatales.png" alt="11.7 % fatales"></div>
+  </div>
+  <div class="pie"><span>Datos abiertos SUTRAN (ODC-By) · Red Vial Nacional MTC · Open-Meteo (reanálisis)</span><span>1/6</span></div>
+</section>
+
+<!-- 3 · EDA: el giro -->
+<section class="slide">
+  <div class="etapa">2 · Lo que encontramos en los datos</div>
+  <h1>Con lluvia, los accidentes <em>no</em> son más fatales: la diferencia la explica la <em>altitud</em></h1>
+  <div class="cuerpo" style="gap:28px">
+    <div class="col" style="width:470px"><img src="figuras/04_lluvia_fatalidad.png" alt="% fatal por nivel de lluvia"></div>
+    <div class="col" style="flex:1"><img src="figuras/05_altitud.png" alt="Altitud: fatalidad y lluvia">
+      <div class="caja nota" style="margin-top:14px; font-size:16.5px">En la sierra llueve más y los accidentes son menos fatales; en la costa, al revés. Por eso la lluvia parecía "proteger". Al controlar por altitud y departamento, su efecto desaparece: <b>odds ratio 0.98, p = 0.67</b>.</div>
+    </div>
+  </div>
+  <div class="pie"><span>Regresión logística clásica: fatal ~ lluvia + altitud + hora + departamento</span><span>2/6</span></div>
+</section>
+
+<!-- 4 · Baseline -->
+<section class="slide">
+  <div class="etapa">3 · Baseline</div>
+  <h1>El baseline detecta fatales mejor que el azar, pero con <em>muchas falsas alarmas</em></h1>
+  <div class="cuerpo">
+    <div class="col" style="width:420px; gap:20px">
+      <div class="kpi" style="color:var(--azul)">0.165<small>PR-AUC (validación cruzada 5 × 5)<br><b style="color:var(--tinta)">1.4 veces el azar</b> (azar = 0.117)</small></div>
+      <ul class="puntos">
+        <li><b>Modelo:</b> regresión logística con pesos de clase, 9 variables conocidas antes del accidente (lluvia, altitud, hora, mes, día, departamento, vía). Interpretable y punto de partida de la literatura.</li>
+        <li><b>Métrica:</b> PR-AUC y no exactitud: un modelo que siempre dice "no fatal" acierta el 88 %.</li>
+      </ul>
+    </div>
+    <div class="col" style="flex:1; justify-content:center"><img src="figuras/07_recall_precision.png" alt="Recall y precisión del baseline">
+      <div class="caja nota" style="margin-top:18px; font-size:17px">De 100 accidentes fatales encuentra ~83, pero solo ~13 de cada 100 alertas son realmente fatales. <b>¿Por qué no lo hace mejor?</b></div>
+    </div>
+  </div>
+  <div class="pie"><span>Partición estratificada 80/20 y validación cruzada repetida 5 × 5 (mismas 25 particiones para todos los modelos)</span><span>3/6</span></div>
+</section>
+
+<!-- 5 · El techo de los datos -->
+<section class="slide">
+  <div class="etapa">4 · Por qué el desempeño es bajo</div>
+  <h1>Antes del accidente no existe una situación de alto riesgo: lo que define la muerte es <em>cómo</em> ocurre el choque</h1>
+  <div class="cuerpo">
+    <div class="col" style="flex:1"><img src="figuras/08_techo.png" alt="Techo de señal por grupos"></div>
+    <div class="col" style="width:330px; justify-content:center; gap:18px">
+      <div class="kpi" style="color:var(--naranja)">29 %<small>es lo más letal que se puede anticipar: incluso en el peor lugar, hora y altitud, <b style="color:var(--tinta)">7 de cada 10 accidentes no son fatales</b></small></div>
+      <div class="caja nota" style="font-size:16.5px">Saber el <b>tipo de choque</b> (atropello, volcadura…) sube el techo a 57 %, pero solo se conoce después. Los modelos complejos (Random Forest, boosting, MLP) <b>no superan</b> a la logística.</div>
+    </div>
+  </div>
+  <div class="pie"><span>Grupos con ≥ 30 accidentes; % fatal observado en cada grupo</span><span>4/6</span></div>
+</section>
+
+<!-- 6 · Modelo 1 -->
+<section class="slide">
+  <div class="etapa">5 · Modelo 1</div>
+  <h1>Con <em>3 variables</em> predecimos igual que con 9, y agregar la lluvia <em>no suma nada</em></h1>
+  <div class="cuerpo" style="gap:34px">
+    <div class="col" style="flex:1.3; gap:18px">
+      <div class="chips">
+        <span class="chip on">Departamento</span><span class="chip on">Hora</span><span class="chip on">Altitud</span>
+        <span class="chip off">lluvia</span><span class="chip off">mes</span><span class="chip off">día</span><span class="chip off">vía</span>
+      </div>
+      <img src="figuras/09_modelo1.png" alt="Modelo 1 vs baseline">
+      <ul class="puntos">
+        <li><b>Mismo desempeño, menos variables:</b> +0.003 de PR-AUC frente al baseline (mejor en 15 de 25 particiones) y mejor F1 y precisión en test.</li>
+        <li class="n"><b>Lluvia:</b> agregarla al Modelo 1 cambia la PR-AUC en +0.000.</li>
+      </ul>
+    </div>
+    <div class="col" style="flex:1; gap:16px">
+      <img src="figuras/10_franja.png" alt="% fatal por franja horaria">
+      <div class="caja nota" style="font-size:17px"><b>Lo que sí pesa:</b> la madrugada es la franja más letal, la costa es más letal que la sierra (OR 0.77 por cada 1 700 m de altitud) y Huancavelica, Puno y La Libertad tienen el mayor riesgo.</div>
+    </div>
+  </div>
+  <div class="pie"><span>Regresión logística: departamento + hora (seno/coseno) + altitud (m) · PR-AUC en validación cruzada 5 × 5</span><span>5/6</span></div>
+</section>
+
+<!-- 7 · Conclusión -->
+<section class="slide" style="justify-content:center">
+  <div class="etapa">6 · Respuesta</div>
+  <div class="respuesta" style="margin-top:6px; font-size:34px">La lluvia <em>no</em> vuelve más mortales los accidentes en las carreteras del Perú. El riesgo depende de <em>dónde y cuándo</em> ocurren (altitud, departamento, madrugada) y, sobre todo, de <em>cómo</em> ocurre el choque.</div>
+  <div class="tres">
+    <div class="caja"><h3>Qué aprendimos</h3><p>Un modelo simple de 3 variables iguala al de 9. Con estos datos, el límite lo ponen las variables disponibles, no la complejidad del modelo.</p></div>
+    <div class="caja"><h3>Limitaciones</h3><p>Asociaciones, no causas. Lluvia de reanálisis (~11 km), 20 % de accidentes sin ubicar, solo accidentes ocurridos (sin tráfico) y periodo de pandemia.</p></div>
+    <div class="caja"><h3>Siguientes pasos</h3><p>Datos del choque y del vehículo (tipo, ocupantes, cinturón) y la exposición (tráfico) para estimar el riesgo, no solo la gravedad.</p></div>
+  </div>
+  <div class="pie"><span>Repositorio: notebooks/02_modelos.ipynb · results/metrics.csv · results/model_comparison.txt</span><span>6/6</span></div>
+</section>
+
+</body>
+</html>
