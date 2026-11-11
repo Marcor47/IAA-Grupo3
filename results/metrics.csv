@@ -4,6 +4,7 @@ A_clasificacion,Baseline · Reg. logística · Set A,aleatorio 80/20,0.423,0.615
 A_clasificacion,"Referencia · Reg. logística · Set B (+ MODALIDAD, ex-post)",aleatorio 80/20,0.618,0.6576,0.2478,0.2941,0.2752,0.3158,0.6027,0.1171,,,,
 A_clasificacion,Modelo 1 · Reg. logística (depto + hora + altitud),aleatorio 80/20,0.494,0.6318,0.1843,0.2547,0.1589,0.6421,0.5955,0.1171,,,,
 A_clasificacion,Modelo 1 + lluvia del día,aleatorio 80/20,0.521,0.6307,0.1805,0.2557,0.1711,0.5053,0.5903,0.1171,,,,
+A_clasificacion,Modelo 2 · Reg. logística (depto + hora + altitud + tipo de accidente),aleatorio 80/20,0.658,0.6712,0.263,0.2635,0.3056,0.2316,0.5809,0.1171,,,,
 A_clasificacion,Random Forest · Set A,aleatorio 80/20,0.404,0.5944,0.1567,0.2117,0.1512,0.3526,0.545,0.1171,,,,
 B_regresion_conteo,Dummy (media),aleatorio 80/20,,,,,,,,,0.3014,0.7934,0.847,
 B_regresion_conteo,Dummy (mediana = 0),aleatorio 80/20,,,,,,,,,0.172,0.8118,4.6502,
@@ -11,6 +12,8 @@ B_regresion_conteo,Baseline · Regresión de Poisson · Set A,aleatorio 80/20,,,
 A_clasificacion,Baseline · Reg. logística · Set A,CV 5x5 (dataset completo),,0.5923,0.1653,,,,,0.1173,,,,0.0137
 A_clasificacion,Modelo 1 · Reg. logística (depto + hora + altitud),CV 5x5 (dataset completo),,0.5978,0.1683,,,,,0.1173,,,,0.0148
 A_clasificacion,Modelo 1 + lluvia del día,CV 5x5 (dataset completo),,0.597,0.1683,,,,,0.1173,,,,0.0148
+A_clasificacion,Modelo 2 · Reg. logística (depto + hora + altitud + tipo de accidente),CV 5x5 (dataset completo),,0.6678,0.2659,,,,,0.1173,,,,0.0298
+A_clasificacion,Modelo 2 + lluvia del día,CV 5x5 (dataset completo),,0.6672,0.2655,,,,,0.1173,,,,0.0296
 A_clasificacion,Random Forest · Set A,CV 5x5 (dataset completo),,0.5836,0.1571,,,,,0.1173,,,,0.0123
 A_clasificacion,Reg. logística · Set A+,CV 5x5 (dataset completo),,0.5915,0.1685,,,,,0.1173,,,,0.015
 A_clasificacion,Random Forest · Set A+,CV 5x5 (dataset completo),,0.5855,0.1608,,,,,0.1173,,,,0.0126

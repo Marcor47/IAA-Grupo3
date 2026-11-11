@@ -94,7 +94,7 @@
     <div class="col" style="flex:1; align-items:center"><img src="figuras/02_mapa_accidentes.png" alt="Mapa de accidentes"></div>
     <div class="col" style="width:330px; justify-content:center"><img src="figuras/01_dona_fatales.png" alt="11.7 % fatales"></div>
   </div>
-  <div class="pie"><span>Datos abiertos SUTRAN (ODC-By) · Red Vial Nacional MTC · Open-Meteo (reanálisis)</span><span>1/6</span></div>
+  <div class="pie"><span>Datos abiertos SUTRAN (ODC-By) · Red Vial Nacional MTC · Open-Meteo (reanálisis)</span><span>1/7</span></div>
 </section>
 
 <!-- 3 · EDA: el giro -->
@@ -107,7 +107,7 @@
       <div class="caja nota" style="margin-top:14px; font-size:16.5px">En la sierra llueve más y los accidentes son menos fatales; en la costa, al revés. Por eso la lluvia parecía "proteger". Al controlar por altitud y departamento, su efecto desaparece: <b>odds ratio 0.98, p = 0.67</b>.</div>
     </div>
   </div>
-  <div class="pie"><span>Regresión logística clásica: fatal ~ lluvia + altitud + hora + departamento</span><span>2/6</span></div>
+  <div class="pie"><span>Regresión logística clásica: fatal ~ lluvia + altitud + hora + departamento</span><span>2/7</span></div>
 </section>
 
 <!-- 4 · Baseline -->
@@ -126,7 +126,7 @@
       <div class="caja nota" style="margin-top:18px; font-size:17px">De 100 accidentes fatales encuentra ~83, pero solo ~13 de cada 100 alertas son realmente fatales. <b>¿Por qué no lo hace mejor?</b></div>
     </div>
   </div>
-  <div class="pie"><span>Partición estratificada 80/20 y validación cruzada repetida 5 × 5 (mismas 25 particiones para todos los modelos)</span><span>3/6</span></div>
+  <div class="pie"><span>Partición estratificada 80/20 y validación cruzada repetida 5 × 5 (mismas 25 particiones para todos los modelos)</span><span>3/7</span></div>
 </section>
 
 <!-- 5 · El techo de los datos -->
@@ -137,15 +137,15 @@
     <div class="col" style="flex:1"><img src="figuras/08_techo.png" alt="Techo de señal por grupos"></div>
     <div class="col" style="width:330px; justify-content:center; gap:18px">
       <div class="kpi" style="color:var(--naranja)">29 %<small>es lo más letal que se puede anticipar: incluso en el peor lugar, hora y altitud, <b style="color:var(--tinta)">7 de cada 10 accidentes no son fatales</b></small></div>
-      <div class="caja nota" style="font-size:16.5px">Saber el <b>tipo de choque</b> (atropello, volcadura…) sube el techo a 57 %, pero solo se conoce después. Los modelos complejos (Random Forest, boosting, MLP) <b>no superan</b> a la logística.</div>
+      <div class="caja nota" style="font-size:16.5px">Los modelos complejos (Random Forest, boosting, MLP) <b>no superan</b> a la logística. El <b>tipo de choque</b> (atropello, volcadura…) sube el techo a 57 %, pero se conoce recién cuando el accidente <b>se reporta</b>: ahí entra el Modelo 2.</div>
     </div>
   </div>
-  <div class="pie"><span>Grupos con ≥ 30 accidentes; % fatal observado en cada grupo</span><span>4/6</span></div>
+  <div class="pie"><span>Grupos con ≥ 30 accidentes; % fatal observado en cada grupo</span><span>4/7</span></div>
 </section>
 
 <!-- 6 · Modelo 1 -->
 <section class="slide">
-  <div class="etapa">5 · Modelo 1</div>
+  <div class="etapa">5 · Modelo 1 · prevención (antes del accidente)</div>
   <h1>Con <em>3 variables</em> predecimos igual que con 9, y agregar la lluvia <em>no suma nada</em></h1>
   <div class="cuerpo" style="gap:34px">
     <div class="col" style="flex:1.3; gap:18px">
@@ -164,19 +164,43 @@
       <div class="caja nota" style="font-size:17px"><b>Lo que sí pesa:</b> la madrugada es la franja más letal, la costa es más letal que la sierra (OR 0.77 por cada 1 700 m de altitud) y Huancavelica, Puno y La Libertad tienen el mayor riesgo.</div>
     </div>
   </div>
-  <div class="pie"><span>Regresión logística: departamento + hora (seno/coseno) + altitud (m) · PR-AUC en validación cruzada 5 × 5</span><span>5/6</span></div>
+  <div class="pie"><span>Regresión logística: departamento + hora (seno/coseno) + altitud (m) · PR-AUC en validación cruzada 5 × 5</span><span>5/7</span></div>
+</section>
+
+<!-- 7 · Modelo 2 -->
+<section class="slide">
+  <div class="etapa">6 · Modelo 2 · triaje (al reportarse el accidente)</div>
+  <h1>Cuando se reporta el accidente, su <em>tipo</em> permite priorizar: 3 de cada 10 alertas son fatales, <em>el doble</em> que antes</h1>
+  <div class="cuerpo" style="gap:30px">
+    <div class="col" style="flex:1.3; gap:16px">
+      <div class="chips">
+        <span class="chip on">Departamento</span><span class="chip on">Hora</span><span class="chip on">Altitud</span><span class="chip on" style="background:var(--naranja)">Tipo de accidente</span>
+        <span class="chip off">lluvia</span>
+      </div>
+      <img src="figuras/11_modelo2.png" alt="Modelo 1 vs Modelo 2">
+      <ul class="puntos">
+        <li><b>Uso:</b> decidir a qué accidente mandar primero la ambulancia. Gana al Modelo 1 en las 25 de 25 particiones.</li>
+        <li class="n"><b>Lluvia:</b> tampoco suma aquí (−0.000).</li>
+      </ul>
+    </div>
+    <div class="col" style="flex:1; gap:16px">
+      <img src="figuras/12_tipo_accidente.png" alt="% fatal por tipo de accidente">
+      <div class="caja nota" style="font-size:16.5px"><b>Límite:</b> encuentra bien los casos de mayor riesgo (atropellos), pero si se quiere detectar 8 de cada 10 fatales, la precisión baja a ~15 %. <b>Supuesto:</b> la central conoce el tipo al recibir el reporte.</div>
+    </div>
+  </div>
+  <div class="pie"><span>Regresión logística: Modelo 1 + tipo de accidente · PR-AUC en validación cruzada 5 × 5 · umbral por F1 en train</span><span>6/7</span></div>
 </section>
 
 <!-- 7 · Conclusión -->
 <section class="slide" style="justify-content:center">
-  <div class="etapa">6 · Respuesta</div>
-  <div class="respuesta" style="margin-top:6px; font-size:34px">La lluvia <em>no</em> vuelve más mortales los accidentes en las carreteras del Perú. El riesgo depende de <em>dónde y cuándo</em> ocurren (altitud, departamento, madrugada) y, sobre todo, de <em>cómo</em> ocurre el choque.</div>
+  <div class="etapa">7 · Respuesta</div>
+  <div class="respuesta" style="margin-top:6px; font-size:34px">La lluvia <em>no</em> vuelve más mortales los accidentes en las carreteras del Perú. Para <em>prevenir</em>, lugar, hora y altitud solo dan 1.4× el azar; al <em>reportarse</em>, el tipo de accidente lo sube a 2.3× y permite priorizar la atención.</div>
   <div class="tres">
-    <div class="caja"><h3>Qué aprendimos</h3><p>Un modelo simple de 3 variables iguala al de 9. Con estos datos, el límite lo ponen las variables disponibles, no la complejidad del modelo.</p></div>
+    <div class="caja"><h3>Qué aprendimos</h3><p>Modelos simples bastan: 3 variables igualan a 9 y la logística empata con Random Forest. El límite lo ponen las variables disponibles, no la complejidad del modelo.</p></div>
     <div class="caja"><h3>Limitaciones</h3><p>Asociaciones, no causas. Lluvia de reanálisis (~11 km), 20 % de accidentes sin ubicar, solo accidentes ocurridos (sin tráfico) y periodo de pandemia.</p></div>
-    <div class="caja"><h3>Siguientes pasos</h3><p>Datos del choque y del vehículo (tipo, ocupantes, cinturón) y la exposición (tráfico) para estimar el riesgo, no solo la gravedad.</p></div>
+    <div class="caja"><h3>Siguientes pasos</h3><p>Ajustar el umbral del Modelo 2 al uso real (cuántas ambulancias hay) y sumar datos del vehículo, ocupantes y tráfico para detectar más fatales.</p></div>
   </div>
-  <div class="pie"><span>Repositorio: notebooks/02_modelos.ipynb · results/metrics.csv · results/model_comparison.txt</span><span>6/6</span></div>
+  <div class="pie"><span>Repositorio: notebooks/02_modelos.ipynb · results/metrics.csv · results/model_comparison.txt</span><span>7/7</span></div>
 </section>
 
 </body>

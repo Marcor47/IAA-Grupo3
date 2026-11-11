@@ -23,7 +23,12 @@ Fuente: notebooks/02_modelos.ipynb -> results/metrics.csv
 - Baseline: regresión logística (class_weight="balanced") con el Set A, 9 variables ex-ante:
   lluvia del día, altitud, hora, mes, día de la semana, departamento y vía. El kilómetro no
   entra como número (solo tiene sentido dentro de cada vía; se usa para ubicar el accidente).
-- Modelo 1: regresión logística con solo departamento + hora (seno/coseno) + altitud (m).
+- Modelo 1 (prevención): regresión logística con solo departamento + hora (seno/coseno) +
+  altitud (m). Todo se conoce antes del accidente.
+- Modelo 2 (triaje): Modelo 1 + tipo de accidente (MODALIDAD). El tipo se conoce cuando el
+  accidente se reporta, así que el modelo sirve para priorizar la atención, no para prevenir.
+  Supuesto: la central conoce la modalidad al recibir el reporte. NUM_HERIDOS no se usa
+  (es parte del resultado del accidente).
 - Respaldo: Random Forest, Lasso, árbol de decisión, KNN, MLP y gradient boosting (Set A);
   Set A+ (15 variables ex-ante); Set B (Set A + MODALIDAD, ex-post) como referencia de techo.
 - Tarea B: regresión de Poisson (Set A) frente a dos Dummy (media y mediana).
@@ -35,6 +40,8 @@ Dummy (prior)                       -            -                0.117        0
 Baseline · Reg. logística           Set A (9)    0.165 ± 0.014    0.186        0.616         0.225    0.832
 Modelo 1 · Reg. logística           3            0.168 ± 0.015    0.184        0.632         0.255    0.642
 Modelo 1 + lluvia del día           4            0.168 ± 0.015    0.180        0.631         0.256    0.505
+Modelo 2 · Reg. logística (triaje)  4            0.266 ± 0.030    0.263        0.671         0.263    0.232
+Modelo 2 + lluvia del día           5            0.265 ± 0.030    -            -             -        -
 Random Forest                       Set A (9)    0.157 ± 0.012    0.157        0.594         0.212    0.353
 Reg. logística                      Set A+ (15)  0.168 ± 0.015    -            -             -        -
 Random Forest                       Set A+ (15)  0.161 ± 0.013    -            -             -        -
@@ -44,6 +51,13 @@ Referencia ex-post · Random Forest  Set B (10)   0.263 ± 0.027    -           
 Comparaciones pareadas (25 particiones, PR-AUC):
 - Modelo 1 − baseline:              +0.003 (IC95 % aprox. −0.002 a +0.008); mejor en 15 de 25.
 - (Modelo 1 + lluvia) − Modelo 1:   +0.000 (IC95 % aprox. −0.001 a +0.001); mejor en 11 de 25.
+- Modelo 2 − Modelo 1:              +0.098 (IC95 % aprox. +0.088 a +0.108); mejor en 25 de 25.
+- (Modelo 2 + lluvia) − Modelo 2:   −0.000 (IC95 % aprox. −0.001 a +0.000); mejor en 12 de 25.
+
+Precisión a recall fijo (test):     recall ≥ 50 %   recall ≥ 80 %
+  Baseline                          0.159           0.133
+  Modelo 1                          0.177           0.150
+  Modelo 2                          0.217           0.146
 - Random Forest − baseline:         −0.008 (IC95 % aprox. −0.013 a −0.003); mejor en 6 de 25.
 
 Selección de algoritmos (CV de 5 particiones en train, Set A, PR-AUC):
@@ -68,13 +82,24 @@ a) ¿Qué modelo funcionó mejor y por qué?
    Lluvia, mes, día de la semana y vía no aportan información sobre departamento, hora y
    altitud, y solo agregan varianza.
 
-b) ¿Por qué los modelos no lineales no ganan?
+b) ¿Qué aporta el Modelo 2 (triaje)?
+   El tipo de accidente es la variable con más señal: el atropello es fatal en 43 % de los
+   casos, el choque en 14 %, el despiste en 7 % y la volcadura en 5 %. Agregarlo al Modelo 1
+   sube la PR-AUC de 0.168 a 0.266 (2.3 veces el azar) y gana en las 25 particiones. No sirve
+   para prevenir, porque solo se conoce al reportarse el accidente, pero sí para priorizar la
+   atención. La ventaja se concentra en los casos de mayor riesgo: con el umbral por F1, 3 de
+   cada 10 alertas son fatales (el doble que el Modelo 1), aunque detecta solo el 23 % de los
+   fatales; con recall de 50 % la precisión es 0.22 frente a 0.18. Si se exige detectar el
+   80 % de los fatales, ningún modelo pasa de 0.15: el resto de la fatalidad depende de
+   factores que el registro no tiene (vehículo, ocupantes, velocidad, cinturón).
+
+c) ¿Por qué los modelos no lineales no ganan?
    Ningún algoritmo no lineal supera al logit en la CV de train, y en la CV repetida el Random
    Forest queda por debajo del baseline (−0.008, mejor en solo 6 de 25 particiones). Con las tres variables del Modelo 1, la interacción completa
    departamento × franja × altitud (229 combinaciones) cae a 0.147: se sobreajusta. La señal
    que existe es aditiva y débil, y los modelos flexibles terminan ajustándose al ruido.
 
-c) ¿Por qué el desempeño absoluto es bajo?
+d) ¿Por qué el desempeño absoluto es bajo?
    Techo por grupos (in-sample, optimista): con departamento + franja + altitud, la PR-AUC
    máxima es 0.217 y ningún grupo de ≥ 30 accidentes supera el 29 % de fatales. Antes del
    accidente no existe una situación de alto riesgo: incluso en la peor combinación, 7 de cada
@@ -84,14 +109,16 @@ c) ¿Por qué el desempeño absoluto es bajo?
    variables del choque (configuración, dispositivos de seguridad, vehículo) que este dataset
    no tiene.
 
-d) ¿La lluvia aporta? (pregunta del proyecto)
-   No. Agregarla al Modelo 1 no cambia la PR-AUC (+0.000) y en el logit clásico, controlando
+e) ¿La lluvia aporta? (pregunta del proyecto)
+   No, en ninguno de los dos escenarios: agregarla no cambia la PR-AUC del Modelo 1 (+0.000)
+   ni del Modelo 2 (−0.000), y en los tipos frecuentes (atropello, choque, despiste) los días con
+   lluvia > 1 mm no son más fatales. En el logit clásico, controlando
    por departamento, hora y altitud, el OR de log(1 + lluvia) es 0.980 (IC95 % 0.891–1.077;
    p = 0.67). El signo negativo que mostraba el EDA venía de la geografía: llueve más en la
    sierra alta, donde los accidentes son menos letales. La lluvia de los 3 días previos (Set A+)
    tampoco mejora el modelo.
 
-e) Insights
+f) Insights
    - Altitud: OR 0.77 por cada 1 700 m. Los accidentes en la costa son más letales que en la
      sierra alta (hipótesis no verificada con estos datos: mayor velocidad en la costa).
    - Departamento: Huancavelica (OR 2.8), Puno (2.2) y La Libertad (1.8) tienen los

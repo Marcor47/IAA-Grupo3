@@ -185,6 +185,28 @@ ax.axhline(PREV, color=TINTA2, lw=1.2, ls="--", zorder=0)
 ax.set_title("De madrugada, los accidentes son más fatales")
 guardar(fig, "10_franja.png", "% de accidentes con ≥ 1 fallecido según la hora del accidente.")
 
+# 11 · Dos escenarios: prevención (Modelo 1) vs. triaje (Modelo 2)
+M2 = "Modelo 2 · Reg. logística (depto + hora + altitud + tipo de accidente)"
+vals = [df.ES_FATAL.mean(), cv.loc[M1].pr_auc, cv.loc[M2].pr_auc, cv.loc["Modelo 2 + lluvia del día"].pr_auc]
+fig, ax = plt.subplots(figsize=(10, 5.2))
+barras(ax, ["Azar", "Modelo 1\nprevención", "Modelo 2\ntriaje", "Modelo 2\n+ lluvia"], vals,
+       [GRIS, "#9fc2ec", AZUL, "#9fc2ec"], fmt="{:.3f}", ymax=0.34)
+for xi, v in enumerate(vals[1:], start=1):
+    ax.text(xi, v / 2, f"{v / vals[0]:.1f}×", ha="center", fontsize=20, fontweight="bold", color=FONDO)
+ax.set_title("Con el tipo de accidente, el modelo pasa de 1.4× a 2.3× el azar")
+guardar(fig, "11_modelo2.png", "PR-AUC promedio en validación cruzada 5 × 5. Modelo 2 = Modelo 1 + tipo de accidente (se conoce al reportarse).")
+
+# 12 · % fatal por tipo de accidente
+t = df.dropna(subset=["MODALIDAD"]).groupby("MODALIDAD").ES_FATAL.agg(["mean", "size"])
+t = t[t["size"] >= 100].sort_values("mean", ascending=False)
+fig, ax = plt.subplots(figsize=(8, 5.2))
+barras(ax, [m.capitalize() for m in t.index], 100 * t["mean"], [NARANJA] + [GRIS] * (len(t) - 1), ymax=50)
+for xi, n in enumerate(t["size"]):
+    ax.text(xi, 0.8, f"{n:,} acc.".replace(",", " "), ha="center", fontsize=12, color=FONDO if xi == 0 else TINTA, fontweight="bold")
+ax.axhline(PREV, color=TINTA2, lw=1.2, ls="--", zorder=0)
+ax.set_title("Un atropello es 6 veces más letal que un despiste")
+guardar(fig, "12_tipo_accidente.png", "% de accidentes con ≥ 1 fallecido según el tipo de accidente (tipos con ≥ 100 casos).")
+
 print("Figuras en", SALIDA)
 for p in sorted(SALIDA.glob("*.png")):
     print(" ", p.name)

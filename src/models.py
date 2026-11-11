@@ -34,6 +34,11 @@ NUM_1 = ["ELEVACION", "HORA_SIN", "HORA_COS"]
 CAT_1 = ["DEPARTAMENTO"]
 COLS_MODELO_1 = NUM_1 + CAT_1
 
+# Modelo 2 (triaje): Modelo 1 + tipo de accidente. MODALIDAD se conoce cuando se reporta el accidente,
+# no antes: el modelo sirve para priorizar la atención, no para prevenir.
+CAT_2 = CAT_1 + ["MODALIDAD"]
+COLS_MODELO_2 = NUM_1 + CAT_2
+
 
 def cargar_datos(path=F_DATASET):
     """Lee el dataset procesado (lo genera src/preprocessing.py) y construye las variables de los modelos."""
@@ -76,6 +81,11 @@ def modelo_1(con_lluvia=False):
     con_lluvia=True agrega PRECIP_LOG, para medir si la lluvia aporta algo sobre estas tres.
     """
     return logit(NUM_1 + (["PRECIP_LOG"] if con_lluvia else []), CAT_1)
+
+
+def modelo_2(con_lluvia=False):
+    """Modelo 2 (triaje): regresión logística con departamento + hora + altitud + tipo de accidente."""
+    return logit(NUM_1 + (["PRECIP_LOG"] if con_lluvia else []), CAT_2)
 
 
 def poisson():

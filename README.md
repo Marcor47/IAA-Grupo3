@@ -185,7 +185,8 @@ Muñoz et al. (2024) encuentran que los accidentes se separan por **franja horar
 |---|---|---|---|
 | Regresión logística (`class_weight` balanceado) | A | Curso | **Implementado (baseline)** |
 | Regresión de Poisson | B | Mhetre y Thube (2023) | **Implementado (baseline)** |
-| **Regresión logística con departamento + hora + altitud (Modelo 1)** | A | Techo de señal por grupos (§5.4) | **Implementado (Modelo 1)** |
+| **Regresión logística con departamento + hora + altitud (Modelo 1, prevención)** | A | Techo de señal por grupos (§5.4) | **Implementado (Modelo 1)** |
+| **Modelo 1 + tipo de accidente (Modelo 2, triaje al reportarse)** | A | Modalidad: la variable con más señal (§5.4) | **Implementado (Modelo 2)** |
 | Random Forest | A | Muñoz et al. (2024) | Probado (§5.4) |
 | Regresión logística con penalización L1 (Lasso) | A | Babaoglu y Babaoglu (2021) | Probado (§5.4) |
 | Gradient boosting | A | Babaoglu y Babaoglu (2021) (XGBoost) | Probado (§5.4) |
@@ -281,7 +282,7 @@ Sin la lluvia, el Set A obtiene la misma PR-AUC en CV (0.161 ± 0.012). Para con
 - **Cuidado al interpretar:** son asociaciones, no efectos causales. La lluvia viene de reanálisis en celdas de ~11 km, el 19.8 % de los accidentes usa la de la capital, y el dataset solo contiene accidentes (no hay tráfico ni días sin accidentes).
 - **Siguientes pasos:** modelos no lineales (árbol de decisión, KNN, MLP, binomial negativa); interacciones lluvia × altitud y lluvia × departamento; K-Means de departamentos; ajuste del umbral o remuestreo.
 
-### 5.4 Avance del entregable final: Modelo 1
+### 5.4 Avance del entregable final: Modelo 1 (prevención) y Modelo 2 (triaje)
 
 Detalle en `notebooks/02_modelos.ipynb` (secciones 2 a 4) y en [`results/model_comparison.txt`](results/model_comparison.txt).
 
@@ -293,13 +294,15 @@ Detalle en `notebooks/02_modelos.ipynb` (secciones 2 a 4) y en [`results/model_c
 | Baseline · Reg. logística (Set A, 9 variables) | 0.165 ± 0.014 | 0.186 | 0.616 | 0.225 | 0.832 |
 | **Modelo 1 · Reg. logística (depto + hora + altitud)** | **0.168 ± 0.015** | 0.184 | **0.632** | **0.255** | **0.642** |
 | Modelo 1 + lluvia del día | 0.168 ± 0.015 | 0.180 | 0.631 | 0.256 | 0.505 |
+| **Modelo 2 · Modelo 1 + tipo de accidente (triaje)** | **0.266 ± 0.030** | **0.263** | **0.671** | **0.263** | 0.232 |
 | Random Forest (Set A) | 0.157 ± 0.012 | 0.157 | 0.594 | 0.212 | 0.353 |
 | Reg. logística · Set B (+ `MODALIDAD`, ex-post) | 0.260 ± 0.028 | 0.248 | 0.658 | 0.294 | 0.316 |
 
 - **El Modelo 1 iguala al baseline con 3 variables en lugar de 9:** +0.003 de PR-AUC (IC 95 % aprox. −0.002 a +0.008; mejor en 15 de 25 particiones) y mejor F1, precisión y balanced accuracy en test; el baseline detecta más fatales (recall 0.83) a costa de más falsas alarmas. La ganancia es de parsimonia, no de desempeño.
-- **La lluvia no aporta:** agregarla al Modelo 1 cambia la PR-AUC en +0.000. Tampoco aportan las variables del Set A+ (ubicación exacta, lluvia de los 3 días previos, horas de lluvia, tipo de vía, feriados, cuarentena): 0.168.
+- **Modelo 2 · triaje:** cuando el accidente se reporta ya se sabe su tipo (atropello 43 % fatal, choque 14 %, despiste 7 %). Agregarlo sube la PR-AUC a 0.266 (2.3 veces el azar; +0.098 sobre el Modelo 1, mejor en las 25 particiones). No sirve para prevenir, pero sí para priorizar la atención: con el umbral por F1, 3 de cada 10 alertas son fatales (el doble que el Modelo 1). Si se exige detectar el 80 % de los fatales, ningún modelo pasa de 0.15 de precisión. Supuesto: la modalidad se conoce al recibir el reporte; `NUM_HERIDOS` sigue excluido.
+- **La lluvia no aporta en ninguno de los dos escenarios:** agregarla cambia la PR-AUC en +0.000 en el Modelo 1 y en −0.000 en el Modelo 2. Tampoco aportan las variables del Set A+ (ubicación exacta, lluvia de los 3 días previos, horas de lluvia, tipo de vía, feriados, cuarentena): 0.168.
 - **Los modelos no lineales no ganan:** árbol de decisión, Random Forest, gradient boosting, KNN y MLP no superan al logit. La señal ex-ante es aditiva y débil.
-- **El techo lo ponen los datos:** con la modalidad (ex-post) la PR-AUC sube a 0.26. La gravedad depende de cómo ocurre el choque, y eso no se conoce antes.
+- **El techo lo ponen los datos:** antes del accidente no hay forma de pasar de ~0.17; la gravedad depende de cómo ocurre el choque, que solo se conoce al reportarse (Modelo 2).
 
 ---
 
@@ -312,7 +315,7 @@ jupyter notebook
 ```
 La preparación de datos (lectura, limpieza, ubicación y unión con el clima) está en `src/preprocessing.py`. Ejecutar en orden desde la carpeta `notebooks/`:
 1. `01_eda.ipynb`: usa `src/preprocessing.py` para leer `data/raw/accidentes_transito_carreteras.csv` (si no existe, lo descarga), limpiarlo, ubicar cada accidente y unirlo con el clima; documenta cada decisión, genera `data/processed/accidentes_clima.csv` y las figuras.
-2. `02_modelos.ipynb`: baseline, Modelo 1, pruebas de respaldo, `results/metrics.csv` y figuras `modelo_01` a `modelo_04` (≈ 5 min).
+2. `02_modelos.ipynb`: baseline, Modelo 1, Modelo 2, pruebas de respaldo, `results/metrics.csv` y figuras `modelo_01` a `modelo_05` (≈ 6 min).
 
 Las descargas externas ya están en el repo (`data/raw/red_vial_nacional_mtc.json`, `clima_celdas_open_meteo.csv` y `clima_open_meteo.csv`), así que los notebooks corren sin internet. Si se borran, se vuelven a descargar: la red vial tarda segundos, pero la lluvia por celda tarda ~1 hora por los límites de la API gratuita de Open-Meteo (la descarga se retoma donde quedó si se interrumpe).
 
