@@ -316,13 +316,20 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 - **El triaje sigue siendo difícil:** en el test, el baseline detecta el 51 % de los fatales con una precisión de 0.21. Los heridos
   y los sin víctimas se confunden entre sí, porque el registro no trae vehículo, ocupantes ni velocidad.
 
-### 5.4 Siguientes pasos
-Están en los issues del repositorio, con criterios de aceptación:
-- Tarea 1: Random Forest y gradient boosting con CV temporal y tuning.
-- Tarea 2: Random Forest y gradient boosting multiclase con tuning y manejo del desbalance.
-- Ablación por grupos e importancia por permutación.
-- Variable de exposición: flujo vehicular en peajes.
-- `model_comparison.txt` final, `report.pdf` y la presentación final.
+### 5.4 Siguientes pasos (issues)
+Cada issue trae su contexto, los pasos y los criterios de aceptación. Las convenciones comunes están en `AGENTS.md`.
+
+| Issue | Qué | Depende de |
+|---|---|---|
+| #2 | Tarea 1 · Random Forest y gradient boosting para `N_ACC` (CV temporal + ajuste de hiperparámetros) | — |
+| #3 | Tarea 1 · Clasificadores de `HAY_FATAL` con calibración | — |
+| #4 | Tarea 2 · Random Forest y gradient boosting multiclase (ajuste + desbalance) | — |
+| #5 | Ablación por grupos de variables e importancia por permutación | #2, #3, #4 |
+| #6 | Investigar una variable de exposición (flujo vehicular en peajes) | — |
+| #7 | `model_comparison.txt` final, README §5 y reproducibilidad | #2–#5 |
+| #8 | `report.pdf` (3–5 páginas) | #7 |
+| #9 | Presentación final (`presentation.pdf`) | #7 |
+| #10 | Opcional: MLP y ensamble por votación (Emu et al.) | #4 |
 
 ---
 
