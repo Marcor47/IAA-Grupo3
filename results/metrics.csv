@@ -1,21 +1,17 @@
-tarea,modelo,split,umbral,roc_auc,pr_auc,f1,precision,recall,balanced_acc,prevalencia_test,mae,rmse,poisson_deviance,pr_auc_sd
-A_clasificacion,Dummy (prior),aleatorio 80/20,0.5,0.5,0.1171,0.0,0.0,0.0,0.5,0.1171,,,,
-A_clasificacion,Baseline · Reg. logística · Set A,aleatorio 80/20,0.423,0.6155,0.1859,0.2254,0.1304,0.8316,0.5478,0.1171,,,,
-A_clasificacion,"Referencia · Reg. logística · Set B (+ MODALIDAD, ex-post)",aleatorio 80/20,0.618,0.6576,0.2478,0.2941,0.2752,0.3158,0.6027,0.1171,,,,
-A_clasificacion,Modelo 1 · Reg. logística (depto + hora + altitud),aleatorio 80/20,0.494,0.6318,0.1843,0.2547,0.1589,0.6421,0.5955,0.1171,,,,
-A_clasificacion,Modelo 1 + lluvia del día,aleatorio 80/20,0.521,0.6307,0.1805,0.2557,0.1711,0.5053,0.5903,0.1171,,,,
-A_clasificacion,Modelo 2 · Reg. logística (depto + hora + altitud + tipo de accidente),aleatorio 80/20,0.658,0.6712,0.263,0.2635,0.3056,0.2316,0.5809,0.1171,,,,
-A_clasificacion,Random Forest · Set A,aleatorio 80/20,0.404,0.5944,0.1567,0.2117,0.1512,0.3526,0.545,0.1171,,,,
-B_regresion_conteo,Dummy (media),aleatorio 80/20,,,,,,,,,0.3014,0.7934,0.847,
-B_regresion_conteo,Dummy (mediana = 0),aleatorio 80/20,,,,,,,,,0.172,0.8118,4.6502,
-B_regresion_conteo,Baseline · Regresión de Poisson · Set A,aleatorio 80/20,,,,,,,,,0.2962,0.7911,0.8217,
-A_clasificacion,Baseline · Reg. logística · Set A,CV 5x5 (dataset completo),,0.5923,0.1653,,,,,0.1173,,,,0.0137
-A_clasificacion,Modelo 1 · Reg. logística (depto + hora + altitud),CV 5x5 (dataset completo),,0.5978,0.1683,,,,,0.1173,,,,0.0148
-A_clasificacion,Modelo 1 + lluvia del día,CV 5x5 (dataset completo),,0.597,0.1683,,,,,0.1173,,,,0.0148
-A_clasificacion,Modelo 2 · Reg. logística (depto + hora + altitud + tipo de accidente),CV 5x5 (dataset completo),,0.6678,0.2659,,,,,0.1173,,,,0.0298
-A_clasificacion,Modelo 2 + lluvia del día,CV 5x5 (dataset completo),,0.6672,0.2655,,,,,0.1173,,,,0.0296
-A_clasificacion,Random Forest · Set A,CV 5x5 (dataset completo),,0.5836,0.1571,,,,,0.1173,,,,0.0123
-A_clasificacion,Reg. logística · Set A+,CV 5x5 (dataset completo),,0.5915,0.1685,,,,,0.1173,,,,0.015
-A_clasificacion,Random Forest · Set A+,CV 5x5 (dataset completo),,0.5855,0.1608,,,,,0.1173,,,,0.0126
-A_clasificacion,"Referencia · Reg. logística · Set B (+ MODALIDAD, ex-post)",CV 5x5 (dataset completo),,0.6637,0.2598,,,,,0.1173,,,,0.0277
-A_clasificacion,"Referencia · Random Forest · Set B (+ MODALIDAD, ex-post)",CV 5x5 (dataset completo),,0.6684,0.2631,,,,,0.1173,,,,0.0271
+tarea,modelo,validacion,poisson_dev,d2_poisson,mae,rmse,pr_auc,roc_auc,brier,prevalencia,macro_f1,balanced_acc,pr_auc_fatal,log_loss
+1_conteo_N_ACC,Ingenuo · media 28 días,CV temporal (5 pliegues),0.9984145626161964,0.2172941499274114,0.5463632022906892,0.7892239000645358,,,,,,,,
+1_conteo_N_ACC,Ingenuo · semana pasada,CV temporal (5 pliegues),7.237266635623084,-4.650006041098321,0.6361026693600046,1.0850125019618324,,,,,,,,
+1_conteo_N_ACC,Baseline · Poisson,CV temporal (5 pliegues),0.9488808655213973,0.2562281863271555,0.5685126814699171,0.7923305134204313,,,,,,,,
+1_conteo_N_ACC,Ingenuo · media 28 días,holdout abr-sep 2021,1.0018960743717515,0.277463802809097,0.6045732653200624,0.8364549254117989,,,,,,,,
+1_conteo_N_ACC,Ingenuo · semana pasada,holdout abr-sep 2021,7.779634114612406,-4.610429457200349,0.7283699674408014,1.1601101535227634,,,,,,,,
+1_conteo_N_ACC,Baseline · Poisson,holdout abr-sep 2021,1.0170338899942362,0.26654688236851576,0.5896117310772768,0.8503946693014883,,,,,,,,
+1_clasificacion_HAY_FATAL,Ingenuo · fatales últimos 28 días,CV temporal (5 pliegues),,,,,0.11185396534443752,0.6774862680893425,0.054173699459302484,0.05841777311903098,,,,
+1_clasificacion_HAY_FATAL,Baseline · Reg. logística,CV temporal (5 pliegues),,,,,0.1330431240020483,0.7040739234543026,0.056101153071816554,0.05841777311903098,,,,
+1_clasificacion_HAY_FATAL,Ingenuo · fatales últimos 28 días,holdout abr-sep 2021,,,,,0.13132356757394992,0.6887215664993442,0.06184612970396173,0.06762295081967214,,,,
+1_clasificacion_HAY_FATAL,Baseline · Reg. logística,holdout abr-sep 2021,,,,,0.16123785116945064,0.7335372446483558,0.060037399870855906,0.06762295081967214,,,,
+2_triaje_GRAVEDAD,Dummy (proporciones),CV estratificada 5x5,,,,,,,,,0.22779941949407967,0.33333333333333337,0.1173349784083899,0.9596364621705676
+2_triaje_GRAVEDAD,Modelo 2 del avance (4 variables),CV estratificada 5x5,,,,,,,,,0.421318555641095,0.46904598230610245,0.2693519884168274,1.0372275682347873
+2_triaje_GRAVEDAD,Baseline · Reg. logística multinomial,CV estratificada 5x5,,,,,,,,,0.41898657153550817,0.4656384120516255,0.2655148212943331,1.0370950521070177
+2_triaje_GRAVEDAD,Dummy (proporciones),test estratificado 80/20,,,,,,,,,0.22772813430815056,0.3333333333333333,0.11721159777914868,0.959584662071224
+2_triaje_GRAVEDAD,Modelo 2 del avance (4 variables),test estratificado 80/20,,,,,,,,,0.4390940051847756,0.48904929245057865,0.2574780718872555,1.0222778177025666
+2_triaje_GRAVEDAD,Baseline · Reg. logística multinomial,test estratificado 80/20,,,,,,,,,0.43602164855695263,0.48356748599768834,0.2596522588434235,1.019115751664175

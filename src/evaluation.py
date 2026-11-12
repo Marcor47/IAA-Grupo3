@@ -1,83 +1,94 @@
-"""Métricas y evaluación de los modelos.
+"""Métricas y esquemas de validación de las dos tareas.
 
 Uso desde un notebook (con la raíz del repo en sys.path):
     from src import evaluation as E
-    fila, prob = E.evaluar_clf("Modelo 1", modelo, tr, te, cols)     # test 80/20, umbral elegido por CV en train
-    pr, roc = E.cv_repetida(modelo, df[cols], df["ES_FATAL"])        # PR-AUC y ROC-AUC en CV 5×5
-    print(E.comparacion_pareada(pr_modelo, pr_baseline))
+    folds = E.cv_temporal(panel["FECHA"])                          # Tarea 1: origen móvil por fechas
+    r = E.cv_puntajes(modelo, X, y, folds, E.metricas_conteo)      # métricas por pliegue
+    r = E.cv_puntajes(modelo, X, y, E.CV_REPETIDA.split(X, y), E.metricas_multiclase, proba=True)   # Tarea 2
+    print(E.comparacion_pareada(r_a["pr_auc_fatal"], r_b["pr_auc_fatal"]))
 """
 import numpy as np
-from sklearn.metrics import (average_precision_score, balanced_accuracy_score, f1_score, mean_absolute_error,
-                             mean_poisson_deviance, mean_squared_error, precision_recall_curve, precision_score,
-                             recall_score, roc_auc_score)
-from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold, cross_val_predict, cross_validate
+import pandas as pd
+from sklearn.base import clone
+from sklearn.metrics import (average_precision_score, balanced_accuracy_score, brier_score_loss, d2_tweedie_score,
+                             f1_score, log_loss, mean_absolute_error, mean_poisson_deviance, mean_squared_error,
+                             roc_auc_score)
+from sklearn.model_selection import RepeatedStratifiedKFold, StratifiedKFold
 
 SEED = 42
-CV = StratifiedKFold(5, shuffle=True, random_state=SEED)                          # selección dentro de train
-CV_REPETIDA = RepeatedStratifiedKFold(n_splits=5, n_repeats=5, random_state=SEED)  # comparación final
+CV = StratifiedKFold(5, shuffle=True, random_state=SEED)                          # tuning dentro de train
+CV_REPETIDA = RepeatedStratifiedKFold(n_splits=5, n_repeats=5, random_state=SEED)  # comparación final (Tarea 2)
 
 
-def umbral_f1(modelo, X, y, cv=CV):
-    """Umbral que maximiza el F1 en predicciones fuera de muestra (CV) de train; el test no interviene.
-
-    Hace falta porque cada modelo produce probabilidades en otra escala (p. ej. con pesos de clase),
-    así que un umbral fijo de 0.5 no los compara en igualdad de condiciones.
-    """
-    oof = cross_val_predict(modelo, X, y, cv=cv, method="predict_proba")[:, 1]
-    p, r, t = precision_recall_curve(y, oof)
-    return t[np.argmax((2 * p * r / (p + r + 1e-12))[:-1])]
-
-
-def metricas_clf(y, prob, umbral):
-    """Métricas de la Tarea A. PR-AUC es la principal (clase fatal ≈ 12 %; su valor al azar es la prevalencia)."""
-    pred = (prob >= umbral).astype(int)
-    return dict(roc_auc=roc_auc_score(y, prob), pr_auc=average_precision_score(y, prob), f1=f1_score(y, pred),
-                precision=precision_score(y, pred, zero_division=0), recall=recall_score(y, pred),
-                balanced_acc=balanced_accuracy_score(y, pred), prevalencia_test=float(np.mean(y)))
+def cv_temporal(fechas, n_splits=5, min_train_dias=180):
+    """Validación con origen móvil (Tarea 1): los días posteriores a los primeros `min_train_dias` se parten en
+    `n_splits` bloques consecutivos; cada pliegue entrena con TODOS los días anteriores a su bloque y evalúa en
+    él. Se parte por FECHAS, no por filas, para que un mismo día (los 24 departamentos) no quede repartido entre
+    train y test. El mínimo de 180 días evita pliegues que entrenan con 2-3 meses y evalúan en plena cuarentena."""
+    dias = np.sort(fechas.unique())
+    for bloque in np.array_split(dias[min_train_dias:], n_splits):
+        yield np.flatnonzero(fechas < bloque[0]), np.flatnonzero(fechas.isin(bloque))
 
 
-def evaluar_clf(nombre, modelo, tr, te, cols, y="ES_FATAL", umbral=None, split="aleatorio 80/20"):
-    """Entrena en `tr`, evalúa en `te`. Si no se da `umbral`, se elige con umbral_f1 sobre `tr`."""
-    umbral = umbral_f1(modelo, tr[cols], tr[y]) if umbral is None else umbral
-    prob = modelo.fit(tr[cols], tr[y]).predict_proba(te[cols])[:, 1]
-    fila = dict(tarea="A_clasificacion", modelo=nombre, split=split, umbral=round(float(umbral), 3))
-    return fila | metricas_clf(te[y], prob, umbral), prob
+def metricas_conteo(y, pred):
+    """Tarea 1 · N_ACC. La principal es la devianza de Poisson (y su D², la fracción de devianza explicada
+    frente a predecir la media): el MAE premia predecir 0, que es el valor más común (66 % de los días)."""
+    pred = np.clip(pred, 1e-6, None)
+    return dict(poisson_dev=mean_poisson_deviance(y, pred), d2_poisson=d2_tweedie_score(y, pred, power=1),
+                mae=mean_absolute_error(y, pred), rmse=np.sqrt(mean_squared_error(y, pred)))
 
 
-def evaluar_conteo(nombre, modelo, tr, te, cols, y="NUM_FALLECIDOS"):
-    """Tarea B: MAE, RMSE y devianza de Poisson del número de fallecidos por accidente."""
-    pred = np.clip(modelo.fit(tr[cols], tr[y]).predict(te[cols]), 1e-6, None)
-    return dict(tarea="B_regresion_conteo", modelo=nombre, split="aleatorio 80/20",
-                mae=mean_absolute_error(te[y], pred), rmse=np.sqrt(mean_squared_error(te[y], pred)),
-                poisson_deviance=mean_poisson_deviance(te[y], pred)), pred
+def metricas_binaria(y, prob):
+    """Tarea 1 · HAY_FATAL (≈ 6 % de los días): PR-AUC (al azar = prevalencia), ROC-AUC y Brier (calibración)."""
+    return dict(pr_auc=average_precision_score(y, prob), roc_auc=roc_auc_score(y, prob),
+                brier=brier_score_loss(y, prob), prevalencia=float(np.mean(y)))
 
 
-def cv_repetida(modelo, X, y, cv=CV_REPETIDA):
-    """PR-AUC y ROC-AUC en cada una de las 25 particiones. Con el mismo `cv`, todos los modelos ven las mismas."""
-    r = cross_validate(modelo, X, y, cv=cv, scoring=["average_precision", "roc_auc"], n_jobs=-1)
-    return r["test_average_precision"], r["test_roc_auc"]
+def metricas_multiclase(y, proba):
+    """Tarea 2 · GRAVEDAD (0 sin víctimas, 1 heridos, 2 fatal). Macro-F1 y balanced accuracy pesan igual las
+    tres clases; la PR-AUC de la clase fatal (one-vs-rest) se compara con la del Modelo 2 del avance (0.266)."""
+    y = np.asarray(y)
+    pred = proba.argmax(axis=1)
+    return dict(macro_f1=f1_score(y, pred, average="macro"), balanced_acc=balanced_accuracy_score(y, pred),
+                pr_auc_fatal=average_precision_score(y == 2, proba[:, 2]), log_loss=log_loss(y, proba, labels=[0, 1, 2]))
 
 
-def comparacion_pareada(a, b):
-    """Diferencia a − b partición a partición, con IC 95 % aproximado.
+def predecir(modelo, X, proba):
+    if not proba:
+        return modelo.predict(X)
+    p = modelo.predict_proba(X)
+    return p[:, 1] if p.shape[1] == 2 else p
 
-    ponytail: IC normal sobre particiones que comparten datos, así que es optimista; si se necesita una
-    prueba formal, usar la corrección de Nadeau y Bengio (2003).
+
+def cv_puntajes(modelo, X, y, folds, metricas, proba=False):
+    """Entrena una copia de `modelo` en cada pliegue y devuelve un DataFrame con las métricas por pliegue.
+    Con los mismos `folds`, todos los modelos se evalúan en las mismas particiones (comparación pareada)."""
+    filas = []
+    for tr, te in folds:
+        m = clone(modelo).fit(X.iloc[tr], y.iloc[tr])
+        filas.append(metricas(y.iloc[te], predecir(m, X.iloc[te], proba)))
+    return pd.DataFrame(filas)
+
+
+def comparacion_pareada(a, b, mayor_es_mejor=True):
+    """Diferencia a − b pliegue a pliegue, con IC 95 % aproximado.
+
+    ponytail: IC normal sobre pliegues que comparten datos, así que es optimista; si se necesita una prueba
+    formal, usar la corrección de Nadeau y Bengio (2003).
     """
     d = np.asarray(a) - np.asarray(b)
     h = 1.96 * d.std(ddof=1) / np.sqrt(len(d))
-    return f"{d.mean():+.3f} (IC95% aprox. {d.mean() - h:+.3f} a {d.mean() + h:+.3f}), mejor en {(d > 0).sum()} de {len(d)} particiones"
+    gana = (d > 0) if mayor_es_mejor else (d < 0)
+    return f"{d.mean():+.3f} (IC95% aprox. {d.mean() - h:+.3f} a {d.mean() + h:+.3f}), mejor en {gana.sum()} de {len(d)} pliegues"
 
 
-def fila_cv(nombre, pr, roc, prevalencia):
-    """Fila de results/metrics.csv con el resumen de la CV repetida."""
-    return dict(tarea="A_clasificacion", modelo=nombre, split="CV 5x5 (dataset completo)", roc_auc=roc.mean(),
-                pr_auc=pr.mean(), pr_auc_sd=pr.std(), prevalencia_test=prevalencia)
-
-
-if __name__ == "__main__":  # chequeo rápido de las métricas y del umbral
-    y = np.array([0, 0, 0, 1, 1]); prob = np.array([.1, .2, .3, .8, .9])
-    m = metricas_clf(y, prob, 0.5)
-    assert m["pr_auc"] == 1 and m["f1"] == 1 and m["balanced_acc"] == 1
+if __name__ == "__main__":  # chequeo rápido de las métricas y de la partición temporal
+    f = pd.Series(pd.to_datetime(["2020-01-01", "2020-01-01", "2020-01-02", "2020-01-02", "2020-01-03", "2020-01-03"]))
+    for tr, te in cv_temporal(f, n_splits=2, min_train_dias=1):
+        assert f.iloc[tr].max() < f.iloc[te].min(), "fuga temporal"
+    proba = np.array([[.8, .1, .1], [.1, .8, .1], [.1, .1, .8]])
+    m = metricas_multiclase([0, 1, 2], proba)
+    assert m["macro_f1"] == 1 and m["pr_auc_fatal"] == 1
+    assert metricas_conteo(np.array([1, 2]), np.array([1, 2]))["d2_poisson"] == 1
     assert comparacion_pareada([.2, .3], [.1, .1]).startswith("+0.150")
     print("OK evaluation")

@@ -1,31 +1,28 @@
 # Entregable final (Semana 15)
 
-> Estado al 11/11/2026: **avance**. Modelo 1 (prevención) y Modelo 2 (triaje) entrenados y comparados contra el baseline; presentación lista.
+> **Estado al 12/11/2026: replanteo + baseline.**
+> Tras la presentación de avances, el proyecto se replanteó como dos problemas de ML (pronóstico de riesgo y triaje
+> de gravedad; README §1). Están listos el preprocesamiento, el EDA y los baselines. Los modelos de ensamble, el ajuste
+> de hiperparámetros, la ablación, el informe y la presentación están en los issues del repositorio.
 
 | Requisito del enunciado | Estado | Dónde está |
 |---|---|---|
-| Código limpio, comentado y reproducible (se ejecuta sin errores) | 🟡 En curso | `notebooks/01_eda.ipynb` y `notebooks/02_modelos.ipynb` se ejecutan de punta a punta; falta la revisión final |
+| Código limpio, comentado y reproducible (se ejecuta sin errores) | 🟡 En curso | `00_preprocesamiento`, `01_eda` y `02_modelos` corren de punta a punta (12/11). Falta la revisión final tras los modelos nuevos |
 | `requirements.txt` con todas las dependencias | ✅ | [`requirements.txt`](requirements.txt) |
-| Modelos implementados (mínimo 2) en `src/models.py` | ✅ | [`src/models.py`](src/models.py): baseline (regresión logística, Set A), **Modelo 1** (regresión logística, departamento + hora + altitud), **Modelo 2** (Modelo 1 + tipo de accidente), Random Forest (respaldo) y regresión de Poisson (Tarea B) |
-| Métricas y evaluación en `src/evaluation.py` | ✅ | [`src/evaluation.py`](src/evaluation.py): métricas, umbral por CV, CV repetida 5 × 5 y comparación pareada |
-| Tabla comparativa de métricas (`results/metrics.csv`) | ✅ | [`results/metrics.csv`](results/metrics.csv) (filas de test 80/20 y de CV 5 × 5) |
-| Gráficos en `results/plots/` | ✅ | [`results/plots/`](results/plots/): `eda_*` y `modelo_01` a `modelo_05` |
-| `results/model_comparison.txt` con resumen y análisis detallado | 🟡 Versión de avance | [`results/model_comparison.txt`](results/model_comparison.txt) |
-| Análisis de por qué un modelo funcionó mejor, limitaciones e insights | 🟡 Versión de avance | `model_comparison.txt` §5–6 y `02_modelos.ipynb` §7 |
-| Paper/reporte académico (3-5 páginas) en `report.pdf` | ⬜ Pendiente | |
-| Presentación (máx. 5 min, resultados y conclusiones) en `presentation.pdf` | ✅ | [`presentation.pdf`](presentation.pdf) (8 diapositivas); fuente en `presentación/presentacion_final.html`, figuras con `presentación/figuras.py` y guion en `presentación/GUION_FINAL.md` |
+| Modelos implementados (mínimo 2) en `src/models.py` | 🟡 | Baselines: Poisson, regresión logística binaria y multinomial. Factorías listas para Random Forest y gradient boosting (issues) |
+| Métricas y evaluación en `src/evaluation.py` | ✅ | [`src/evaluation.py`](src/evaluation.py): CV temporal, CV 5 × 5, métricas de conteo, binarias y multiclase, comparación pareada |
+| Tabla comparativa de métricas (`results/metrics.csv`) | 🟡 | Baselines de las dos tareas. Faltan las filas de los modelos nuevos |
+| Gráficos en `results/plots/` | 🟡 | `prep_*`, `eda_*` y `modelo_01` a `modelo_03` |
+| `results/model_comparison.txt` con resumen y análisis detallado | 🟡 Versión baseline | [`results/model_comparison.txt`](results/model_comparison.txt) |
+| Análisis de por qué un modelo funcionó mejor, limitaciones e insights | 🟡 | README §5.3 y `model_comparison.txt` §3–4. Falta la versión con los modelos de ensamble |
+| Paper/reporte académico (3-5 páginas) en `report.pdf` | ⬜ Pendiente | Issue |
+| Presentación (máx. 5 min) en `presentation.pdf` | ⬜ Pendiente | Issue. La de avances (planteamiento anterior) está archivada en `presentación/avances/` |
 | `ENTREGABLE_FINAL.md` confirmando completitud | 🟡 | Este archivo |
 
-## Resultado principal
+## Resultado actual (baseline)
 
-| Modelo | PR-AUC CV 5×5 | PR-AUC test | ROC-AUC test | F1 test |
-|---|---|---|---|---|
-| Baseline · Reg. logística (Set A, 9 variables) | 0.165 ± 0.014 | 0.186 | 0.616 | 0.225 |
-| **Modelo 1 · prevención (depto + hora + altitud)** | **0.168 ± 0.015** | 0.184 | 0.632 | 0.255 |
-| **Modelo 2 · triaje (Modelo 1 + tipo de accidente)** | **0.266 ± 0.030** | **0.263** | **0.671** | **0.263** |
-
-El Modelo 1 iguala al baseline con 3 variables en lugar de 9 (+0.003 de PR-AUC, mejor en 15 de 25 particiones). El Modelo 2, que usa el tipo de accidente conocido al reportarse, sube a 2.3 veces el azar (+0.098, mejor en las 25 particiones). La lluvia no aporta en ninguno de los dos.
-
-## Pendiente
-- `report.pdf`.
-- Revisión final de README y de la ejecución completa desde cero.
+| Tarea | Referencia sin ML | Baseline | Métrica |
+|---|---|---|---|
+| 1 · `N_ACC` | 0.217 (media de 28 días) | **0.256** (Poisson) | D² de Poisson, CV temporal |
+| 1 · `HAY_FATAL` | 0.112 (fatales de 28 días) | **0.133** (logística) | PR-AUC, CV temporal (azar 0.058) |
+| 2 · `GRAVEDAD` | 0.228 (Dummy) | **0.419** (logística multinomial) | Macro-F1, CV 5 × 5 |
