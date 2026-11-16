@@ -335,21 +335,78 @@ Cada issue trae su contexto, los pasos y los criterios de aceptación. Las conve
 
 ## 6. Cómo ejecutar
 
-```
-uv venv --python 3.12 .venv && uv pip install -r requirements.txt   # o: python -m venv .venv && pip install -r requirements.txt
-cd notebooks && ../.venv/bin/jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb
-```
+### Requisitos
+- Python 3.10 o superior (`python --version`).
+- Los datos procesados y las descargas externas ya están en el repo: los notebooks corren sin internet.
 
-1. `00_preprocesamiento.ipynb`: limpieza, ubicación, atributos de la vía, clima, variables, selección y encoding.
-   Guarda `data/processed/accidentes.csv` y `panel_depto_dia.csv`. Equivale a `python -m src.preprocessing`.
-2. `01_eda.ipynb`: EDA sobre los datasets limpios (figuras `eda_*`).
-3. `02_modelos.ipynb`: baselines de las dos tareas, `results/metrics.csv` y figuras `modelo_*`.
+### 1. Crear el entorno e instalar las dependencias (una sola vez)
 
-Las descargas externas están en `data/raw/` como cachés: red vial con atributos, clima por celda (diario y por
-hora) y clima por capital. Con ellas, todo corre sin internet. Si se borran, se vuelven a descargar: el clima por hora
-tarda ~1.5 h por los límites de la API gratuita de Open-Meteo y retoma donde quedó si se interrumpe.
+**Windows · cmd**
+    python -m venv .venv
+    .venv\Scripts\activate
+    python -m pip install -r requirements.txt
 
----
+**Windows · PowerShell**
+    python -m venv .venv
+    .venv\Scripts\Activate.ps1
+    python -m pip install -r requirements.txt
+
+**Linux / Mac**
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python -m pip install -r requirements.txt
+
+
+**Sin entorno virtual (Python global)**
+Si prefieres instalar las librerías en tu Python global, omite la creación y activación de `.venv` y ejecuta solo:
+
+    python -m pip install -r requirements.txt
+
+Luego abre directamente `jupyter notebook`. Ten en cuenta que estas librerías quedan compartidas con tus otros
+proyectos: si alguno necesita otra versión de pandas o scikit-learn, pueden entrar en conflicto. Por eso se recomienda
+el entorno virtual.
+
+
+
+> Al activar el entorno, la consola muestra `(.venv)` al inicio de la línea. Si no aparece, `pip` instalará en el
+> Python global. Para confirmar qué Python se usa: `where python` (Windows) o `which python` (Linux/Mac).
+>
+> Si ya tienes instaladas las librerías de `requirements.txt`, puedes omitir este paso.
+
+### 2. Comprobar la instalación
+    python -c "from src import models as M; print('OK', M.cargar_panel().shape)"
+
+### 3. Trabajar con los notebooks
+Cada vez que trabajes, activa el entorno (paso 1, segunda línea) y abre Jupyter:
+
+    jupyter notebook
+
+En Jupyter o VS Code, elige el kernel de `.venv`. Para ejecutar un notebook: *Kernel → Restart & Run All*.
+
+### 4. Reproducir todos los resultados
+Ejecuta los notebooks **en este orden**: 00 → 01 → 02 → 03 → 04 → 05. El 02 reescribe `results/metrics.csv` con los
+baselines; los siguientes agregan sus filas.
+
+**Windows**
+    cd notebooks
+    jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_tarea1_modelos.ipynb 04_tarea2_modelos.ipynb 05_binomial_negativa.ipynb
+
+**Linux / Mac**
+    cd notebooks
+    jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_tarea1_modelos.ipynb 04_tarea2_modelos.ipynb 05_binomial_negativa.ipynb
+
+Opcional: `python -m src.preprocessing` regenera `data/processed/` desde las cachés de `data/raw/` (≈ 1 min). Si se
+borran las cachés, se descargan de nuevo: la red vial tarda segundos y la lluvia ≈ 1 hora por los límites de la API.
+
+### Problemas comunes
+| Mensaje | Causa | Solución |
+|---|---|---|
+| `"source" no se reconoce…` | Es un comando de Linux/Mac | En Windows usa `.venv\Scripts\activate` |
+| `"..\" no se reconoce…` o `.venv/bin` no existe | Ruta de Linux/Mac | En Windows la carpeta es `.venv\Scripts` |
+| `"uv" no se reconoce…` | `uv` no viene con Python | Usa `python -m venv`, como arriba |
+| `Activate.ps1 no se puede cargar… ejecución de scripts deshabilitada` | Política de PowerShell | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` y vuelve a activar |
+| `ModuleNotFoundError: No module named 'sklearn'` (u otro) | El entorno no está activado, o el kernel de Jupyter no es el de `.venv` | Activa el entorno o elige el kernel correcto |
+| `ModuleNotFoundError: No module named 'src'` | Jupyter se abrió fuera de la carpeta del repo | Abre Jupyter desde la raíz del repo |
 
 ## 7. Estructura del repositorio
 ```
