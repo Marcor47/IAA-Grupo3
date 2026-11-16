@@ -15,6 +15,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.optimize import minimize
+from scipy.special import digamma, gammaln
+from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import (HistGradientBoostingClassifier, HistGradientBoostingRegressor, RandomForestClassifier,
                               RandomForestRegressor)
@@ -22,6 +25,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression, PoissonRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
+from sklearn.utils.validation import check_is_fitted
 
 ROOT = Path(__file__).resolve().parents[1]
 F_DATASET = ROOT / "data" / "processed" / "accidentes.csv"
@@ -153,6 +157,98 @@ def rf_conteo(cols, **kw):
     params = dict(n_estimators=400, criterion="poisson", min_samples_leaf=20, max_features=0.5, n_jobs=-1,
                   random_state=SEED) | kw
     return Pipeline([("pre", preprocesador(*cols)), ("reg", RandomForestRegressor(**params))])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+# Modelo BinomialNegativa
+# ---------------------------------------------------------------------------
+
+
+
+class BinomialNegativa(RegressorMixin, BaseEstimator):
+    """Regresión binomial negativa (NB2) ajustada por máxima verosimilitud (Mhetre y Thube, 2023).
+
+    Media: mu = exp(b0 + X·w). Varianza: mu + alpha·mu². Con alpha → 0 se vuelve una Poisson;
+    alpha > 0 mide la sobredispersión (varianza mayor que la media).
+    `l2` penaliza los coeficientes (no el intercepto ni alpha), como el `alpha` de PoissonRegressor.
+    """
+
+    def __init__(self, l2=1e-3, max_iter=1000):
+        self.l2 = l2
+        self.max_iter = max_iter
+
+    @staticmethod
+    def _loglik(y, mu, a):
+        r = 1.0 / a
+        return gammaln(y + r) - gammaln(r) - gammaln(y + 1) + r * np.log(r / (r + mu)) + y * np.log(mu / (r + mu))
+
+    def _objetivo(self, theta, X, y):
+        n = len(y)
+        b0, w, log_a = theta[0], theta[1:-1], theta[-1]
+        a = np.exp(log_a)
+        eta = np.clip(b0 + X @ w, -30, 30)
+        mu = np.exp(eta)
+        nll = -self._loglik(y, mu, a).sum() / n + 0.5 * self.l2 * w @ w
+        # gradientes analíticos
+        g_eta = (y - mu) / (1 + a * mu)                       # d loglik / d eta
+        g_b0 = -g_eta.sum() / n
+        g_w = -(X.T @ g_eta) / n + self.l2 * w
+        r = 1.0 / a
+        d_a = (r ** 2) * (np.log1p(a * mu) + digamma(r) - digamma(y + r)) + (y - mu) / (a * (1 + a * mu))
+        g_log_a = -(d_a.sum() * a) / n                        # regla de la cadena: d/dlog(a) = a · d/da
+        return nll, np.concatenate([[g_b0], g_w, [g_log_a]])
+
+    def fit(self, X, y):
+        X = np.asarray(X, dtype=float)
+        y = np.asarray(y, dtype=float)
+        theta0 = np.concatenate([[np.log(y.mean() + 1e-9)], np.zeros(X.shape[1]), [0.0]])   # alpha inicial = 1
+        res = minimize(self._objetivo, theta0, args=(X, y), jac=True, method="L-BFGS-B",
+                       options={"maxiter": self.max_iter})
+        self.intercept_, self.coef_, self.alpha_ = res.x[0], res.x[1:-1], float(np.exp(res.x[-1]))
+        self.convergio_, self.n_iter_ = bool(res.success), int(res.nit)
+        mu = self._mu(X)
+        self.loglik_ = float(self._loglik(y, mu, self.alpha_).sum())
+        k = X.shape[1] + 2                                    # coeficientes + intercepto + alpha
+        self.aic_ = 2 * k - 2 * self.loglik_
+        self.bic_ = k * np.log(len(y)) - 2 * self.loglik_
+        self.n_features_in_ = X.shape[1]
+        return self
+
+    def _mu(self, X):
+        return np.exp(np.clip(self.intercept_ + np.asarray(X, dtype=float) @ self.coef_, -30, 30))
+
+    def predict(self, X):
+        """Número esperado de eventos (mu)."""
+        check_is_fitted(self, "coef_")
+        return self._mu(X)
+
+    def predict_proba(self, X):
+        """[P(0 eventos), P(al menos 1)]. P(0) = (1 + alpha·mu)^(-1/alpha)."""
+        mu = self.predict(X)
+        p0 = np.exp(-np.log1p(self.alpha_ * mu) / self.alpha_)
+        return np.column_stack([p0, 1 - p0])
+
+
+def binomial_negativa(cols, **kw):
+    """Modelo de conteo con sobredispersión: regresión binomial negativa NB2 (Mhetre y Thube, 2023)."""
+    params = dict(l2=1e-3) | kw
+    return Pipeline([("pre", preprocesador(*cols)), ("reg", BinomialNegativa(**params))])
+
+
+
+
 
 
 # ---------------------------------------------------------------------------
