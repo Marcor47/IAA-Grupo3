@@ -159,24 +159,9 @@ def rf_conteo(cols, **kw):
     return Pipeline([("pre", preprocesador(*cols)), ("reg", RandomForestRegressor(**params))])
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 # ---------------------------------------------------------------------------
-# Modelo BinomialNegativa
+# Tarea 1 · conteo con sobredispersión: binomial negativa (N_ACC y N_FATALES → HAY_FATAL)
 # ---------------------------------------------------------------------------
-
-
-
 class BinomialNegativa(RegressorMixin, BaseEstimator):
     """Regresión binomial negativa (NB2) ajustada por máxima verosimilitud (Mhetre y Thube, 2023).
 
@@ -245,10 +230,6 @@ def binomial_negativa(cols, **kw):
     """Modelo de conteo con sobredispersión: regresión binomial negativa NB2 (Mhetre y Thube, 2023)."""
     params = dict(l2=1e-3) | kw
     return Pipeline([("pre", preprocesador(*cols)), ("reg", BinomialNegativa(**params))])
-
-
-
-
 
 
 # ---------------------------------------------------------------------------

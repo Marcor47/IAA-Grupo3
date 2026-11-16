@@ -7,12 +7,12 @@
 
 | Requisito del enunciado | Estado | Dónde está |
 |---|---|---|
-| Código limpio, comentado y reproducible (se ejecuta sin errores) | 🟡 En curso | `00_preprocesamiento`, `01_eda` y `02_modelos` corren de punta a punta (12/11). Falta la revisión final tras los modelos nuevos |
+| Código limpio, comentado y reproducible (se ejecuta sin errores) | 🟡 En curso | `00_preprocesamiento`, `01_eda`, `02_modelos` y `05_binomial_negativa` corren de punta a punta. Falta la revisión final tras los modelos nuevos |
 | `requirements.txt` con todas las dependencias | ✅ | [`requirements.txt`](requirements.txt) |
-| Modelos implementados (mínimo 2) en `src/models.py` | 🟡 | Baselines: Poisson, regresión logística binaria y multinomial. Factorías listas para Random Forest y gradient boosting (issues) |
+| Modelos implementados (1 por integrante) en `src/models.py` | 🟡 | Baselines: Poisson y regresión logística (binaria y multinomial). Binomial negativa implementada (`05_binomial_negativa.ipynb`). Pendientes: Random Forest, gradient boosting y MLP (issues) |
 | Métricas y evaluación en `src/evaluation.py` | ✅ | [`src/evaluation.py`](src/evaluation.py): CV temporal, CV 5 × 5, métricas de conteo, binarias y multiclase, comparación pareada |
-| Tabla comparativa de métricas (`results/metrics.csv`) | 🟡 | Baselines de las dos tareas. Faltan las filas de los modelos nuevos |
-| Gráficos en `results/plots/` | 🟡 | `prep_*`, `eda_*` y `modelo_01` a `modelo_03` |
+| Tabla comparativa de métricas (`results/metrics.csv`) | 🟡 | Baselines de las dos tareas y binomial negativa (Tarea 1). Faltan Random Forest, gradient boosting y MLP |
+| Gráficos en `results/plots/` | 🟡 | `prep_*`, `eda_*`, `modelo_01` a `modelo_03` y `modelo_09` (binomial negativa) |
 | `results/model_comparison.txt` con resumen y análisis detallado | 🟡 Versión baseline | [`results/model_comparison.txt`](results/model_comparison.txt) |
 | Análisis de por qué un modelo funcionó mejor, limitaciones e insights | 🟡 | README §5.3 y `model_comparison.txt` §3–4. Falta la versión con los modelos de ensamble |
 | Paper/reporte académico (3-5 páginas) en `report.pdf` | ⬜ Pendiente | Issue |

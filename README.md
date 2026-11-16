@@ -35,8 +35,8 @@ de SUTRAN con fuentes abiertas de clima y de infraestructura vial.
 - Integrar el registro de accidentes de SUTRAN con el clima diario y horario (Open-Meteo) y con los atributos de la
   Red Vial Nacional (MTC), para reconstruir las variables que la bibliografía asocia a la siniestralidad.
 - Construir un panel departamento × día que incluya los días sin accidentes, para modelar la frecuencia.
-- Entrenar y ajustar modelos lineales y de ensamble (Poisson, regresión logística, Random Forest y gradient
-  boosting) y compararlos con referencias ingenuas, con validación temporal o cruzada repetida.
+- Entrenar y ajustar modelos lineales y de ensamble (Poisson, binomial negativa, regresión logística, Random Forest y
+  gradient boosting) y compararlos con referencias ingenuas, con validación temporal o cruzada repetida.
 - Medir con ablación e importancia por permutación qué factores (tipo de choque, vía, clima, luz, calendario, lugar)
   aportan a la predicción.
 
@@ -233,6 +233,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 |---|---|---|---|
 | Referencias sin ML: media de 28 días, semana pasada, fatales de 28 días, Dummy | 1 y 2 | Lo que hay que superar | **Implementado** |
 | Regresión de Poisson | 1 · `N_ACC` | Mhetre y Thube (2023) | **Implementado (baseline)** |
+| Regresión binomial negativa (NB2) | 1 · `N_ACC` y `HAY_FATAL` (vía `N_FATALES`) | Mhetre y Thube (2023) | **Implementado** (`05_binomial_negativa.ipynb`) |
 | Regresión logística (binaria / multinomial) | 1 · `HAY_FATAL`, 2 | Curso; Babaoglu (Lasso) | **Implementado (baseline)** |
 | Random Forest (`criterion="poisson"` en la Tarea 1) | 1 y 2 | Muñoz et al. (2024) | Factoría lista en `src/models.py`; pendiente (issue) |
 | Gradient boosting (`HistGradientBoosting`, pérdida de Poisson en la Tarea 1, categóricas nativas) | 1 y 2 | Babaoglu y Babaoglu (2021) (XGBoost) | Factoría lista en `src/models.py`; pendiente (issue) |
@@ -283,6 +284,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Ingenuo · semana pasada | −4.650 | −4.610 |
 | Ingenuo · media 28 días | 0.217 | **0.277** |
 | **Baseline · Poisson** | **0.256** | 0.267 |
+| Binomial negativa (`05_binomial_negativa.ipynb`) | 0.256 | 0.268 |
 
 **Tarea 1 · `HAY_FATAL`** (PR-AUC; al azar ≈ 0.06)
 
@@ -290,6 +292,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 |---|---|---|---|
 | Ingenuo · fatales últimos 28 días | 0.112 | 0.131 | 0.689 |
 | **Baseline · Reg. logística** | **0.133** | **0.161** | **0.734** |
+| Binomial negativa (vía `N_FATALES`) | 0.130 | 0.160 | 0.731 |
 
 **Tarea 2 · `GRAVEDAD`** (CV 5 × 5)
 
@@ -315,6 +318,9 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
   noche en recta.
 - **El triaje sigue siendo difícil:** en el test, el baseline detecta el 51 % de los fatales con una precisión de 0.21. Los heridos
   y los sin víctimas se confunden entre sí, porque el registro no trae vehículo, ocupantes ni velocidad.
+- **Binomial negativa:** empata con el Poisson en `N_ACC` (D² −0.001, IC −0.002 a +0.000) y con la logística en
+  `HAY_FATAL`. La sobredispersión es significativa pero pequeña (α = 0.10; AIC 16 799 frente a 16 816) y en
+  `N_FATALES` es nula (α ≈ 0): las variables explican casi toda la variación extra, así que el Poisson basta.
 
 ### 5.4 Siguientes pasos (issues)
 Cada issue trae su contexto, los pasos y los criterios de aceptación. Las convenciones comunes están en `AGENTS.md`.
@@ -333,6 +339,7 @@ Cada issue trae su contexto, los pasos y los criterios de aceptación. Las conve
 
 ---
 
+
 ## 6. Cómo ejecutar
 
 ### Requisitos
@@ -342,61 +349,61 @@ Cada issue trae su contexto, los pasos y los criterios de aceptación. Las conve
 ### 1. Crear el entorno e instalar las dependencias (una sola vez)
 
 **Windows · cmd**
-    python -m venv .venv
-    .venv\Scripts\activate
-    python -m pip install -r requirements.txt
+```
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install -r requirements.txt
+```
 
 **Windows · PowerShell**
-    python -m venv .venv
-    .venv\Scripts\Activate.ps1
-    python -m pip install -r requirements.txt
+```
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
 
 **Linux / Mac**
-    python3 -m venv .venv
-    source .venv/bin/activate
-    python -m pip install -r requirements.txt
-
-
-**Sin entorno virtual (Python global)**
-Si prefieres instalar las librerías en tu Python global, omite la creación y activación de `.venv` y ejecuta solo:
-
-    python -m pip install -r requirements.txt
-
-Luego abre directamente `jupyter notebook`. Ten en cuenta que estas librerías quedan compartidas con tus otros
-proyectos: si alguno necesita otra versión de pandas o scikit-learn, pueden entrar en conflicto. Por eso se recomienda
-el entorno virtual.
-
-
+```
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
 
 > Al activar el entorno, la consola muestra `(.venv)` al inicio de la línea. Si no aparece, `pip` instalará en el
 > Python global. Para confirmar qué Python se usa: `where python` (Windows) o `which python` (Linux/Mac).
->
-> Si ya tienes instaladas las librerías de `requirements.txt`, puedes omitir este paso.
+
+**Sin entorno virtual (Python global).** Omite la creación y activación de `.venv` y ejecuta solo
+`python -m pip install -r requirements.txt`; luego abre directamente `jupyter notebook`. Las librerías quedan
+compartidas con tus otros proyectos y pueden entrar en conflicto si alguno necesita otras versiones; por eso se
+recomienda el entorno virtual. Si ya las tienes instaladas, puedes omitir este paso.
 
 ### 2. Comprobar la instalación
-    python -c "from src import models as M; print('OK', M.cargar_panel().shape)"
+```
+python -c "from src import models as M; print('OK', M.cargar_panel().shape)"
+```
 
 ### 3. Trabajar con los notebooks
-Cada vez que trabajes, activa el entorno (paso 1, segunda línea) y abre Jupyter:
+Cada vez que trabajes, activa el entorno y abre Jupyter con `jupyter notebook`. En Jupyter o VS Code, elige el kernel
+de `.venv`. Para ejecutar un notebook: *Kernel → Restart & Run All*.
 
-    jupyter notebook
-
-En Jupyter o VS Code, elige el kernel de `.venv`. Para ejecutar un notebook: *Kernel → Restart & Run All*.
+| Notebook | Qué hace |
+|---|---|
+| `00_preprocesamiento.ipynb` | Limpieza, ubicación, atributos de la vía, clima, variables, selección y encoding. Guarda `data/processed/accidentes.csv` y `panel_depto_dia.csv`. Equivale a `python -m src.preprocessing` |
+| `01_eda.ipynb` | EDA sobre los datasets limpios (figuras `eda_*`) |
+| `02_modelos.ipynb` | Baselines de las dos tareas, `results/metrics.csv` y figuras `modelo_01`–`modelo_03` |
+| `05_binomial_negativa.ipynb` | Binomial negativa para `N_ACC` y `HAY_FATAL` (Mhetre y Thube, 2023); figura `modelo_09` |
 
 ### 4. Reproducir todos los resultados
-Ejecuta los notebooks **en este orden**: 00 → 01 → 02 → 03 → 04 → 05. El 02 reescribe `results/metrics.csv` con los
-baselines; los siguientes agregan sus filas.
+Los notebooks se ejecutan en orden. El 02 reescribe `results/metrics.csv` con los baselines; los siguientes agregan
+sus filas, así que el 02 va siempre antes que ellos. Desde la carpeta `notebooks/` (igual en Windows, Linux y Mac):
+```
+jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 05_binomial_negativa.ipynb
+```
+Cuando existan `03_tarea1_modelos.ipynb` y `04_tarea2_modelos.ipynb`, se agregan entre el 02 y el 05.
 
-**Windows**
-    cd notebooks
-    jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_tarea1_modelos.ipynb 04_tarea2_modelos.ipynb 05_binomial_negativa.ipynb
-
-**Linux / Mac**
-    cd notebooks
-    jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_tarea1_modelos.ipynb 04_tarea2_modelos.ipynb 05_binomial_negativa.ipynb
-
-Opcional: `python -m src.preprocessing` regenera `data/processed/` desde las cachés de `data/raw/` (≈ 1 min). Si se
-borran las cachés, se descargan de nuevo: la red vial tarda segundos y la lluvia ≈ 1 hora por los límites de la API.
+Las descargas externas están en `data/raw/` como cachés: red vial con atributos, clima por celda (diario y por hora)
+y clima por capital. Si se borran, se vuelven a descargar: el clima por hora tarda ~1.5 h por los límites de la API
+gratuita de Open-Meteo y retoma donde quedó si se interrumpe.
 
 ### Problemas comunes
 | Mensaje | Causa | Solución |
@@ -404,9 +411,11 @@ borran las cachés, se descargan de nuevo: la red vial tarda segundos y la lluvi
 | `"source" no se reconoce…` | Es un comando de Linux/Mac | En Windows usa `.venv\Scripts\activate` |
 | `"..\" no se reconoce…` o `.venv/bin` no existe | Ruta de Linux/Mac | En Windows la carpeta es `.venv\Scripts` |
 | `"uv" no se reconoce…` | `uv` no viene con Python | Usa `python -m venv`, como arriba |
-| `Activate.ps1 no se puede cargar… ejecución de scripts deshabilitada` | Política de PowerShell | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` y vuelve a activar |
+| `Activate.ps1 no se puede cargar…` | Política de PowerShell | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` y vuelve a activar |
 | `ModuleNotFoundError: No module named 'sklearn'` (u otro) | El entorno no está activado, o el kernel de Jupyter no es el de `.venv` | Activa el entorno o elige el kernel correcto |
 | `ModuleNotFoundError: No module named 'src'` | Jupyter se abrió fuera de la carpeta del repo | Abre Jupyter desde la raíz del repo |
+
+---
 
 ## 7. Estructura del repositorio
 ```
@@ -417,7 +426,7 @@ ENTREGABLE_FINAL.md    checklist del entregable de la semana 15
 requirements.txt       dependencias
 data/raw/              accidentes SUTRAN + diccionario, red vial del MTC (con atributos) y cachés de clima
 data/processed/        accidentes.csv (Tarea 2, 8 105 × 33) y panel_depto_dia.csv (Tarea 1, 15 336 × 25)
-notebooks/             00_preprocesamiento.ipynb, 01_eda.ipynb, 02_modelos.ipynb
+notebooks/             00_preprocesamiento.ipynb, 01_eda.ipynb, 02_modelos.ipynb, 05_binomial_negativa.ipynb
 results/               metrics.csv, model_comparison.txt, plots/
 src/                   preprocessing.py (datos y variables), models.py (grupos de variables, encoding y modelos), evaluation.py (métricas y validación)
 papers/                paper_integrante1..4.pdf, resúmenes e índice
