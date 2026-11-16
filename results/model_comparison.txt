@@ -1,6 +1,6 @@
 COMPARACIÓN DE MODELOS: RIESGO Y GRAVEDAD DE ACCIDENTES EN CARRETERAS DEL PERÚ
-Inteligencia Artificial Aplicada (1INF62), PUCP 2026-2. Versión: BASELINE del replanteo (12/11/2026).
-Fuente: notebooks/02_modelos.ipynb -> results/metrics.csv
+Inteligencia Artificial Aplicada (1INF62), PUCP 2026-2. Versión: BASELINE del replanteo (12/11/2026) + MLP (16/11/2026).
+Fuente: notebooks/02_modelos.ipynb y notebooks/06_mlp.ipynb -> results/metrics.csv
 
 0. REPLANTEO
 ------------
@@ -70,7 +70,68 @@ d) El triaje sigue siendo difícil: heridos y sin víctimas se confunden entre s
 - Capa vial de 2014. Sin exposición (tráfico). Periodo corto (21 meses) y en pandemia.
 - Los IC pareados son aproximados (pliegues que comparten datos).
 
-5. SIGUIENTES PASOS (issues del repositorio)
+5. MLP: PERCEPTRÓN MULTICAPA (issue #10, notebooks/06_mlp.ipynb)
+-----------------------------------------------------------------
+Respaldo: Emu et al. (2022). Mismas variables (M.preprocesador: 43 columnas en la Tarea 1 y 67 en la Tarea 2), misma
+validación y mismas métricas que el baseline; las referencias se recalcularon en el notebook y coinciden con las de
+arriba.
+- Tarea 1 · N_ACC: MLPRegressor con pérdida de Poisson (salida exponencial).
+- Tarea 1 · HAY_FATAL: MLPClassifier sin pesos de clase, como la logística, para que las probabilidades queden calibradas.
+- Tarea 2: MLPClassifier con pesos de clase balanceados (M.PesosBalanceados, el equivalente a class_weight="balanced").
+Ajuste en grilla (capas ocultas, alpha L2 y número de épocas) sin el early stopping de scikit-learn, que usa una
+validación aleatoria (mezclaría días en la Tarea 1) y decide con la exactitud. Tarea 1: con los 5 pliegues temporales
+del train (el holdout no se mira). Tarea 2: con E.CV dentro del 80 % de entrenamiento (el test no se mira).
+Configuraciones elegidas:
+  N_ACC      capas (32, 16), alpha 1.0, 50 épocas
+  HAY_FATAL  capas (8,),     alpha 1.0, 150 épocas
+  GRAVEDAD   capas (32,),    alpha 0.1, 30 épocas
+
+Tarea 1 · N_ACC (D² de Poisson)            CV temporal   Holdout
+  Ingenuo · media 28 días                   0.217         0.277
+  Baseline · Poisson                        0.256         0.267
+  Binomial negativa                         0.256         0.268
+  MLP (ajustado)                            0.250         0.292
+  MLP − Poisson (CV): −0.006 (IC95 % aprox. −0.032 a +0.019), mejor en 1 de 5 pliegues.
+  Holdout con 5 semillas: 0.283 ± 0.006 (mín. 0.278, máx. 0.292).
+
+Tarea 1 · HAY_FATAL (PR-AUC)               CV temporal   Holdout   ROC-AUC holdout
+  Ingenuo · fatales últimos 28 días         0.112         0.131     0.689
+  Baseline · Reg. logística                 0.133         0.161     0.734
+  MLP (ajustado)                            0.138         0.157     0.722
+  MLP − logística (CV): +0.005 (IC95 % aprox. −0.027 a +0.036), mejor en 1 de 5 pliegues.
+  Holdout con 5 semillas: 0.157 ± 0.002 (mín. 0.154, máx. 0.160).
+
+Tarea 2 · GRAVEDAD (CV 5 × 5)              Macro-F1  Bal. acc.  PR-AUC fatal  Log-loss
+  Baseline · Logística multinomial (67)    0.419     0.466      0.266         1.037
+  MLP (ajustado)                           0.422     0.460      0.254         1.039
+  MLP − logística: macro-F1 +0.003 (IC95 % aprox. −0.001 a +0.006, mejor en 16 de 25 pliegues);
+  balanced acc. −0.005 (−0.009 a −0.001, 8 de 25); PR-AUC fatal −0.011 (−0.016 a −0.006, 4 de 25).
+  Test 80/20: macro-F1 0.430 (logística 0.436); recall de fatales 0.49 con precisión 0.22.
+  Test con 5 semillas: 0.423 ± 0.009 (mín. 0.410, máx. 0.430), siempre por debajo de la logística.
+
+Lectura
+a) Tarea 1 · conteo. Resultado mixto. En la CV temporal el MLP empata con el Poisson (−0.006, gana en 1 de 5
+   pliegues). En el holdout es el único modelo que supera a la media móvil de 28 días (0.292 frente a 0.277 y 0.267
+   del Poisson y 0.268 de la binomial negativa), y lo hace con las 5 semillas. En la figura modelo_10 se ve por qué: en abr–sep 2021 el número de
+   accidentes sube tras la cuarentena, y el Poisson se queda corto en los departamentos grandes (Lima, Arequipa),
+   mientras que el MLP sigue mejor ese nivel. Es una señal a favor de las interacciones no lineales, pero un solo
+   periodo de holdout no basta para afirmarlo: hay que confirmarla con los ensambles de árboles (#2).
+b) Tarea 1 · HAY_FATAL. Sin mejora. La media en CV es algo mayor que la de la logística, pero gana en 1 solo pliegue
+   y el IC incluye el 0; en el holdout queda por debajo con todas las semillas (0.154–0.160 frente a 0.161).
+c) Tarea 2. El MLP no supera al modelo lineal. El macro-F1 empata (+0.003, IC con el 0), pero ordena peor a los
+   fatales (PR-AUC −0.011, peor en 21 de 25 pliegues) y en el test queda por debajo con todas las semillas. La grilla
+   eligió la red más chica y con menos épocas de las probadas, y casi todas las configuraciones quedan entre 0.40 y
+   0.42 de macro-F1: con estas variables, la red no encuentra interacciones que un modelo lineal no capture. Esto refuerza la lectura del baseline (3.c y 3.d): el límite está en
+   la información del registro (sin vehículo, ocupantes ni velocidad), no en la flexibilidad del modelo.
+d) Frente a Emu et al. (2022): ellos entrenan redes con 5.8 millones de choques y variables del vehículo y las
+   personas. Aquí hay 8 105 accidentes sin esas variables, un escenario en el que la bibliografía espera que los
+   modelos lineales y los ensambles de árboles rindan igual o mejor que una red.
+e) Pendiente del issue #10: el ensamble por votación (soft voting) de logística, MLP y árboles, cuando estén los
+   modelos del #4. Un MLP de scikit-learn varía con la semilla (±0.006 de D² y ±0.009 de macro-F1 en el holdout y en
+   el test), del mismo orden que las diferencias con el baseline; promediar varias semillas o votar con otros modelos
+   reduce esa varianza.
+
+6. SIGUIENTES PASOS (issues del repositorio)
 --------------------------------------------
 - Tarea 1: Random Forest y gradient boosting (Poisson) con CV temporal y ajuste de hiperparámetros.
 - Tarea 2: Random Forest y gradient boosting multiclase con ajuste de hiperparámetros y manejo del desbalance.

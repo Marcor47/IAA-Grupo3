@@ -17,14 +17,16 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import digamma, gammaln
-from sklearn.base import BaseEstimator, RegressorMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import (HistGradientBoostingClassifier, HistGradientBoostingRegressor, RandomForestClassifier,
                               RandomForestRegressor)
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression, PoissonRegressor
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
+from sklearn.utils.class_weight import compute_sample_weight
 from sklearn.utils.validation import check_is_fitted
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -254,3 +256,50 @@ def random_forest(cols, **kw):
     params = dict(n_estimators=500, min_samples_leaf=5, max_features="sqrt", class_weight="balanced_subsample",
                   n_jobs=-1, random_state=SEED) | kw
     return Pipeline([("pre", preprocesador(*cols)), ("clf", RandomForestClassifier(**params))])
+
+
+# ---------------------------------------------------------------------------
+# Redes neuronales: perceptrón multicapa (Emu et al., 2022)
+# ---------------------------------------------------------------------------
+class PesosBalanceados(BaseEstimator, ClassifierMixin):
+    """Entrena `estimator` con sample_weight 'balanced' (cada clase pesa lo mismo en la pérdida).
+
+    MLPClassifier no tiene `class_weight`, pero sí acepta `sample_weight` en fit. Con este envoltorio el MLP se trata
+    igual que la logística con class_weight="balanced" y funciona dentro de un Pipeline, de E.cv_puntajes y de
+    GridSearchCV (los parámetros del MLP se ajustan como `clf__estimator__<parámetro>`)."""
+
+    def __init__(self, estimator):
+        self.estimator = estimator
+
+    def fit(self, X, y):
+        self.estimator_ = clone(self.estimator).fit(X, y, sample_weight=compute_sample_weight("balanced", y))
+        self.classes_ = self.estimator_.classes_
+        return self
+
+    def predict_proba(self, X):
+        return self.estimator_.predict_proba(X)
+
+    def predict(self, X):
+        return self.classes_[self.predict_proba(X).argmax(axis=1)]
+
+
+# Sin early stopping: el de sklearn separa una validación aleatoria (en la Tarea 1 mezclaría días) y en clasificación
+# decide con la exactitud, que no sirve con clases desbalanceadas. El número de épocas (max_iter) se ajusta como un
+# hiperparámetro más con la misma validación de cada tarea.
+MLP_BASE = dict(activation="relu", solver="adam", batch_size=256, learning_rate_init=1e-3, max_iter=100,
+                early_stopping=False, random_state=SEED)
+
+
+def mlp_conteo(cols, **kw):
+    """MLP de conteo con pérdida de Poisson (la salida pasa por exp, como en la regresión de Poisson).
+    Mismo preprocesador que el modelo lineal: la red necesita las variables estandarizadas y en one-hot."""
+    params = MLP_BASE | dict(loss="poisson", hidden_layer_sizes=(32,), alpha=1.0) | kw
+    return Pipeline([("pre", preprocesador(*cols)), ("reg", MLPRegressor(**params))])
+
+
+def mlp_clasificador(cols, balanceado=True, **kw):
+    """MLP para clasificación (binaria o multiclase). Con `balanceado=True` las clases pesan igual (como la
+    logística con class_weight="balanced"); con False las probabilidades quedan calibradas a la prevalencia."""
+    params = MLP_BASE | dict(hidden_layer_sizes=(64,), alpha=1.0) | kw
+    mlp = MLPClassifier(**params)
+    return Pipeline([("pre", preprocesador(*cols)), ("clf", PesosBalanceados(mlp) if balanceado else mlp)])

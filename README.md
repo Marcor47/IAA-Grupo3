@@ -237,7 +237,8 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Regresión logística (binaria / multinomial) | 1 · `HAY_FATAL`, 2 | Curso; Babaoglu (Lasso) | **Implementado (baseline)** |
 | Random Forest (`criterion="poisson"` en la Tarea 1) | 1 y 2 | Muñoz et al. (2024) | Factoría lista en `src/models.py`; pendiente (issue) |
 | Gradient boosting (`HistGradientBoosting`, pérdida de Poisson en la Tarea 1, categóricas nativas) | 1 y 2 | Babaoglu y Babaoglu (2021) (XGBoost) | Factoría lista en `src/models.py`; pendiente (issue) |
-| MLP y ensamble por votación | 2 | Emu et al. (2022) | Opcional (issue) |
+| MLP (perceptrón multicapa; pérdida de Poisson en `N_ACC`, pesos de clase balanceados en la Tarea 2) | 1 y 2 | Emu et al. (2022) | **Implementado y ajustado** (`06_mlp.ipynb`) |
+| Ensamble por votación | 2 | Emu et al. (2022) | Opcional (issue #10; requiere los modelos del #4) |
 | Ablación por grupos + importancia por permutación | 1 y 2 | Muñoz; Babaoglu; Emu (importancia de variables) | Pendiente (issue) |
 
 ### 4.3 Validación y métricas
@@ -285,6 +286,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Ingenuo · media 28 días | 0.217 | **0.277** |
 | **Baseline · Poisson** | **0.256** | 0.267 |
 | Binomial negativa (`05_binomial_negativa.ipynb`) | 0.256 | 0.268 |
+| MLP ajustado (`06_mlp.ipynb`) | 0.250 | **0.292** |
 
 **Tarea 1 · `HAY_FATAL`** (PR-AUC; al azar ≈ 0.06)
 
@@ -293,6 +295,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Ingenuo · fatales últimos 28 días | 0.112 | 0.131 | 0.689 |
 | **Baseline · Reg. logística** | **0.133** | **0.161** | **0.734** |
 | Binomial negativa (vía `N_FATALES`) | 0.130 | 0.160 | 0.731 |
+| MLP ajustado | 0.138 | 0.157 | 0.722 |
 
 **Tarea 2 · `GRAVEDAD`** (CV 5 × 5)
 
@@ -301,6 +304,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Dummy (proporciones) | 0.228 | 0.333 | 0.117 | 0.960 |
 | Modelo 2 del avance (depto + hora + altitud + modalidad) | **0.421** | **0.469** | **0.269** | 1.037 |
 | **Baseline · Reg. logística multinomial (67 columnas)** | 0.419 | 0.466 | 0.266 | 1.037 |
+| MLP ajustado (`06_mlp.ipynb`, mismas 67 columnas) | **0.422** | 0.460 | 0.254 | 1.039 |
 
 ![Matriz de confusión del baseline](results/plots/modelo_03_t2_baseline_test.png)
 
@@ -321,6 +325,16 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 - **Binomial negativa:** empata con el Poisson en `N_ACC` (D² −0.001, IC −0.002 a +0.000) y con la logística en
   `HAY_FATAL`. La sobredispersión es significativa pero pequeña (α = 0.10; AIC 16 799 frente a 16 816) y en
   `N_FATALES` es nula (α ≈ 0): las variables explican casi toda la variación extra, así que el Poisson basta.
+- **MLP** (Emu et al., 2022; hiperparámetros ajustados con la misma validación, sin mirar el holdout ni el test):
+  - **`N_ACC`:** empata con el Poisson en la CV (−0.006, mejor en 1 de 5 pliegues), pero en el holdout es el único
+    modelo que supera a la media de 28 días (0.292; 0.283 ± 0.006 con 5 semillas). Sigue mejor la subida de
+    accidentes tras la cuarentena (figura `modelo_10`): señal a favor de las interacciones no lineales, que falta
+    confirmar con los árboles.
+  - **`HAY_FATAL`:** sin mejora frente a la logística (IC con el 0 en la CV; por debajo en el holdout con todas las semillas).
+  - **Tarea 2:** empata en macro-F1 (+0.003, IC con el 0), pero ordena peor a los fatales (PR-AUC −0.011, peor en 21
+    de 25 pliegues) y en el test queda por debajo con todas las semillas (0.423 ± 0.009 frente a 0.436). Con 8 105
+    accidentes y sin variables del vehículo ni de las personas, la red no aprovecha más que el modelo lineal; Emu et
+    al. usan 5.8 millones de registros.
 
 ### 5.4 Siguientes pasos (issues)
 Cada issue trae su contexto, los pasos y los criterios de aceptación. Las convenciones comunes están en `AGENTS.md`.
@@ -335,7 +349,7 @@ Cada issue trae su contexto, los pasos y los criterios de aceptación. Las conve
 | #7 | `model_comparison.txt` final, README §5 y reproducibilidad | #2–#5 |
 | #8 | `report.pdf` (3–5 páginas) | #7 |
 | #9 | Presentación final (`presentation.pdf`) | #7 |
-| #10 | Opcional: MLP y ensamble por votación (Emu et al.) | #4 |
+| #10 | Opcional: MLP (✅ `06_mlp.ipynb`) y ensamble por votación (pendiente) | #4 |
 
 ---
 
@@ -392,12 +406,13 @@ de `.venv`. Para ejecutar un notebook: *Kernel → Restart & Run All*.
 | `01_eda.ipynb` | EDA sobre los datasets limpios (figuras `eda_*`) |
 | `02_modelos.ipynb` | Baselines de las dos tareas, `results/metrics.csv` y figuras `modelo_01`–`modelo_03` |
 | `05_binomial_negativa.ipynb` | Binomial negativa para `N_ACC` y `HAY_FATAL` (Mhetre y Thube, 2023); figura `modelo_09` |
+| `06_mlp.ipynb` | MLP para las dos tareas, con ajuste de hiperparámetros y sensibilidad a la semilla (Emu et al., 2022); figuras `modelo_10`–`modelo_12` (≈ 5 min) |
 
 ### 4. Reproducir todos los resultados
 Los notebooks se ejecutan en orden. El 02 reescribe `results/metrics.csv` con los baselines; los siguientes agregan
 sus filas, así que el 02 va siempre antes que ellos. Desde la carpeta `notebooks/` (igual en Windows, Linux y Mac):
 ```
-jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 05_binomial_negativa.ipynb
+jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb
 ```
 Cuando existan `03_tarea1_modelos.ipynb` y `04_tarea2_modelos.ipynb`, se agregan entre el 02 y el 05.
 
@@ -426,7 +441,7 @@ ENTREGABLE_FINAL.md    checklist del entregable de la semana 15
 requirements.txt       dependencias
 data/raw/              accidentes SUTRAN + diccionario, red vial del MTC (con atributos) y cachés de clima
 data/processed/        accidentes.csv (Tarea 2, 8 105 × 33) y panel_depto_dia.csv (Tarea 1, 15 336 × 25)
-notebooks/             00_preprocesamiento.ipynb, 01_eda.ipynb, 02_modelos.ipynb, 05_binomial_negativa.ipynb
+notebooks/             00_preprocesamiento.ipynb, 01_eda.ipynb, 02_modelos.ipynb, 05_binomial_negativa.ipynb, 06_mlp.ipynb
 results/               metrics.csv, model_comparison.txt, plots/
 src/                   preprocessing.py (datos y variables), models.py (grupos de variables, encoding y modelos), evaluation.py (métricas y validación)
 papers/                paper_integrante1..4.pdf, resúmenes e índice
