@@ -35,8 +35,9 @@ de SUTRAN con fuentes abiertas de clima y de infraestructura vial.
 - Integrar el registro de accidentes de SUTRAN con el clima diario y horario (Open-Meteo) y con los atributos de la
   Red Vial Nacional (MTC), para reconstruir las variables que la bibliografía asocia a la siniestralidad.
 - Construir un panel departamento × día que incluya los días sin accidentes, para modelar la frecuencia.
-- Entrenar y ajustar modelos lineales y de ensamble (Poisson, binomial negativa, regresión logística, Random Forest y
-  gradient boosting) y compararlos con referencias ingenuas, con validación temporal o cruzada repetida.
+- Entrenar y ajustar modelos propuestos en la literatura (Poisson, binomial negativa, regresión logística, Random
+  Forest, gradient boosting, perceptrón multicapa y un ensamble por votación) y compararlos con referencias ingenuas,
+  con validación temporal o cruzada repetida.
 - Medir con ablación e importancia por permutación qué factores (tipo de choque, vía, clima, luz, calendario, lugar)
   aportan a la predicción.
 
@@ -112,7 +113,7 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
 - **Datos:** registros de la National Highways Authority of India, 2016-2020. División 70 % entrenamiento / 30 % validación.
 - **Técnica:** regresión **binomial negativa** (extiende Poisson a conteos con sobredispersión). Cuatro modelos: naturaleza del choque, horario, condición climática (fino, nublado, llovizna, lluvia fuerte, neblina) y choque + horario. Validación con log-verosimilitud, AIC, BIC, MAD, MSE, RMSE y MAPE.
 - **Resultados:** la naturaleza del choque y el clima resultaron significativos; lluvia ligera y fuerte, neblina, tiempo fino y nublado aparecen asociados positivamente con la fatalidad. Los modelos 2 y 4 ajustaron mejor.
-- **Aporte a nuestro proyecto:** respalda modelar `NUM_FALLECIDOS` como **conteo** (usamos Poisson como baseline y proponemos binomial negativa para el final) y confirma el clima como variable relevante. **Crítica:** usa el clima como categorías y no aísla un efecto propio de la lluvia; nosotros usamos precipitación continua en mm y evaluamos en datos de prueba.
+- **Aporte a nuestro proyecto:** respalda modelar `NUM_FALLECIDOS` como **conteo** (Poisson como baseline y binomial negativa como modelo propuesto, §4.2) y confirma el clima como variable relevante. **Crítica:** usa el clima como categorías y no aísla un efecto propio de la lluvia; nosotros usamos precipitación continua en mm y evaluamos en datos de prueba.
 
 ### Paper 2 · Angel Cerdán · [`paper_integrante2.pdf`](papers/paper_integrante2.pdf) (resumen de una página: [`paper_integrante2_resumen.pdf`](papers/paper_integrante2_resumen.pdf))
 **E. G. Muñoz Muñoz, D. A. Verduga Alcívar, Y. F. Guerrero Alcívar, M. A. Lapo Palacios y O. Zorrilla Briones**, "Búsqueda de patrones con machine learning en datos de siniestros de tránsito", *Ciencia Latina Revista Científica Multidisciplinar*, vol. 8, n.º 2, pp. 1617-1637, 2024. DOI: [10.37811/cl_rcm.v8i2.10592](https://doi.org/10.37811/cl_rcm.v8i2.10592)
@@ -186,11 +187,11 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
    traduce en una decisión de modelado.
 3. **Baseline** (`02_modelos.ipynb`): por cada tarea, una referencia sin aprendizaje y un modelo lineal con todas las
    variables, sin ajuste de hiperparámetros.
-4. **Siguientes pasos** (issues del repositorio):
-   - Random Forest y gradient boosting;
-   - ajuste de hiperparámetros con la misma validación;
-   - ablación por grupos de variables e importancia por permutación;
-   - informe y presentación finales.
+4. **Modelos de la literatura** (un notebook por modelo, `03` a `06`): cada uno se ajusta con la misma validación y
+   las mismas métricas que el baseline, y se compara con él pliegue a pliegue.
+5. **Ablación** (`07_ablacion.ipynb`): con el mejor modelo de cada objetivo, se quita un grupo de variables a la vez
+   y se mide cuánto empeora; se complementa con la importancia por permutación.
+6. **Comparación** (`08_comparacion.ipynb`): tabla y figuras con todos los modelos a partir de `results/metrics.csv`.
 
 ### 4.1 Variables (factores de la bibliografía → columnas)
 
@@ -235,11 +236,11 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Regresión de Poisson | 1 · `N_ACC` | Mhetre y Thube (2023) | **Implementado (baseline)** |
 | Regresión binomial negativa (NB2) | 1 · `N_ACC` y `HAY_FATAL` (vía `N_FATALES`) | Mhetre y Thube (2023) | **Implementado** (`05_binomial_negativa.ipynb`) |
 | Regresión logística (binaria / multinomial) | 1 · `HAY_FATAL`, 2 | Curso; Babaoglu (Lasso) | **Implementado (baseline)** |
-| Random Forest (`criterion="poisson"` en la Tarea 1) | 1 y 2 | Muñoz et al. (2024) | Factoría lista en `src/models.py`; pendiente (issue) |
-| Gradient boosting (`HistGradientBoosting`, pérdida de Poisson en la Tarea 1, categóricas nativas) | 1 y 2 | Babaoglu y Babaoglu (2021) (XGBoost) | Factoría lista en `src/models.py`; pendiente (issue) |
+| Random Forest (`criterion="poisson"` en la Tarea 1) | 1 y 2 | Muñoz et al. (2024) | En desarrollo (`03_random_forest.ipynb`) |
+| Gradient boosting (`HistGradientBoosting`, pérdida de Poisson en la Tarea 1, categóricas nativas) | 1 y 2 | Babaoglu y Babaoglu (2021) (XGBoost) | En desarrollo (`04_gradient_boosting.ipynb`) |
 | MLP (perceptrón multicapa; pérdida de Poisson en `N_ACC`, pesos de clase balanceados en la Tarea 2) | 1 y 2 | Emu et al. (2022) | **Implementado y ajustado** (`06_mlp.ipynb`) |
-| Ensamble por votación | 2 | Emu et al. (2022) | Opcional (issue #10; requiere los modelos del #4) |
-| Ablación por grupos + importancia por permutación | 1 y 2 | Muñoz; Babaoglu; Emu (importancia de variables) | Pendiente (issue) |
+| Ensamble por votación (promedio de las predicciones de logística, MLP, Random Forest y gradient boosting) | 1 y 2 | Emu et al. (2022) | En desarrollo (`06_mlp.ipynb`) |
+| Ablación por grupos + importancia por permutación | 1 y 2 | Muñoz; Babaoglu; Emu (importancia de variables) | En desarrollo (`07_ablacion.ipynb`) |
 
 ### 4.3 Validación y métricas
 
@@ -276,7 +277,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 
   ![Variables de la bibliografía y gravedad](results/plots/eda_03_variables_bibliografia.png)
 
-### 5.2 Baseline (`02_modelos.ipynb`, `results/metrics.csv`)
+### 5.2 Modelos (`results/metrics.csv`)
 
 **Tarea 1 · `N_ACC`** (D² de Poisson; más es mejor)
 
@@ -308,7 +309,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 
 ![Matriz de confusión del baseline](results/plots/modelo_03_t2_baseline_test.png)
 
-### 5.3 Lectura del baseline
+### 5.3 Lectura de los resultados
 - **Tarea 1 · conteo:** el Poisson le gana a la media móvil en los 5 pliegues de la CV (+0.039 de D², IC 95 % aprox.
   +0.025 a +0.053). En el holdout queda empatado o un poco por debajo (0.267 frente a 0.277). Hay señal
   aprendible más allá de la inercia, pero un modelo lineal apenas la captura. Las interacciones no lineales (departamento
@@ -336,23 +337,14 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
     accidentes y sin variables del vehículo ni de las personas, la red no aprovecha más que el modelo lineal; Emu et
     al. usan 5.8 millones de registros.
 
-### 5.4 Siguientes pasos (issues)
-Cada issue trae su contexto, los pasos y los criterios de aceptación. Las convenciones comunes están en `AGENTS.md`.
-
-| Issue | Qué | Depende de |
-|---|---|---|
-| #2 | Tarea 1 · Random Forest y gradient boosting para `N_ACC` (CV temporal + ajuste de hiperparámetros) | — |
-| #3 | Tarea 1 · Clasificadores de `HAY_FATAL` con calibración | — |
-| #4 | Tarea 2 · Random Forest y gradient boosting multiclase (ajuste + desbalance) | — |
-| #5 | Ablación por grupos de variables e importancia por permutación | #2, #3, #4 |
-| #6 | Investigar una variable de exposición (flujo vehicular en peajes) | — |
-| #7 | `model_comparison.txt` final, README §5 y reproducibilidad | #2–#5 |
-| #8 | `report.pdf` (3–5 páginas) | #7 |
-| #9 | Presentación final (`presentation.pdf`) | #7 |
-| #10 | Opcional: MLP (✅ `06_mlp.ipynb`) y ensamble por votación (pendiente) | #4 |
+### 5.4 Trabajo en curso
+- **Modelos de ensamble:** Random Forest y gradient boosting en las dos tareas, y un ensamble por votación que combine
+  los modelos anteriores.
+- **Ablación:** medir qué grupos de variables aportan a la predicción en cada tarea; en particular, si el clima
+  aporta a la frecuencia de accidentes (Tarea 1) y a su gravedad (Tarea 2).
+- **Comparación final:** elegir el mejor modelo para cada objetivo con la métrica principal y la comparación pareada.
 
 ---
-
 
 ## 6. Cómo ejecutar
 
@@ -414,7 +406,7 @@ sus filas, así que el 02 va siempre antes que ellos. Desde la carpeta `notebook
 ```
 jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb
 ```
-Cuando existan `03_tarea1_modelos.ipynb` y `04_tarea2_modelos.ipynb`, se agregan entre el 02 y el 05.
+A medida que se agreguen `03_random_forest`, `04_gradient_boosting`, `07_ablacion` y `08_comparacion`, se suman a la lista en orden numérico.
 
 Las descargas externas están en `data/raw/` como cachés: red vial con atributos, clima por celda (diario y por hora)
 y clima por capital. Si se borran, se vuelven a descargar: el clima por hora tarda ~1.5 h por los límites de la API
