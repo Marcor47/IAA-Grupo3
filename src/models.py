@@ -323,3 +323,64 @@ def votacion(estimadores, conteo=False, pesos=None):
     if conteo:
         return VotingRegressor(estimadores, weights=pesos)
     return VotingClassifier(estimadores, voting="soft", weights=pesos)
+
+
+# ---------------------------------------------------------------------------
+# Configuraciones elegidas por la búsqueda de hiperparámetros de cada notebook
+# ---------------------------------------------------------------------------
+# Copiadas de la salida de 03_random_forest, 04_gradient_boosting, 05_binomial_negativa y 06_mlp. Sirven para volver a
+# entrenar los modelos finales sin repetir las búsquedas (comparación final y ablación). Si se vuelve a ajustar un
+# modelo en su notebook, hay que actualizar aquí su configuración.
+CONFIG_AJUSTADA = {
+    "N_ACC": {
+        "nb": dict(l2=1e-3),
+        "mlp": dict(hidden_layer_sizes=(32, 16), alpha=1.0, max_iter=50),
+        "rf": dict(min_samples_leaf=20, max_features=0.2, max_depth=20),
+        "gbm": dict(learning_rate=0.03, max_iter=100, max_leaf_nodes=7, min_samples_leaf=100, l2_regularization=1.0),
+    },
+    "HAY_FATAL": {   # todos sin pesos de clase: probabilidades calibradas
+        "nb": dict(l2=1e-3),
+        "mlp": dict(hidden_layer_sizes=(8,), alpha=1.0, max_iter=150),
+        "rf": dict(class_weight=None, min_samples_leaf=40, max_features=0.35, max_depth=8),
+        "gbm": dict(class_weight=None, learning_rate=0.03, max_iter=150, max_leaf_nodes=7, min_samples_leaf=200,
+                    l2_regularization=10.0),
+    },
+    "GRAVEDAD": {   # todos con pesos de clase balanceados
+        "mlp": dict(hidden_layer_sizes=(32,), alpha=0.1, max_iter=30),
+        "rf": dict(class_weight="balanced_subsample", min_samples_leaf=3, max_features="sqrt", max_depth=12),
+        "gbm": dict(learning_rate=0.03, max_iter=600, max_leaf_nodes=15, min_samples_leaf=20, l2_regularization=0.0),
+    },
+}
+
+
+def modelos_ajustados(objetivo, cols):
+    """Modelos finales de `objetivo` ("N_ACC", "HAY_FATAL" o "GRAVEDAD") con las columnas `cols`, como
+    {nombre: modelo sin entrenar}. Los nombres son los de results/metrics.csv.
+    La binomial negativa de HAY_FATAL se entrena con N_FATALES (su predict_proba da P(al menos un fatal))."""
+    cfg = CONFIG_AJUSTADA[objetivo]
+    if objetivo == "N_ACC":
+        m = {"Baseline · Poisson": poisson(cols),
+             "Binomial negativa": binomial_negativa(cols, **cfg["nb"]),
+             "MLP (ajustado)": mlp_conteo(cols, **cfg["mlp"]),
+             "Random Forest (ajustado)": rf_conteo(cols, **cfg["rf"]),
+             "Gradient boosting (ajustado)": gbm_conteo(cols, **cfg["gbm"])}
+        claves = ["Baseline · Poisson", "MLP (ajustado)", "Random Forest (ajustado)", "Gradient boosting (ajustado)"]
+        m["Ensamble (votación)"] = votacion([(k, clone(m[k])) for k in claves], conteo=True)
+        return m
+    if objetivo == "HAY_FATAL":
+        m = {"Baseline · Reg. logística": logit(cols, class_weight=None),
+             "Binomial negativa (N_FATALES)": binomial_negativa(cols, **cfg["nb"]),
+             "MLP (ajustado)": mlp_clasificador(cols, balanceado=False, **cfg["mlp"]),
+             "Random Forest (ajustado)": random_forest(cols, **cfg["rf"]),
+             "Gradient boosting (ajustado)": gbm_clasificador(cols, **cfg["gbm"])}
+        claves = ["Baseline · Reg. logística", "MLP (ajustado)", "Random Forest (ajustado)", "Gradient boosting (ajustado)"]
+    elif objetivo == "GRAVEDAD":
+        m = {"Baseline · Reg. logística multinomial": logit(cols),
+             "MLP (ajustado)": mlp_clasificador(cols, **cfg["mlp"]),
+             "Random Forest (ajustado)": random_forest(cols, **cfg["rf"]),
+             "Gradient boosting (ajustado)": gbm_clasificador(cols, **cfg["gbm"])}
+        claves = list(m)
+    else:
+        raise ValueError(f"objetivo desconocido: {objetivo}")
+    m["Ensamble (votación)"] = votacion([(k, clone(m[k])) for k in claves])
+    return m

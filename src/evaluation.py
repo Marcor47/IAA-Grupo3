@@ -70,8 +70,8 @@ def cv_puntajes(modelo, X, y, folds, metricas, proba=False):
     return pd.DataFrame(filas)
 
 
-def comparacion_pareada(a, b, mayor_es_mejor=True):
-    """Diferencia a − b pliegue a pliegue, con IC 95 % aproximado.
+def diferencia_pareada(a, b, mayor_es_mejor=True):
+    """Diferencia a − b pliegue a pliegue como números: media, IC 95 % aproximado, pliegues en que gana a y total.
 
     ponytail: IC normal sobre pliegues que comparten datos, así que es optimista; si se necesita una prueba
     formal, usar la corrección de Nadeau y Bengio (2003).
@@ -79,7 +79,14 @@ def comparacion_pareada(a, b, mayor_es_mejor=True):
     d = np.asarray(a) - np.asarray(b)
     h = 1.96 * d.std(ddof=1) / np.sqrt(len(d))
     gana = (d > 0) if mayor_es_mejor else (d < 0)
-    return f"{d.mean():+.3f} (IC95% aprox. {d.mean() - h:+.3f} a {d.mean() + h:+.3f}), mejor en {gana.sum()} de {len(d)} pliegues"
+    return dict(dif=d.mean(), ic_inf=d.mean() - h, ic_sup=d.mean() + h, gana=int(gana.sum()), pliegues=len(d))
+
+
+def comparacion_pareada(a, b, mayor_es_mejor=True):
+    """Diferencia a − b pliegue a pliegue, con IC 95 % aproximado (texto; los números, en diferencia_pareada)."""
+    r = diferencia_pareada(a, b, mayor_es_mejor)
+    return (f"{r['dif']:+.3f} (IC95% aprox. {r['ic_inf']:+.3f} a {r['ic_sup']:+.3f}), "
+            f"mejor en {r['gana']} de {r['pliegues']} pliegues")
 
 
 if __name__ == "__main__":  # chequeo rápido de las métricas y de la partición temporal
