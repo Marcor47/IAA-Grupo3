@@ -7,12 +7,12 @@
 
 | Requisito del enunciado | Estado | Dónde está |
 |---|---|---|
-| Código limpio, comentado y reproducible (se ejecuta sin errores) | 🟡 En curso | `00_preprocesamiento`, `01_eda`, `02_modelos`, `05_binomial_negativa` y `06_mlp` corren de punta a punta. Falta la revisión final tras los modelos nuevos |
+| Código limpio, comentado y reproducible (se ejecuta sin errores) | 🟡 En curso | `00_preprocesamiento`, `01_eda`, `02_modelos`, `03_random_forest`, `05_binomial_negativa` y `06_mlp` corren de punta a punta. Falta la revisión final tras los modelos nuevos |
 | `requirements.txt` con todas las dependencias | ✅ | [`requirements.txt`](requirements.txt) |
-| Modelos implementados (1 por integrante) en `src/models.py` | 🟡 | Baselines: Poisson y regresión logística (binaria y multinomial). Binomial negativa implementada (`05_binomial_negativa.ipynb`). MLP implementado y ajustado en las dos tareas (`06_mlp.ipynb`). Pendientes: Random Forest y gradient boosting (issues) |
+| Modelos implementados (1 por integrante) en `src/models.py` | 🟡 | Baselines: Poisson y regresión logística (binaria y multinomial). Binomial negativa implementada (`05_binomial_negativa.ipynb`). MLP implementado y ajustado en las dos tareas (`06_mlp.ipynb`). Random Forest implementado y ajustado en las dos tareas (`03_random_forest.ipynb`). Pendientes: gradient boosting y ensamble (issues) |
 | Métricas y evaluación en `src/evaluation.py` | ✅ | [`src/evaluation.py`](src/evaluation.py): CV temporal, CV 5 × 5, métricas de conteo, binarias y multiclase, comparación pareada |
-| Tabla comparativa de métricas (`results/metrics.csv`) | 🟡 | Baselines de las dos tareas, binomial negativa (Tarea 1) y MLP (dos tareas). Faltan Random Forest y gradient boosting |
-| Gráficos en `results/plots/` | 🟡 | `prep_*`, `eda_*`, `modelo_01` a `modelo_03`, `modelo_09` (binomial negativa) y `modelo_10` a `modelo_12` (MLP) |
+| Tabla comparativa de métricas (`results/metrics.csv`) | 🟡 | Baselines de las dos tareas, binomial negativa (Tarea 1), MLP y Random Forest (dos tareas). Faltan gradient boosting y ensamble |
+| Gráficos en `results/plots/` | 🟡 | `prep_*`, `eda_*`, `modelo_01` a `modelo_03`, `modelo_04` a `modelo_06` (Random Forest), `modelo_09` (binomial negativa) y `modelo_10` a `modelo_12` (MLP) |
 | `results/model_comparison.txt` con resumen y análisis detallado | 🟡 Versión baseline | [`results/model_comparison.txt`](results/model_comparison.txt) |
 | Análisis de por qué un modelo funcionó mejor, limitaciones e insights | 🟡 | README §5.3 y `model_comparison.txt` §3–4. Falta la versión con los modelos de ensamble |
 | Paper/reporte académico (3-5 páginas) en `report.pdf` | ⬜ Pendiente | Issue |

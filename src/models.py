@@ -156,6 +156,7 @@ def gbm_conteo(cols, **kw):
 
 
 def rf_conteo(cols, **kw):
+    """Random Forest de conteo con criterio de Poisson (Muñoz et al., 2024)."""
     params = dict(n_estimators=400, criterion="poisson", min_samples_leaf=20, max_features=0.5, n_jobs=-1,
                   random_state=SEED) | kw
     return Pipeline([("pre", preprocesador(*cols)), ("reg", RandomForestRegressor(**params))])

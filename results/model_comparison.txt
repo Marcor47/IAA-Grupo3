@@ -1,6 +1,6 @@
 COMPARACIÓN DE MODELOS: RIESGO Y GRAVEDAD DE ACCIDENTES EN CARRETERAS DEL PERÚ
-Inteligencia Artificial Aplicada (1INF62), PUCP 2026-2. Versión: BASELINE del replanteo (12/11/2026) + MLP (16/11/2026).
-Fuente: notebooks/02_modelos.ipynb y notebooks/06_mlp.ipynb -> results/metrics.csv
+Inteligencia Artificial Aplicada (1INF62), PUCP 2026-2. Versión: BASELINE del replanteo (12/11/2026) + MLP (16/11/2026) + Random Forest (21/11/2026).
+Fuente: notebooks/02_modelos.ipynb, 03_random_forest.ipynb y 06_mlp.ipynb -> results/metrics.csv
 
 0. REPLANTEO
 ------------
@@ -131,10 +131,69 @@ e) Pendiente del issue #10: el ensamble por votación (soft voting) de logístic
    el test), del mismo orden que las diferencias con el baseline; promediar varias semillas o votar con otros modelos
    reduce esa varianza.
 
-6. SIGUIENTES PASOS (issues del repositorio)
+6. RANDOM FOREST (issue #11, notebooks/03_random_forest.ipynb)
+---------------------------------------------------------------
+Respaldo: Muñoz et al. (2024). Mismas variables (M.preprocesador: 43 columnas en la Tarea 1 y 67 en la Tarea 2), misma
+validación y mismas métricas que el baseline.
+- Tarea 1 · N_ACC: RandomForestRegressor con criterion="poisson" (M.rf_conteo).
+- Tarea 1 · HAY_FATAL: RandomForestClassifier sin pesos de clase, para que las probabilidades queden calibradas.
+- Tarea 2: RandomForestClassifier con pesos de clase; el tipo (balanced o balanced_subsample) entra en la búsqueda.
+Ajuste con RandomizedSearchCV (20 combinaciones, random_state=42) sobre min_samples_leaf (5–80; 1–40 en la Tarea 2),
+max_features (0.2–0.8; "sqrt" a 0.5 en la Tarea 2) y max_depth (None, 8, 12, 20). Tarea 1: con los 5 pliegues
+temporales del train. Tarea 2: con E.CV dentro del 80 % de entrenamiento. Ni el holdout ni el test se miran al ajustar.
+Configuraciones elegidas (Tabla II del informe), todas con n_estimators = 400 (Tarea 1 · N_ACC) o 500:
+  N_ACC      min_samples_leaf 20, max_features 0.2,  max_depth 20
+  HAY_FATAL  min_samples_leaf 40, max_features 0.35, max_depth 8
+  GRAVEDAD   min_samples_leaf 3,  max_features sqrt, max_depth 12, class_weight balanced_subsample
+
+Tarea 1 · N_ACC (D² de Poisson)            CV temporal   Holdout
+  Ingenuo · media 28 días                   0.217         0.277
+  Baseline · Poisson                        0.256         0.267
+  Random Forest (por defecto)               0.250           –
+  Random Forest (ajustado)                  0.254         0.293
+  RF − Poisson (CV): −0.002 (IC95 % aprox. −0.029 a +0.025), mejor en 1 de 5 pliegues.
+  RF − media 28 d (CV): +0.037 (IC95 % aprox. +0.011 a +0.064), mejor en 5 de 5 pliegues.
+
+Tarea 1 · HAY_FATAL (PR-AUC)               CV temporal   Holdout   ROC-AUC holdout   Brier holdout
+  Ingenuo · fatales últimos 28 días         0.112         0.131     0.689             0.062
+  Baseline · Reg. logística                 0.133         0.161     0.734             0.060
+  Random Forest (por defecto)               0.136           –         –                 –
+  Random Forest (ajustado)                  0.140         0.158     0.725             0.060
+  RF − logística (CV): +0.006 (IC95 % aprox. −0.020 a +0.033), mejor en 2 de 5 pliegues.
+  RF − ingenuo (CV): +0.028 (IC95 % aprox. +0.017 a +0.038), mejor en 5 de 5 pliegues.
+
+Tarea 2 · GRAVEDAD (CV 5 × 5)              Macro-F1  Bal. acc.  PR-AUC fatal  Log-loss
+  Baseline · Logística multinomial (67)    0.419     0.466      0.266         1.037
+  Random Forest (por defecto)              0.456     0.455      0.266         0.961
+  Random Forest (ajustado)                 0.452     0.458      0.263         0.980
+  RF − logística: macro-F1 +0.033 (IC95 % aprox. +0.029 a +0.036, mejor en 25 de 25 pliegues);
+  balanced acc. −0.008 (−0.012 a −0.004, 3 de 25); PR-AUC fatal −0.002 (−0.009 a +0.004, 13 de 25);
+  log-loss −0.057 (mejor en 25 de 25).
+  Test 80/20: macro-F1 0.445 (logística 0.436); PR-AUC fatal 0.227 (logística 0.260);
+  recall de fatales 0.27 con precisión 0.25.
+
+Lectura
+a) Tarea 1 · conteo. El RF empata con el Poisson en la CV y es el mejor modelo en el holdout (0.293), al nivel del
+   MLP (0.292) y por encima de la media de 28 días (0.277). Que dos modelos no lineales distintos coincidan refuerza
+   la lectura de 5.a: tras la cuarentena el nivel de accidentes sube y las interacciones (departamento × historia ×
+   calendario) siguen mejor ese cambio que el Poisson (figura modelo_04). El MAE no mejora (0.609 frente a 0.590),
+   porque el Poisson predice más bajo y el 66 % de los días vale 0.
+b) Tarea 1 · HAY_FATAL. Sin mejora frente a la logística: el IC en la CV incluye el 0 y en el holdout queda 0.003
+   por debajo. El Brier es igual y la curva de calibración sigue la diagonal (figura modelo_05), pero las
+   probabilidades no pasan de ≈ 0.2: sirven para ordenar departamentos por riesgo, no para anticipar un día fatal.
+c) Tarea 2. El RF es el primer modelo que supera claramente a la logística en macro-F1 (+0.033, 25 de 25 pliegues).
+   Con interacciones, las variables de la bibliografía sí suman, pero para separar sin víctimas de heridos; la clase
+   fatal no mejora (PR-AUC igual en la CV, menor en el test) y la balanced accuracy baja un poco, porque el RF
+   predice menos fatales que la logística balanceada (recall 0.27 frente a 0.51) con algo más de precisión
+   (0.25 frente a 0.21). Para un despacho que prioriza no perder fatales, la logística sigue siendo preferible.
+d) Ajuste de hiperparámetros. Aporta poco: las 5 mejores configuraciones de cada búsqueda están a menos de 0.01, y en
+   la Tarea 2 la elegida queda algo por debajo de la configuración por defecto en la CV 5 × 5 (0.452 frente a 0.456).
+   Se reporta la ajustada porque es la que se eligió sin mirar el test.
+
+7. SIGUIENTES PASOS (issues del repositorio)
 --------------------------------------------
-- Tarea 1: Random Forest y gradient boosting (Poisson) con CV temporal y ajuste de hiperparámetros.
-- Tarea 2: Random Forest y gradient boosting multiclase con ajuste de hiperparámetros y manejo del desbalance.
+- Gradient boosting (Poisson en N_ACC, multiclase en GRAVEDAD) con ajuste de hiperparámetros (#12).
+- Ensamble por votación de logística, MLP, Random Forest y gradient boosting (#13).
 - Ablación por grupos de variables e importancia por permutación en las dos tareas.
 - Variable de exposición (flujo vehicular en peajes), si existe en datos abiertos.
 - Versión final de este archivo, report.pdf y presentación final.
