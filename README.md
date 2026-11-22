@@ -239,7 +239,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Random Forest (`criterion="poisson"` en la Tarea 1) | 1 y 2 | Muñoz et al. (2024) | **Implementado y ajustado** (`03_random_forest.ipynb`) |
 | Gradient boosting (`HistGradientBoosting`, pérdida de Poisson en la Tarea 1, categóricas nativas) | 1 y 2 | Babaoglu y Babaoglu (2021) (XGBoost) | En desarrollo (`04_gradient_boosting.ipynb`) |
 | MLP (perceptrón multicapa; pérdida de Poisson en `N_ACC`, pesos de clase balanceados en la Tarea 2) | 1 y 2 | Emu et al. (2022) | **Implementado y ajustado** (`06_mlp.ipynb`) |
-| Ensamble por votación (promedio de las predicciones de logística, MLP, Random Forest y gradient boosting) | 1 y 2 | Emu et al. (2022) | En desarrollo (`06_mlp.ipynb`) |
+| Ensamble por votación (`M.votacion`: promedio de las predicciones de Poisson/logística, MLP, Random Forest y gradient boosting; votación suave en clasificación) | 1 y 2 | Emu et al. (2022) | **Implementado** (`06_mlp.ipynb` §4) |
 | Ablación por grupos + importancia por permutación | 1 y 2 | Muñoz; Babaoglu; Emu (importancia de variables) | En desarrollo (`07_ablacion.ipynb`) |
 
 ### 4.3 Validación y métricas
@@ -289,6 +289,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Binomial negativa (`05_binomial_negativa.ipynb`) | 0.256 | 0.268 |
 | Random Forest ajustado (`03_random_forest.ipynb`) | 0.254 | **0.293** |
 | MLP ajustado (`06_mlp.ipynb`) | 0.250 | 0.292 |
+| Ensamble por votación (`06_mlp.ipynb` §4) | **0.268** | **0.296** |
 
 **Tarea 1 · `HAY_FATAL`** (PR-AUC; al azar ≈ 0.06)
 
@@ -299,6 +300,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Binomial negativa (vía `N_FATALES`) | 0.130 | 0.160 | 0.731 |
 | Random Forest ajustado | **0.140** | 0.158 | 0.725 |
 | MLP ajustado | 0.138 | 0.157 | 0.722 |
+| Ensamble por votación | 0.135 | 0.160 | 0.733 |
 
 **Tarea 2 · `GRAVEDAD`** (CV 5 × 5)
 
@@ -309,6 +311,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | **Baseline · Reg. logística multinomial (67 columnas)** | 0.419 | 0.466 | 0.266 | 1.037 |
 | Random Forest ajustado (`03_random_forest.ipynb`) | **0.452** | 0.458 | 0.263 | 0.980 |
 | MLP ajustado (`06_mlp.ipynb`, mismas 67 columnas) | 0.422 | 0.460 | 0.254 | 1.039 |
+| Ensamble por votación (`06_mlp.ipynb` §4) | 0.447 | 0.466 | 0.268 | 0.993 |
 
 ![Matriz de confusión del baseline](results/plots/modelo_03_t2_baseline_test.png)
 
@@ -350,9 +353,19 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
     pliegues. La ganancia viene de separar sin víctimas y heridos; la clase fatal no mejora (PR-AUC 0.263 frente a
     0.266; en el test, recall 0.27 con precisión 0.25).
 
+- **Ensamble por votación** (Emu et al., 2022; promedio de Poisson/logística, MLP, RF y GBM con la configuración de
+  cada uno, pesos iguales):
+  - **`N_ACC`:** el mejor en la CV (0.268) y en el holdout (0.296), pero empata con el GBM (+0.001, IC −0.001 a
+    +0.003): los miembros predicen casi lo mismo (correlación 0.96–0.98) y promediarlos aporta poco (figura `modelo_16`).
+  - **`HAY_FATAL`:** sin mejora frente a la logística ni al RF (IC con el 0 en la CV; 0.160 frente a 0.161 en el holdout).
+  - **Tarea 2:** combina en parte las fortalezas. Supera a la logística en macro-F1 (+0.028, IC +0.024 a +0.032, 25 de
+    25 pliegues) sin perder en balanced accuracy ni en PR-AUC de fatales (0.268, la más alta). Queda algo por debajo
+    del RF en macro-F1 (−0.005), pero ordena mejor a los fatales (+0.005). En el test tiene el mejor macro-F1 (0.447) y
+    detecta el 37 % de los fatales (RF 27 %, logística 51 %) (figura `modelo_18`). Es el modelo más equilibrado: en ninguna
+    variable queda por debajo del baseline.
+
 ### 5.4 Trabajo en curso
-- **Modelos de ensamble:** gradient boosting en las dos tareas, y un ensamble por votación que combine
-  los modelos anteriores.
+- **Gradient boosting:** sus filas en `results/metrics.csv` y su sección en este README y en `model_comparison.txt`.
 - **Ablación:** medir qué grupos de variables aportan a la predicción en cada tarea; en particular, si el clima
   aporta a la frecuencia de accidentes (Tarea 1) y a su gravedad (Tarea 2).
 - **Comparación final:** elegir el mejor modelo para cada objetivo con la métrica principal y la comparación pareada.

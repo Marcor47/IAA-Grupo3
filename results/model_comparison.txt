@@ -1,6 +1,6 @@
 COMPARACIÓN DE MODELOS: RIESGO Y GRAVEDAD DE ACCIDENTES EN CARRETERAS DEL PERÚ
-Inteligencia Artificial Aplicada (1INF62), PUCP 2026-2. Versión: BASELINE del replanteo (12/11/2026) + MLP (16/11/2026) + Random Forest (21/11/2026).
-Fuente: notebooks/02_modelos.ipynb, 03_random_forest.ipynb y 06_mlp.ipynb -> results/metrics.csv
+Inteligencia Artificial Aplicada (1INF62), PUCP 2026-2. Versión: BASELINE del replanteo (12/11/2026) + MLP (16/11/2026) + Random Forest (21/11/2026) + Ensamble por votación (22/11/2026).
+Fuente: notebooks/02_modelos.ipynb, 03_random_forest.ipynb y 06_mlp.ipynb (MLP y ensamble) -> results/metrics.csv
 
 0. REPLANTEO
 ------------
@@ -126,10 +126,9 @@ c) Tarea 2. El MLP no supera al modelo lineal. El macro-F1 empata (+0.003, IC co
 d) Frente a Emu et al. (2022): ellos entrenan redes con 5.8 millones de choques y variables del vehículo y las
    personas. Aquí hay 8 105 accidentes sin esas variables, un escenario en el que la bibliografía espera que los
    modelos lineales y los ensambles de árboles rindan igual o mejor que una red.
-e) Pendiente del issue #10: el ensamble por votación (soft voting) de logística, MLP y árboles, cuando estén los
-   modelos del #4. Un MLP de scikit-learn varía con la semilla (±0.006 de D² y ±0.009 de macro-F1 en el holdout y en
-   el test), del mismo orden que las diferencias con el baseline; promediar varias semillas o votar con otros modelos
-   reduce esa varianza.
+e) Un MLP de scikit-learn varía con la semilla (±0.006 de D² y ±0.009 de macro-F1 en el holdout y en el test), del
+   mismo orden que las diferencias con el baseline. En el ensamble por votación (sección 7) el MLP pesa un cuarto de
+   la predicción, así que esa varianza se diluye.
 
 6. RANDOM FOREST (issue #11, notebooks/03_random_forest.ipynb)
 ---------------------------------------------------------------
@@ -190,10 +189,74 @@ d) Ajuste de hiperparámetros. Aporta poco: las 5 mejores configuraciones de cad
    la Tarea 2 la elegida queda algo por debajo de la configuración por defecto en la CV 5 × 5 (0.452 frente a 0.456).
    Se reporta la ajustada porque es la que se eligió sin mirar el test.
 
-7. SIGUIENTES PASOS (issues del repositorio)
+7. ENSAMBLE POR VOTACIÓN (issue #13, notebooks/06_mlp.ipynb §4)
+---------------------------------------------------------------
+Respaldo: Emu et al. (2022). Función M.votacion (VotingRegressor / VotingClassifier de scikit-learn, pesos iguales).
+Miembros: los cuatro modelos del proyecto, cada uno con la configuración que eligió su propia búsqueda (no se vuelven
+a ajustar; el ensamble no tiene hiperparámetros propios, así que el holdout y el test no se usan para elegir nada).
+- N_ACC: promedio de los accidentes esperados por Poisson, MLP, RF y GBM.
+- HAY_FATAL: votación suave (promedio de probabilidades) de logística, MLP, RF y GBM, todos sin pesos de clase.
+- GRAVEDAD: votación suave de logística, MLP, RF y GBM, todos con pesos de clase balanceados.
+Como todos los miembros tratan las clases igual, sus probabilidades están en la misma escala y se pueden promediar.
+Los miembros se ajustaron con los mismos pliegues de la CV, así que el CV del ensamble es algo optimista; el holdout
+y el test no.
+
+Tarea 1 · N_ACC (D² de Poisson)            CV temporal   Holdout
+  Ingenuo · media 28 días                   0.217         0.277
+  Baseline · Poisson                        0.256         0.267
+  MLP (ajustado)                            0.250         0.292
+  Random Forest (ajustado)                  0.254         0.293
+  Gradient boosting (ajustado)              0.267         0.289
+  Ensamble (votación)                       0.268         0.296
+  Ensamble − GBM (CV): +0.001 (IC95 % aprox. −0.001 a +0.003), mejor en 3 de 5 pliegues.
+  Ensamble − Poisson (CV): +0.012 (IC95 % aprox. −0.014 a +0.037), mejor en 3 de 5 pliegues.
+  Ensamble − media 28 d (CV): +0.050 (IC95 % aprox. +0.026 a +0.074), mejor en 5 de 5 pliegues.
+
+Tarea 1 · HAY_FATAL (PR-AUC)               CV temporal   Holdout   ROC-AUC holdout   Brier holdout
+  Ingenuo · fatales últimos 28 días         0.112         0.131     0.689             0.062
+  Baseline · Reg. logística                 0.133         0.161     0.734             0.060
+  Random Forest (ajustado)                  0.140         0.158     0.725             0.060
+  Ensamble (votación)                       0.135         0.160     0.733             0.060
+  Ensamble − logística (CV): +0.002 (IC95 % aprox. −0.009 a +0.014), mejor en 2 de 5 pliegues.
+  Ensamble − RF (CV): −0.004 (IC95 % aprox. −0.020 a +0.011), mejor en 3 de 5 pliegues.
+
+Tarea 2 · GRAVEDAD (CV 5 × 5)              Macro-F1  Bal. acc.  PR-AUC fatal  Log-loss
+  Baseline · Logística multinomial (67)    0.419     0.466      0.266         1.037
+  MLP (ajustado)                           0.422     0.460      0.254         1.039
+  Random Forest (ajustado)                 0.452     0.458      0.263         0.980
+  Gradient boosting (ajustado)             0.433     0.442      0.236         1.010
+  Ensamble (votación)                      0.447     0.466      0.268         0.993
+  Ensamble − logística: macro-F1 +0.028 (IC95 % aprox. +0.024 a +0.032, mejor en 25 de 25 pliegues);
+  balanced acc. +0.001 (−0.004 a +0.005, 12 de 25); PR-AUC fatal +0.002 (−0.002 a +0.007, 16 de 25);
+  log-loss −0.044 (mejor en 25 de 25).
+  Ensamble − RF: macro-F1 −0.005 (IC95 % aprox. −0.009 a −0.002, mejor en 6 de 25 pliegues);
+  PR-AUC fatal +0.005 (+0.000 a +0.009, 16 de 25).
+  Test 80/20: macro-F1 0.447 (RF 0.445, logística 0.436); recall de fatales 0.37 con precisión 0.23
+  (RF 0.27, logística 0.51).
+
+Lectura
+a) Tarea 1 · conteo. El ensamble es el mejor modelo en la CV y en el holdout, pero por poco y sin diferencia
+   significativa con el GBM. Los cuatro miembros predicen casi lo mismo (correlación de 0.96 a 0.98 en el holdout), y
+   promediar reduce poco error cuando los errores coinciden. Lo que sí confirma es la lectura de 5.a y 6.a: los modelos
+   con interacciones siguen mejor la subida de accidentes tras la cuarentena (figura modelo_16, en especial en Lima).
+b) Tarea 1 · HAY_FATAL. Sin mejora: empata con la logística y con el RF. Los miembros ordenan los días de forma
+   parecida (correlación 0.91–0.96) y la señal para anticipar un día fatal es débil para todos.
+c) Tarea 2. Es donde el ensamble aporta, porque las probabilidades de "fatal" de los miembros son las más distintas
+   (correlación de 0.66 a 0.90). Combina en parte las dos fortalezas: casi el macro-F1 del RF (−0.005) con la
+   PR-AUC de fatales y la balanced accuracy de la logística (las más altas de todos los modelos). En el test tiene el
+   mejor macro-F1 y detecta el 37 % de los fatales, entre el RF (27 %) y la logística (51 %).
+d) Conclusión. El ensamble no gana en todas las métricas, pero es el más equilibrado: en ninguna variable queda por
+   debajo del baseline. Para el triaje es un punto medio entre el RF (más macro-F1) y la logística (más fatales
+   detectados); cuál conviene depende del costo de dejar pasar un fatal.
+e) Reproducibilidad. Los miembros RF y MLP dan las mismas cifras que en sus notebooks. El GBM de la Tarea 2 da casi
+   las mismas probabilidades que en 04_gradient_boosting.ipynb (log-loss del test 0.998), pero su macro-F1 del test
+   cambia entre máquinas (0.415 aquí, 0.427 en el 04): con 600 árboles, pequeñas diferencias numéricas cambian la
+   clase predicha de los casos cercanos a la frontera. El ensamble promedia probabilidades, así que debería ser menos
+   sensible a esto, pero sus cifras también pueden variar en el tercer decimal según la máquina.
+
+8. SIGUIENTES PASOS (issues del repositorio)
 --------------------------------------------
 - Gradient boosting (Poisson en N_ACC, multiclase en GRAVEDAD) con ajuste de hiperparámetros (#12).
-- Ensamble por votación de logística, MLP, Random Forest y gradient boosting (#13).
 - Ablación por grupos de variables e importancia por permutación en las dos tareas.
 - Variable de exposición (flujo vehicular en peajes), si existe en datos abiertos.
 - Versión final de este archivo, report.pdf y presentación final.
