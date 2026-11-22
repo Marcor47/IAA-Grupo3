@@ -20,7 +20,7 @@ from scipy.special import digamma, gammaln
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import (HistGradientBoostingClassifier, HistGradientBoostingRegressor, RandomForestClassifier,
-                              RandomForestRegressor)
+                              RandomForestRegressor, VotingClassifier, VotingRegressor)
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression, PoissonRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
@@ -262,7 +262,7 @@ def random_forest(cols, **kw):
 # ---------------------------------------------------------------------------
 # Redes neuronales: perceptrón multicapa (Emu et al., 2022)
 # ---------------------------------------------------------------------------
-class PesosBalanceados(BaseEstimator, ClassifierMixin):
+class PesosBalanceados(ClassifierMixin, BaseEstimator):   # el mixin va primero: así sklearn lo reconoce como clasificador
     """Entrena `estimator` con sample_weight 'balanced' (cada clase pesa lo mismo en la pérdida).
 
     MLPClassifier no tiene `class_weight`, pero sí acepta `sample_weight` en fit. Con este envoltorio el MLP se trata
@@ -304,3 +304,22 @@ def mlp_clasificador(cols, balanceado=True, **kw):
     params = MLP_BASE | dict(hidden_layer_sizes=(64,), alpha=1.0) | kw
     mlp = MLPClassifier(**params)
     return Pipeline([("pre", preprocesador(*cols)), ("clf", PesosBalanceados(mlp) if balanceado else mlp)])
+
+
+# ---------------------------------------------------------------------------
+# Ensamble por votación (Emu et al., 2022)
+# ---------------------------------------------------------------------------
+def votacion(estimadores, conteo=False, pesos=None):
+    """Ensamble por votación de modelos ya configurados, pasados como lista de (nombre, modelo).
+
+    - Clasificación (HAY_FATAL, GRAVEDAD): votación suave, es decir, el promedio de las probabilidades de cada
+      modelo. Para que el promedio tenga sentido, todos los miembros deben usar el mismo tratamiento de clases
+      (todos sin pesos en HAY_FATAL, todos balanceados en GRAVEDAD).
+    - Conteo (N_ACC, `conteo=True`): promedio de los accidentes esperados que predice cada modelo.
+
+    Cada miembro es un Pipeline completo con su propio preprocesador (one-hot para los lineales, el MLP y el RF;
+    categóricas nativas para el gradient boosting), así que el ensamble recibe las columnas sin transformar y se
+    evalúa con E.cv_puntajes como cualquier otro modelo. `pesos=None` da el mismo peso a todos."""
+    if conteo:
+        return VotingRegressor(estimadores, weights=pesos)
+    return VotingClassifier(estimadores, voting="soft", weights=pesos)
