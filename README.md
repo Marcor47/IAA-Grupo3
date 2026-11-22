@@ -232,6 +232,10 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 
 ### 4.2 Modelos
 
+Todos los modelos se construyen con las factorías de `src/models.py` (`poisson`, `binomial_negativa`, `logit`,
+`rf_conteo`, `random_forest`, `gbm_conteo`, `gbm_clasificador`, `mlp_conteo`, `mlp_clasificador` y `votacion`); la
+configuración elegida por cada búsqueda está en `M.CONFIG_AJUSTADA`.
+
 | Modelo | Tarea | Respaldo | Estado |
 |---|---|---|---|
 | Referencias sin ML: media de 28 días, semana pasada, fatales de 28 días, Dummy | 1 y 2 | Lo que hay que superar | **Implementado** |
@@ -242,7 +246,8 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Gradient boosting (`HistGradientBoosting`, pérdida de Poisson en la Tarea 1, categóricas nativas) | 1 y 2 | Babaoglu y Babaoglu (2021) (XGBoost) | **Implementado y ajustado** (`04_gradient_boosting.ipynb`) |
 | MLP (perceptrón multicapa; pérdida de Poisson en `N_ACC`, pesos de clase balanceados en la Tarea 2) | 1 y 2 | Emu et al. (2022) | **Implementado y ajustado** (`06_mlp.ipynb`) |
 | Ensamble por votación (`M.votacion`: promedio de las predicciones de Poisson/logística, MLP, Random Forest y gradient boosting; votación suave en clasificación) | 1 y 2 | Emu et al. (2022) | **Implementado** (`06_mlp.ipynb` §4) |
-| Ablación por grupos + importancia por permutación | 1 y 2 | Muñoz; Babaoglu; Emu (importancia de variables) | En desarrollo (`07_ablacion.ipynb`) |
+| Comparación final (`M.modelos_ajustados`: todos los modelos con su configuración elegida) | 1 y 2 | — | **Hecho** (`08_comparacion.ipynb`) |
+| Ablación por grupos + importancia por permutación | 1 y 2 | Muñoz; Babaoglu; Emu (importancia de variables) | **Hecho** (`07_ablacion.ipynb`) |
 
 ### 4.3 Validación y métricas
 
@@ -323,15 +328,13 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 ### 5.3 Lectura de los resultados
 - **Tarea 1 · conteo:** el Poisson le gana a la media móvil en los 5 pliegues de la CV (+0.039 de D², IC 95 % aprox.
   +0.025 a +0.053). En el holdout queda empatado o un poco por debajo (0.267 frente a 0.277). Hay señal
-  aprendible más allá de la inercia, pero un modelo lineal apenas la captura. Las interacciones no lineales (departamento
-  × calendario, lluvia × región) son lo siguiente que hay que probar.
+  aprendible más allá de la inercia, pero un modelo lineal apenas la captura; los modelos no lineales de abajo la
+  aprovechan mejor en el holdout.
 - **Tarea 1 · `HAY_FATAL`:** la logística mejora a la referencia en CV (+0.021, mejor en 4 de 5 pliegues) y en el holdout
   (PR-AUC 0.161, 2.4 veces el azar; ROC-AUC 0.734).
 - **Tarea 2:** pasar de las 4 variables del avance a todas (67 columnas tras el encoding) con un modelo **lineal**
   deja el resultado igual: −0.002 de macro-F1, mejor en 10 de 25 pliegues. Con 135 columnas, antes de la reducción,
-  quedaba algo peor (−0.004). Sin interacciones, las variables nuevas no suman. Ese es el argumento para los ensambles de
-  árboles: deben mostrar si la vía, el clima y la luz aportan cuando se permiten interacciones, por ejemplo atropello de
-  noche en recta.
+  quedaba algo peor (−0.004). Sin interacciones, las variables nuevas no suman; con árboles sí (Random Forest, abajo).
 - **El triaje sigue siendo difícil:** en el test, el baseline detecta el 51 % de los fatales con una precisión de 0.21. Los heridos
   y los sin víctimas se confunden entre sí, porque el registro no trae vehículo, ocupantes ni velocidad.
 - **Binomial negativa:** empata con el Poisson en `N_ACC` (D² −0.001, IC −0.002 a +0.000) y con la logística en
@@ -340,8 +343,8 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 - **MLP** (Emu et al., 2022; hiperparámetros ajustados con la misma validación, sin mirar el holdout ni el test):
   - **`N_ACC`:** empata con el Poisson en la CV (−0.006, mejor en 1 de 5 pliegues), pero en el holdout es el único
     modelo que supera a la media de 28 días (0.292; 0.283 ± 0.006 con 5 semillas). Sigue mejor la subida de
-    accidentes tras la cuarentena (figura `modelo_10`): señal a favor de las interacciones no lineales, que falta
-    confirmar con los árboles.
+    accidentes tras la cuarentena (figura `modelo_10`): señal a favor de las interacciones no lineales, que los
+    árboles confirman.
   - **`HAY_FATAL`:** sin mejora frente a la logística (IC con el 0 en la CV; por debajo en el holdout con todas las semillas).
   - **Tarea 2:** empata en macro-F1 (+0.003, IC con el 0), pero ordena peor a los fatales (PR-AUC −0.011, peor en 21
     de 25 pliegues) y en el test queda por debajo con todas las semillas (0.423 ± 0.009 frente a 0.436). Con 8 105
@@ -391,16 +394,33 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 
   ![Comparación final](results/plots/modelo_19_comparacion_metrica_principal.png)
 
-### 5.4 Trabajo en curso
-- **Ablación:** medir qué grupos de variables aportan a la predicción en cada tarea; en particular, si el clima
-  aporta a la frecuencia de accidentes (Tarea 1) y a su gravedad (Tarea 2).
+- **Ablación e importancia por permutación** (`07_ablacion.ipynb`; GBM en `N_ACC`, RF en `HAY_FATAL` y `GRAVEDAD`;
+  figuras `modelo_07` y `modelo_08`):
+  - **Clima:** aporta poco, pero no cero. En `N_ACC`, quitarlo baja el D² en 0.001 (IC ± 0.001, peor en 4 de 5
+    pliegues); en `HAY_FATAL` y en `GRAVEDAD` no aporta (caída 0.000 con IC que incluye el 0).
+  - **Tarea 1:** el **lugar** es el único grupo cuya ablación empeora en todos los pliegues (D² −0.022). La **historia**
+    es lo que más usa el modelo (permutación: D² −0.21), pero quitarla no cambia la métrica: lleva la misma
+    información que el departamento.
+  - **Tarea 2:** domina el **tipo de choque** (macro-F1 −0.042, 25 de 25 pliegues), seguido del lugar (−0.016) y de la
+    luz y la hora (−0.009); la vía y el calendario aportan poco (≈ 0.003).
+
+  ![Ablación por grupos](results/plots/modelo_07_ablacion.png)
+
+Detalle de cada modelo, la comparación final, la ablación y las conclusiones en
+[`results/model_comparison.txt`](results/model_comparison.txt) (§3–12).
+
+### 5.4 Siguientes pasos
+- **Exposición:** agregar el flujo vehicular (peajes) si existe en datos abiertos; hoy los modelos no saben cuánto
+  tráfico hay.
+- **Más de un holdout:** ampliar el periodo para validar fuera de la salida de la cuarentena (abr–sep 2021).
+- **Triaje por costo:** elegir umbrales de decisión por clase según el costo de dejar pasar un fatal.
 
 ---
 
 ## 6. Cómo ejecutar
 
 ### Requisitos
-- Python 3.10 o superior (`python --version`).
+- Python 3.10 o superior (`python --version`). Probado con 3.12 y 3.14.
 - Los datos procesados y las descargas externas ya están en el repo: los notebooks corren sin internet.
 
 ### 1. Crear el entorno e instalar las dependencias (una sola vez)
@@ -449,19 +469,22 @@ de `.venv`. Para ejecutar un notebook: *Kernel → Restart & Run All*.
 | `01_eda.ipynb` | EDA sobre los datasets limpios (figuras `eda_*`) |
 | `02_modelos.ipynb` | Baselines de las dos tareas, `results/metrics.csv` y figuras `modelo_01`–`modelo_03` |
 | `03_random_forest.ipynb` | Random Forest para las dos tareas, con ajuste de hiperparámetros (Muñoz et al., 2024); figuras `modelo_04`–`modelo_06` (≈ 15 min) |
-| `04_gradient_boosting.ipynb` | Gradient boosting para las dos tareas, con ajuste de hiperparámetros (Babaoglu y Babaoglu, 2021); figuras `modelo_13`–`modelo_15` (≈ 15 min) |
+| `04_gradient_boosting.ipynb` | Gradient boosting para las dos tareas, con ajuste de hiperparámetros en grilla (Babaoglu y Babaoglu, 2021); figuras `modelo_13`–`modelo_15` (15–30 min) |
 | `05_binomial_negativa.ipynb` | Binomial negativa para `N_ACC` y `HAY_FATAL` (Mhetre y Thube, 2023); figura `modelo_09` |
 | `06_mlp.ipynb` | MLP para las dos tareas, con ajuste de hiperparámetros y sensibilidad a la semilla (Emu et al., 2022), y ensamble por votación (§4); figuras `modelo_10`–`modelo_12` y `modelo_16`–`modelo_18` |
+| `07_ablacion.ipynb` | Ablación por grupos de variables e importancia por permutación con el mejor modelo de cada objetivo; figuras `modelo_07` y `modelo_08` (≈ 10 min) |
 | `08_comparacion.ipynb` | Comparación final: Tabla I, comparación pareada de todos los modelos, figuras `modelo_19`–`modelo_22` y veredicto por variable objetivo (≈ 20 min) |
 
 ### 4. Reproducir todos los resultados
 Los notebooks se ejecutan en orden. El 02 reescribe `results/metrics.csv` con los baselines; los siguientes agregan
 sus filas, así que el 02 va siempre antes que ellos. Desde la carpeta `notebooks/` (igual en Windows, Linux y Mac):
 ```
-jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_random_forest.ipynb 04_gradient_boosting.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb 08_comparacion.ipynb
+jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_random_forest.ipynb 04_gradient_boosting.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb 07_ablacion.ipynb 08_comparacion.ipynb
 ```
 El 06 va después del 03 y el 04 porque su ensamble usa el Random Forest y el gradient boosting, y el 08 va al final
-porque lee `results/metrics.csv` completo. Cuando se agregue `07_ablacion`, va antes del 08.
+porque lee `results/metrics.csv` completo. En total tarda alrededor de 1 h 20 min (probado en un clon limpio con Python 3.14, scikit-learn 1.9 y pandas 3.1;
+las cifras coinciden con `results/metrics.csv` en ± 0.002, salvo el macro-F1 del test de GRAVEDAD de los modelos
+con muchos árboles, que puede variar en el tercer decimal entre máquinas).
 
 Las descargas externas están en `data/raw/` como cachés: red vial con atributos, clima por celda (diario y por hora)
 y clima por capital. Si se borran, se vuelven a descargar: el clima por hora tarda ~1.5 h por los límites de la API
@@ -485,12 +508,15 @@ README.md              descripción del proyecto, resultados y cómo ejecutar
 AGENTS.md              guía para quien trabaje en el repo (personas o asistentes de IA): convenciones y cómo validar
 ENTREGABLE_PARCIAL.md  checklist del entregable de la semana 8
 ENTREGABLE_FINAL.md    checklist del entregable de la semana 15
+report.pdf             informe académico (plantilla del curso); report.docx es su fuente editable
+presentation.pdf       presentación final (≈ 10 min + preguntas)
+Plantilla_reporte_TA.docx  plantilla del informe entregada por el curso
 requirements.txt       dependencias
 data/raw/              accidentes SUTRAN + diccionario, red vial del MTC (con atributos) y cachés de clima
 data/processed/        accidentes.csv (Tarea 2, 8 105 × 33) y panel_depto_dia.csv (Tarea 1, 15 336 × 25)
-notebooks/             00_preprocesamiento, 01_eda, 02_modelos, 03_random_forest, 04_gradient_boosting, 05_binomial_negativa, 06_mlp
-results/               metrics.csv, model_comparison.txt, plots/
+notebooks/             00_preprocesamiento, 01_eda, 02_modelos, 03_random_forest, 04_gradient_boosting, 05_binomial_negativa, 06_mlp, 07_ablacion, 08_comparacion
+results/               metrics.csv (todas las métricas), model_comparison.txt (análisis por modelo y conclusiones), plots/
 src/                   preprocessing.py (datos y variables), models.py (grupos de variables, encoding y modelos), evaluation.py (métricas y validación)
 papers/                paper_integrante1..4.pdf, resúmenes e índice
-presentación/          template del curso; avances/ = presentaciones del planteamiento anterior (archivado)
+presentación/          template del curso; final/ = fuente (HTML) y guion de la presentación final; avances/ = planteamiento anterior (archivado)
 ```
