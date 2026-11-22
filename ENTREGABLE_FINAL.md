@@ -14,7 +14,7 @@
 | Tabla comparativa de métricas (`results/metrics.csv`) | 🟡 | Baselines de las dos tareas, binomial negativa (Tarea 1), MLP, Random Forest y ensamble por votación (dos tareas). Incluye todos los modelos; falta la comparación final (`08_comparacion`) |
 | Gráficos en `results/plots/` | 🟡 | `prep_*`, `eda_*`, `modelo_01` a `modelo_03`, `modelo_04` a `modelo_06` (Random Forest), `modelo_09` (binomial negativa) `modelo_10` a `modelo_12` (MLP), `modelo_13` a `modelo_15` (gradient boosting) y `modelo_16` a `modelo_18` (ensamble por votación) |
 | `results/model_comparison.txt` con resumen y análisis detallado | 🟡 Versión baseline | [`results/model_comparison.txt`](results/model_comparison.txt) |
-| Análisis de por qué un modelo funcionó mejor, limitaciones e insights | 🟡 | README §5.3 y `model_comparison.txt` §3–8, con el gradient boosting y el ensamble por votación. Falta la ablación §3–7, con el ensamble por votación. Falta la sección del gradient boosting |
+| Análisis de por qué un modelo funcionó mejor, limitaciones e insights | 🟡 | README §5.3 y `model_comparison.txt` §3–8, con el gradient boosting y el ensamble por votación. Falta la ablación |
 | Paper/reporte académico (3-5 páginas) en `report.pdf` | ⬜ Pendiente | Issue |
 | Presentación (máx. 5 min) en `presentation.pdf` | ⬜ Pendiente | Issue. La de avances (planteamiento anterior) está archivada en `presentación/avances/` |
 | `ENTREGABLE_FINAL.md` confirmando completitud | 🟡 | Este archivo |

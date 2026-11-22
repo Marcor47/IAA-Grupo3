@@ -289,6 +289,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Binomial negativa (`05_binomial_negativa.ipynb`) | 0.256 | 0.268 |
 | Random Forest ajustado (`03_random_forest.ipynb`) | 0.254 | **0.293** |
 | MLP ajustado (`06_mlp.ipynb`) | 0.250 | 0.292 |
+| Gradient boosting ajustado (`04_gradient_boosting.ipynb`) | 0.267 | 0.289 |
 | Ensamble por votación (`06_mlp.ipynb` §4) | **0.268** | **0.296** |
 
 **Tarea 1 · `HAY_FATAL`** (PR-AUC; al azar ≈ 0.06)
@@ -301,6 +302,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Random Forest ajustado | **0.140** | 0.158 | 0.725 |
 | MLP ajustado | 0.138 | 0.157 | 0.722 |
 | Gradient boosting ajustado | 0.137 | 0.160 | **0.735** |
+| Ensamble por votación | 0.135 | 0.160 | 0.733 |
 
 **Tarea 2 · `GRAVEDAD`** (CV 5 × 5)
 
@@ -312,6 +314,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Random Forest ajustado (`03_random_forest.ipynb`) | **0.452** | 0.458 | 0.263 | 0.980 |
 | MLP ajustado (`06_mlp.ipynb`, mismas 67 columnas) | 0.422 | 0.460 | 0.254 | 1.039 |
 | Gradient boosting ajustado (`04_gradient_boosting.ipynb`) | 0.432 | 0.441 | 0.236 | 1.012 |
+| Ensamble por votación (`06_mlp.ipynb` §4) | 0.447 | 0.466 | 0.268 | 0.993 |
 
 ![Matriz de confusión del baseline](results/plots/modelo_03_t2_baseline_test.png)
 
@@ -441,7 +444,8 @@ de `.venv`. Para ejecutar un notebook: *Kernel → Restart & Run All*.
 Los notebooks se ejecutan en orden. El 02 reescribe `results/metrics.csv` con los baselines; los siguientes agregan
 sus filas, así que el 02 va siempre antes que ellos. Desde la carpeta `notebooks/` (igual en Windows, Linux y Mac):
 ```
-jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_random_forest.ipynb 04_gradient_boosting.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb```
+jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_random_forest.ipynb 04_gradient_boosting.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb
+```
 El 06 va después del 03 y el 04 porque su ensamble usa el Random Forest y el gradient boosting. A medida que se
 agreguen `07_ablacion` y `08_comparacion`, se suman al final de la lista.
 
