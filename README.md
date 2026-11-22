@@ -191,7 +191,9 @@ Cada integrante revisó un artículo revisado por pares sobre predicción de fat
    las mismas métricas que el baseline, y se compara con él pliegue a pliegue.
 5. **Ablación** (`07_ablacion.ipynb`): con el mejor modelo de cada objetivo, se quita un grupo de variables a la vez
    y se mide cuánto empeora; se complementa con la importancia por permutación.
-6. **Comparación** (`08_comparacion.ipynb`): tabla y figuras con todos los modelos a partir de `results/metrics.csv`.
+6. **Comparación** (`08_comparacion.ipynb`): Tabla I con todos los modelos a partir de `results/metrics.csv`, y
+   reevaluación pliegue a pliegue (`M.modelos_ajustados`) para la comparación pareada, las figuras finales y el
+   veredicto por variable objetivo.
 
 ### 4.1 Variables (factores de la bibliografía → columnas)
 
@@ -377,10 +379,21 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
     detecta el 37 % de los fatales (RF 27 %, logística 51 %) (figura `modelo_18`). Es el modelo más equilibrado: en ninguna
     variable queda por debajo del baseline.
 
+- **Comparación final** (`08_comparacion.ipynb`; figuras `modelo_19` a `modelo_22`):
+  - **`N_ACC`:** todos los modelos con aprendizaje superan a la media de 28 días en los 5 pliegues, pero ninguno al
+    Poisson con un IC sin el 0. En el holdout, los cuatro no lineales (0.289–0.296) superan a la media de 28 días y los
+    lineales no (0.267–0.268). Se elige el **ensamble**: mejor en la CV (0.268) y en el holdout (0.296).
+  - **`HAY_FATAL`:** empate entre todos (PR-AUC 0.130–0.140 en la CV, 0.157–0.161 en el holdout). Se elige la
+    **logística**: la más simple, calibrada y con la mejor PR-AUC en el holdout.
+  - **`GRAVEDAD`:** el RF (+0.033), el ensamble (+0.028) y el GBM (+0.014) superan a la logística en macro-F1 con un
+    IC sin el 0, pero ninguno la supera en la clase fatal. Por la métrica principal gana el **RF**; si importa no dejar
+    pasar fatales, la logística; el **ensamble** es el punto medio (figura `modelo_21`).
+
+  ![Comparación final](results/plots/modelo_19_comparacion_metrica_principal.png)
+
 ### 5.4 Trabajo en curso
 - **Ablación:** medir qué grupos de variables aportan a la predicción en cada tarea; en particular, si el clima
   aporta a la frecuencia de accidentes (Tarea 1) y a su gravedad (Tarea 2).
-- **Comparación final:** elegir el mejor modelo para cada objetivo con la métrica principal y la comparación pareada.
 
 ---
 
@@ -439,15 +452,16 @@ de `.venv`. Para ejecutar un notebook: *Kernel → Restart & Run All*.
 | `04_gradient_boosting.ipynb` | Gradient boosting para las dos tareas, con ajuste de hiperparámetros (Babaoglu y Babaoglu, 2021); figuras `modelo_13`–`modelo_15` (≈ 15 min) |
 | `05_binomial_negativa.ipynb` | Binomial negativa para `N_ACC` y `HAY_FATAL` (Mhetre y Thube, 2023); figura `modelo_09` |
 | `06_mlp.ipynb` | MLP para las dos tareas, con ajuste de hiperparámetros y sensibilidad a la semilla (Emu et al., 2022), y ensamble por votación (§4); figuras `modelo_10`–`modelo_12` y `modelo_16`–`modelo_18` |
+| `08_comparacion.ipynb` | Comparación final: Tabla I, comparación pareada de todos los modelos, figuras `modelo_19`–`modelo_22` y veredicto por variable objetivo (≈ 20 min) |
 
 ### 4. Reproducir todos los resultados
 Los notebooks se ejecutan en orden. El 02 reescribe `results/metrics.csv` con los baselines; los siguientes agregan
 sus filas, así que el 02 va siempre antes que ellos. Desde la carpeta `notebooks/` (igual en Windows, Linux y Mac):
 ```
-jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_random_forest.ipynb 04_gradient_boosting.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb
+jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_random_forest.ipynb 04_gradient_boosting.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb 08_comparacion.ipynb
 ```
-El 06 va después del 03 y el 04 porque su ensamble usa el Random Forest y el gradient boosting. A medida que se
-agreguen `07_ablacion` y `08_comparacion`, se suman al final de la lista.
+El 06 va después del 03 y el 04 porque su ensamble usa el Random Forest y el gradient boosting, y el 08 va al final
+porque lee `results/metrics.csv` completo. Cuando se agregue `07_ablacion`, va antes del 08.
 
 Las descargas externas están en `data/raw/` como cachés: red vial con atributos, clima por celda (diario y por hora)
 y clima por capital. Si se borran, se vuelven a descargar: el clima por hora tarda ~1.5 h por los límites de la API
