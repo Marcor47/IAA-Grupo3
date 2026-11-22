@@ -254,9 +254,62 @@ e) Reproducibilidad. Los miembros RF y MLP dan las mismas cifras que en sus note
    clase predicha de los casos cercanos a la frontera. El ensamble promedia probabilidades, así que debería ser menos
    sensible a esto, pero sus cifras también pueden variar en el tercer decimal según la máquina.
 
-8. SIGUIENTES PASOS (issues del repositorio)
+8. GRADIENT BOOSTING (notebooks/04_gradient_boosting.ipynb)
+-------------------------------------------------------------
+Respaldo: Babaoglu y Babaoglu (2021), XGBoost. HistGradientBoosting de scikit-learn (misma familia), con las
+categóricas nativas del modelo (M.preprocesador_arboles), misma validación y mismas métricas que el baseline.
+- Tarea 1 · N_ACC: HistGradientBoostingRegressor con pérdida de Poisson (M.gbm_conteo).
+- Tarea 1 · HAY_FATAL: HistGradientBoostingClassifier sin pesos de clase, para que las probabilidades queden calibradas.
+- Tarea 2: HistGradientBoostingClassifier con pesos de clase balanceados, como la logística.
+Ajuste con GridSearchCV sobre learning_rate, max_iter, max_leaf_nodes, min_samples_leaf y l2_regularization
+(N_ACC: 72 combinaciones; HAY_FATAL: 48; GRAVEDAD: 108). Tarea 1: con los 5 pliegues temporales del train.
+Tarea 2: con E.CV dentro del 80 % de entrenamiento. Ni el holdout ni el test se miran al ajustar.
+Configuraciones elegidas (Tabla II del informe):
+  N_ACC      learning_rate 0.03, max_iter 100, max_leaf_nodes 7,  min_samples_leaf 100, l2_regularization 1.0
+  HAY_FATAL  learning_rate 0.03, max_iter 150, max_leaf_nodes 7,  min_samples_leaf 200, l2_regularization 10.0
+  GRAVEDAD   learning_rate 0.03, max_iter 600, max_leaf_nodes 15, min_samples_leaf 20,  l2_regularization 0.0
+
+Tarea 1 · N_ACC (D² de Poisson)            CV temporal   Holdout
+  Ingenuo · media 28 días                   0.217         0.277
+  Baseline · Poisson                        0.256         0.267
+  Gradient boosting (ajustado)              0.267         0.289
+  GBM − Poisson (CV): +0.011 (IC95 % aprox. −0.013 a +0.035), mejor en 3 de 5 pliegues.
+  GBM − media 28 d (CV): +0.050 (IC95 % aprox. +0.027 a +0.072), mejor en 5 de 5 pliegues.
+
+Tarea 1 · HAY_FATAL (PR-AUC)               CV temporal   Holdout   ROC-AUC holdout   Brier holdout
+  Ingenuo · fatales últimos 28 días         0.112         0.131     0.689             0.062
+  Baseline · Reg. logística                 0.133         0.161     0.734             0.060
+  Gradient boosting (ajustado)              0.137         0.160     0.735             0.060
+  GBM − logística (CV): +0.004 (IC95 % aprox. −0.017 a +0.025), mejor en 1 de 5 pliegues.
+  GBM − ingenuo (CV): +0.025 (IC95 % aprox. +0.010 a +0.040), mejor en 5 de 5 pliegues.
+
+Tarea 2 · GRAVEDAD (CV 5 × 5)              Macro-F1  Bal. acc.  PR-AUC fatal  Log-loss
+  Baseline · Logística multinomial (67)    0.419     0.466      0.266         1.037
+  Gradient boosting (ajustado)             0.432     0.441      0.236         1.012
+  GBM − logística: macro-F1 +0.013 (IC95 % aprox. +0.008 a +0.018, mejor en 21 de 25 pliegues);
+  balanced acc. −0.024 (−0.031 a −0.018, 3 de 25); PR-AUC fatal −0.030 (−0.039 a −0.021, 3 de 25);
+  log-loss −0.026 (mejor en 25 de 25).
+  Test 80/20: macro-F1 0.427 (logística 0.436); PR-AUC fatal 0.227 (logística 0.260);
+  recall de fatales 0.28 con precisión 0.21.
+
+Lectura
+a) Tarea 1 · conteo. El mejor promedio en la CV de los modelos individuales (0.267), aunque sin diferencia
+   significativa con el Poisson. En el holdout supera a la media de 28 días (0.289 frente a 0.277), igual que el RF y
+   el MLP: tres modelos no lineales distintos siguen mejor la subida de accidentes tras la cuarentena (figura
+   modelo_13). En Lima se queda corto en agosto–septiembre, como el Poisson.
+b) Tarea 1 · HAY_FATAL. Empate con la logística en la CV y en el holdout, con la misma ROC-AUC y el mismo Brier.
+c) Ajuste de hiperparámetros (Tarea 1). En las dos variables la grilla eligió el modelo más simple y regularizado que
+   probó (100–150 árboles, tasa 0.03, 7 hojas, 100–200 casos por hoja): con 10 776 departamento-días, la señal más
+   allá de la historia reciente es débil y un modelo más flexible sobreajusta.
+d) Tarea 2. Supera a la logística en macro-F1 (+0.013, IC sin el 0) y en log-loss, pero ordena peor a los fatales
+   (PR-AUC −0.030) y tiene menor balanced accuracy: clasifica mejor sin víctimas y heridos, y detecta menos fatales
+   (recall 0.28 frente a 0.51 de la logística). Queda por debajo del RF en macro-F1 (0.432 frente a 0.452).
+e) Reproducibilidad. Las mejores configuraciones de la grilla están casi empatadas, así que en otra máquina la
+   búsqueda puede elegir otra y las cifras cambian en el tercer decimal (ver 7.e). Las configuraciones de arriba son
+   las que usa el ensamble.
+
+9. SIGUIENTES PASOS (issues del repositorio)
 --------------------------------------------
-- Gradient boosting (Poisson en N_ACC, multiclase en GRAVEDAD) con ajuste de hiperparámetros (#12).
 - Ablación por grupos de variables e importancia por permutación en las dos tareas.
 - Variable de exposición (flujo vehicular en peajes), si existe en datos abiertos.
 - Versión final de este archivo, report.pdf y presentación final.

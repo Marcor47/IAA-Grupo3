@@ -237,7 +237,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Regresión binomial negativa (NB2) | 1 · `N_ACC` y `HAY_FATAL` (vía `N_FATALES`) | Mhetre y Thube (2023) | **Implementado** (`05_binomial_negativa.ipynb`) |
 | Regresión logística (binaria / multinomial) | 1 · `HAY_FATAL`, 2 | Curso; Babaoglu (Lasso) | **Implementado (baseline)** |
 | Random Forest (`criterion="poisson"` en la Tarea 1) | 1 y 2 | Muñoz et al. (2024) | **Implementado y ajustado** (`03_random_forest.ipynb`) |
-| Gradient boosting (`HistGradientBoosting`, pérdida de Poisson en la Tarea 1, categóricas nativas) | 1 y 2 | Babaoglu y Babaoglu (2021) (XGBoost) | En desarrollo (`04_gradient_boosting.ipynb`) |
+| Gradient boosting (`HistGradientBoosting`, pérdida de Poisson en la Tarea 1, categóricas nativas) | 1 y 2 | Babaoglu y Babaoglu (2021) (XGBoost) | **Implementado y ajustado** (`04_gradient_boosting.ipynb`) |
 | MLP (perceptrón multicapa; pérdida de Poisson en `N_ACC`, pesos de clase balanceados en la Tarea 2) | 1 y 2 | Emu et al. (2022) | **Implementado y ajustado** (`06_mlp.ipynb`) |
 | Ensamble por votación (`M.votacion`: promedio de las predicciones de Poisson/logística, MLP, Random Forest y gradient boosting; votación suave en clasificación) | 1 y 2 | Emu et al. (2022) | **Implementado** (`06_mlp.ipynb` §4) |
 | Ablación por grupos + importancia por permutación | 1 y 2 | Muñoz; Babaoglu; Emu (importancia de variables) | En desarrollo (`07_ablacion.ipynb`) |
@@ -296,11 +296,11 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | Modelo | CV temporal | Holdout | ROC-AUC holdout |
 |---|---|---|---|
 | Ingenuo · fatales últimos 28 días | 0.112 | 0.131 | 0.689 |
-| **Baseline · Reg. logística** | **0.133** | **0.161** | **0.734** |
+| **Baseline · Reg. logística** | **0.133** | **0.161** | 0.734 |
 | Binomial negativa (vía `N_FATALES`) | 0.130 | 0.160 | 0.731 |
 | Random Forest ajustado | **0.140** | 0.158 | 0.725 |
 | MLP ajustado | 0.138 | 0.157 | 0.722 |
-| Ensamble por votación | 0.135 | 0.160 | 0.733 |
+| Gradient boosting ajustado | 0.137 | 0.160 | **0.735** |
 
 **Tarea 2 · `GRAVEDAD`** (CV 5 × 5)
 
@@ -311,7 +311,7 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
 | **Baseline · Reg. logística multinomial (67 columnas)** | 0.419 | 0.466 | 0.266 | 1.037 |
 | Random Forest ajustado (`03_random_forest.ipynb`) | **0.452** | 0.458 | 0.263 | 0.980 |
 | MLP ajustado (`06_mlp.ipynb`, mismas 67 columnas) | 0.422 | 0.460 | 0.254 | 1.039 |
-| Ensamble por votación (`06_mlp.ipynb` §4) | 0.447 | 0.466 | 0.268 | 0.993 |
+| Gradient boosting ajustado (`04_gradient_boosting.ipynb`) | 0.432 | 0.441 | 0.236 | 1.012 |
 
 ![Matriz de confusión del baseline](results/plots/modelo_03_t2_baseline_test.png)
 
@@ -353,6 +353,16 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
     pliegues. La ganancia viene de separar sin víctimas y heridos; la clase fatal no mejora (PR-AUC 0.263 frente a
     0.266; en el test, recall 0.27 con precisión 0.25).
 
+
+- **Gradient boosting** (Babaoglu y Babaoglu, 2021; `GridSearchCV` con la misma validación):
+  - **`N_ACC`:** el mejor promedio en la CV de los modelos individuales (0.267; +0.011 frente al Poisson, IC −0.013
+    a +0.035) y por encima del ingenuo en el holdout (0.289 frente a 0.277), como el RF y el MLP (figura `modelo_13`).
+    La grilla eligió el modelo más simple y regularizado: la señal más allá de la historia reciente es débil.
+  - **`HAY_FATAL`:** empate con la logística (+0.004 en la CV con IC con el 0; 0.160 frente a 0.161 en el holdout).
+  - **Tarea 2:** supera a la logística en macro-F1 (+0.013, IC +0.008 a +0.018), pero ordena peor a los fatales
+    (PR-AUC −0.030) y detecta menos (recall 0.28 en el test, frente a 0.51); queda por debajo del RF (0.432 frente
+    a 0.452).
+
 - **Ensamble por votación** (Emu et al., 2022; promedio de Poisson/logística, MLP, RF y GBM con la configuración de
   cada uno, pesos iguales):
   - **`N_ACC`:** el mejor en la CV (0.268) y en el holdout (0.296), pero empata con el GBM (+0.001, IC −0.001 a
@@ -365,7 +375,6 @@ sea excesivo, ya que antes eran 135 columnas en la Tarea 2:
     variable queda por debajo del baseline.
 
 ### 5.4 Trabajo en curso
-- **Gradient boosting:** sus filas en `results/metrics.csv` y su sección en este README y en `model_comparison.txt`.
 - **Ablación:** medir qué grupos de variables aportan a la predicción en cada tarea; en particular, si el clima
   aporta a la frecuencia de accidentes (Tarea 1) y a su gravedad (Tarea 2).
 - **Comparación final:** elegir el mejor modelo para cada objetivo con la métrica principal y la comparación pareada.
@@ -424,16 +433,17 @@ de `.venv`. Para ejecutar un notebook: *Kernel → Restart & Run All*.
 | `01_eda.ipynb` | EDA sobre los datasets limpios (figuras `eda_*`) |
 | `02_modelos.ipynb` | Baselines de las dos tareas, `results/metrics.csv` y figuras `modelo_01`–`modelo_03` |
 | `03_random_forest.ipynb` | Random Forest para las dos tareas, con ajuste de hiperparámetros (Muñoz et al., 2024); figuras `modelo_04`–`modelo_06` (≈ 15 min) |
+| `04_gradient_boosting.ipynb` | Gradient boosting para las dos tareas, con ajuste de hiperparámetros (Babaoglu y Babaoglu, 2021); figuras `modelo_13`–`modelo_15` (≈ 15 min) |
 | `05_binomial_negativa.ipynb` | Binomial negativa para `N_ACC` y `HAY_FATAL` (Mhetre y Thube, 2023); figura `modelo_09` |
-| `06_mlp.ipynb` | MLP para las dos tareas, con ajuste de hiperparámetros y sensibilidad a la semilla (Emu et al., 2022); figuras `modelo_10`–`modelo_12` (≈ 5 min) |
+| `06_mlp.ipynb` | MLP para las dos tareas, con ajuste de hiperparámetros y sensibilidad a la semilla (Emu et al., 2022), y ensamble por votación (§4); figuras `modelo_10`–`modelo_12` y `modelo_16`–`modelo_18` |
 
 ### 4. Reproducir todos los resultados
 Los notebooks se ejecutan en orden. El 02 reescribe `results/metrics.csv` con los baselines; los siguientes agregan
 sus filas, así que el 02 va siempre antes que ellos. Desde la carpeta `notebooks/` (igual en Windows, Linux y Mac):
 ```
-jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_random_forest.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb
-```
-A medida que se agreguen `04_gradient_boosting`, `07_ablacion` y `08_comparacion`, se suman a la lista en orden numérico.
+jupyter nbconvert --to notebook --execute --inplace 00_preprocesamiento.ipynb 01_eda.ipynb 02_modelos.ipynb 03_random_forest.ipynb 04_gradient_boosting.ipynb 05_binomial_negativa.ipynb 06_mlp.ipynb```
+El 06 va después del 03 y el 04 porque su ensamble usa el Random Forest y el gradient boosting. A medida que se
+agreguen `07_ablacion` y `08_comparacion`, se suman al final de la lista.
 
 Las descargas externas están en `data/raw/` como cachés: red vial con atributos, clima por celda (diario y por hora)
 y clima por capital. Si se borran, se vuelven a descargar: el clima por hora tarda ~1.5 h por los límites de la API
@@ -460,7 +470,7 @@ ENTREGABLE_FINAL.md    checklist del entregable de la semana 15
 requirements.txt       dependencias
 data/raw/              accidentes SUTRAN + diccionario, red vial del MTC (con atributos) y cachés de clima
 data/processed/        accidentes.csv (Tarea 2, 8 105 × 33) y panel_depto_dia.csv (Tarea 1, 15 336 × 25)
-notebooks/             00_preprocesamiento.ipynb, 01_eda.ipynb, 02_modelos.ipynb, 03_random_forest.ipynb, 05_binomial_negativa.ipynb, 06_mlp.ipynb
+notebooks/             00_preprocesamiento, 01_eda, 02_modelos, 03_random_forest, 04_gradient_boosting, 05_binomial_negativa, 06_mlp
 results/               metrics.csv, model_comparison.txt, plots/
 src/                   preprocessing.py (datos y variables), models.py (grupos de variables, encoding y modelos), evaluation.py (métricas y validación)
 papers/                paper_integrante1..4.pdf, resúmenes e índice
