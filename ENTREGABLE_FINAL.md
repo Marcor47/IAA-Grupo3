@@ -13,8 +13,8 @@
 | Métricas y evaluación en `src/evaluation.py` | ✅ | [`src/evaluation.py`](src/evaluation.py): CV temporal, CV 5 × 5, métricas de conteo, binarias y multiclase, comparación pareada |
 | Tabla comparativa de métricas (`results/metrics.csv`) | 🟡 | Baselines de las dos tareas, binomial negativa (Tarea 1), MLP, Random Forest y ensamble por votación (dos tareas). Incluye todos los modelos. Tabla I y comparación pareada final en `08_comparacion.ipynb` |
 | Gráficos en `results/plots/` | 🟡 | `prep_*`, `eda_*`, `modelo_01` a `modelo_03`, `modelo_04` a `modelo_06` (Random Forest), `modelo_09` (binomial negativa) `modelo_10` a `modelo_12` (MLP), `modelo_13` a `modelo_15` (gradient boosting) `modelo_16` a `modelo_18` (ensamble por votación) y `modelo_19` a `modelo_22` (comparación final) |
-| `results/model_comparison.txt` con resumen y análisis detallado | 🟡 Versión baseline | [`results/model_comparison.txt`](results/model_comparison.txt) |
-| Análisis de por qué un modelo funcionó mejor, limitaciones e insights | 🟡 | README §5.3 y `model_comparison.txt` §3–8, con el gradient boosting y el ensamble por votación. Falta la ablación |
+| `results/model_comparison.txt` con resumen y análisis detallado | ✅ | [`results/model_comparison.txt`](results/model_comparison.txt): Tabla I, una sección por modelo, comparación final, ablación y conclusiones |
+| Análisis de por qué un modelo funcionó mejor, limitaciones e insights | ✅ | `model_comparison.txt` §9–12 (comparación final, ablación, conclusiones por variable objetivo y limitaciones) y README §5.3 |
 | Paper/reporte académico (3-5 páginas) en `report.pdf` | ⬜ Pendiente | Issue |
 | Presentación (máx. 5 min) en `presentation.pdf` | ⬜ Pendiente | Issue. La de avances (planteamiento anterior) está archivada en `presentación/avances/` |
 | `ENTREGABLE_FINAL.md` confirmando completitud | 🟡 | Este archivo |
