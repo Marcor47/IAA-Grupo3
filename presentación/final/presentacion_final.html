@@ -66,10 +66,6 @@
   .verdicts .q { font-size: 15pt; color: var(--muted); margin-top: 12px; }
   .verdicts .who { font-size: 32pt; font-weight: 700; line-height: 1.1; margin-top: 4px; }
   .verdicts p { font-size: 14pt; color: var(--muted); margin-top: 10px; line-height: 1.3; }
-  /* anexo */
-  .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 44px; margin-top: 8px; }
-  .qa h3 { font-size: 15pt; font-weight: 600; color: var(--blue); margin-bottom: 6px; }
-  .qa p { font-size: 13pt; line-height: 1.4; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -220,45 +216,6 @@
   <p class="msg" style="margin-bottom:0.2in">El registro no trae <b>vehículo, ocupantes, velocidad ni tráfico</b>.
     Siguiente paso: sumar el flujo vehicular de los peajes.</p>
   <div class="foot"><span><b>Recomendación</b> · Expone: Fernando De La Cruz · github.com/Marcor47/IAA-Grupo3</span><span>11 / 11</span></div>
-</section>
-
-<!-- ANEXO · PREGUNTAS PROBABLES -->
-<section class="slide">
-  <h1>Anexo: validación y desbalance</h1>
-  <div class="qa">
-    <div><h3>¿Por qué validación temporal y no aleatoria en la Tarea 1?</h3>
-      <p>La serie tiene memoria y cambia de nivel con la cuarentena. Con pliegues aleatorios el modelo vería días
-        posteriores a los que pronostica. Toda la historia se calcula hasta t − 1.</p></div>
-    <div><h3>¿Cómo manejaron el desbalance?</h3>
-      <p>Métricas que no lo esconden (PR-AUC, macro-F1) y pesos de clase balanceados en GRAVEDAD. En HAY_FATAL sin
-        pesos, para que las probabilidades queden calibradas (Brier 0.060).</p></div>
-    <div><h3>¿Por qué no reportan exactitud, como los papers?</h3>
-      <p>Decir siempre «no fatal» acierta el 88 % de los accidentes y decir «0 accidentes» acierta el 66 % de los días.
-        La exactitud premia ignorar justo los casos que importan.</p></div>
-    <div><h3>¿Hubo fuga de información?</h3>
-      <p>No: el encoding se ajusta dentro de cada pliegue, las víctimas solo forman el objetivo y los hiperparámetros se
-        eligen sin mirar el holdout ni el test, que se usan una sola vez.</p></div>
-  </div>
-  <div class="foot"><span>Respaldo para preguntas</span><span>A1</span></div>
-</section>
-
-<section class="slide">
-  <h1>Anexo: por qué ganó cada modelo</h1>
-  <div class="qa">
-    <div><h3>¿Las diferencias son significativas?</h3>
-      <p>Comparación pareada con el baseline (IC 95 %). En GRAVEDAD sí: RF +0.033 (25 de 25 pliegues), ensamble
-        +0.028, GBM +0.014. En N_ACC y HAY_FATAL ningún IC excluye el 0; la ventaja en N_ACC aparece en el holdout.</p></div>
-    <div><h3>¿Por qué el ensamble no gana en todo?</h3>
-      <p>Promediar ayuda cuando los miembros se equivocan distinto. En el conteo predicen casi lo mismo (correlación
-        0.96–0.98); en la clase fatal discrepan (0.66–0.90) y ahí sí combina.</p></div>
-    <div><h3>La literatura dice que el clima importa. ¿Por qué aquí no?</h3>
-      <p>La lluvia viene de reanálisis en celdas de ~11 km y su efecto queda absorbido por la estación y el lugar.
-        Babaoglu y Babaoglu también hallan que la mayoría de muertes ocurre con clima no extremo.</p></div>
-    <div><h3>¿Por qué el MLP no rinde como en Emu et al.?</h3>
-      <p>Ellos usan 5.8 millones de choques con datos del vehículo y las personas; aquí hay 8 105 sin ellos. El
-        resultado varía ± 0.009 de macro-F1 según la semilla.</p></div>
-  </div>
-  <div class="foot"><span>Respaldo para preguntas</span><span>A2</span></div>
 </section>
 
 </body>

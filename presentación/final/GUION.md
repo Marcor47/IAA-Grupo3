@@ -1,7 +1,7 @@
 # Guion · Presentación final (≈ 10 min + 5 min de preguntas)
 
 Fuente: `presentacion_final.html` (se exporta a `presentation.pdf` en la raíz del repo; ver al final). Once
-diapositivas y dos de anexo para las preguntas. Cada título dice la conclusión de la diapositiva: si el tiempo
+diapositivas, sin anexo. Cada título dice la conclusión de la diapositiva: si el tiempo
 aprieta, basta con leer el título y señalar la cifra grande.
 
 ## Reparto y tiempos
@@ -65,7 +65,7 @@ Recomendación): al cambiar de bloque, nombrarlo («pasamos a los modelos»). La
 11. **Recomendación (Fernando).** Ensamble para el conteo, logística para anticipar un fatal, Random Forest o ensamble
     para el triaje según el costo de perder un fatal. El límite está en los datos: sin vehículo, ocupantes ni tráfico.
 
-## Preguntas probables (anexo A1–A2)
+## Preguntas probables (respuestas de memoria; no van en las diapositivas)
 
 | Pregunta | Responde | Respuesta corta |
 |---|---|---|
