@@ -120,7 +120,7 @@ guardar(fig, "04_ensamble.png")
 panel = [
     ("Accidentes por día", "D² de Poisson", C, [("Sin ML", "Ingenuo · media 28 días"), ("Baseline", "Baseline · Poisson"),
                                                  ("Ensamble", "Ensamble (votación)")], "d2_poisson", 2),
-    ("¿Habrá un fatal? · todos empatan", "PR-AUC", H, [
+    ("¿Habrá un fatal?", "PR-AUC", H, [
         ("Sin ML", "Ingenuo · fatales últimos 28 días"), ("Logística", "Baseline · Reg. logística"),
         ("Bin.\nnegativa", "Binomial negativa (N_FATALES)"), ("Ensam-\nble", "Ensamble (votación)"),
         ("GBM", "Gradient boosting (ajustado)"), ("MLP", "MLP (ajustado)"), ("RF", "Random Forest (ajustado)")],
@@ -139,11 +139,20 @@ for ax, (titulo, metrica, t, mods, col, k) in zip(axs, panel):
         ax.text(xi, vi + max(v) * 0.02, f"{vi:.3f}", ha="center", va="bottom", fontsize=14 if chico else 17,
                 fontweight="bold")
     ax.set_xlim(-0.6, len(v) - 0.4)
-    ax.text(x[k], v[k] * 1.13 if not chico else max(v) * 1.13, f"+{100 * (v[k] / v[0] - 1):.0f} % vs sin ML",
-            ha="center", va="bottom", fontsize=14, color=AZUL, fontweight="bold")
+    if chico:  # HAY_FATAL: llave sobre los modelos para marcar el empate
+        y = max(v) * 1.15
+        ax.plot([1 - 0.3, 1 - 0.3, len(v) - 0.7, len(v) - 0.7], [y - max(v) * 0.03, y, y, y - max(v) * 0.03],
+                color=TINTA2, lw=1.5)
+        ax.text((len(v)) / 2, y + max(v) * 0.02, "empate: ninguna diferencia es significativa", ha="center",
+                va="bottom", fontsize=14, color=TINTA, fontweight="bold")
+        ax.text(x[k], v[k] / 2, f"+{100 * (v[k] / v[0] - 1):.0f} % vs sin ML", ha="center", va="center", rotation=90,
+                fontsize=13, color="white", fontweight="bold")
+    else:
+        ax.text(x[k], v[k] * 1.13, f"+{100 * (v[k] / v[0] - 1):.0f} % vs sin ML", ha="center", va="bottom",
+                fontsize=14, color=AZUL, fontweight="bold")
     ax.set_xticks(x, [n for n, _ in mods], fontsize=12.5 if chico else 14)
     ax.tick_params(axis="x", length=0)
-    ax.set_yticks([]), ax.spines["left"].set_visible(False), ax.set_ylim(0, max(v) * 1.32)
+    ax.set_yticks([]), ax.spines["left"].set_visible(False), ax.set_ylim(0, max(v) * 1.36)
     ax.set_title(f"{titulo}\n", fontsize=17)
     ax.text(0, 1.03, metrica, transform=ax.transAxes, fontsize=13, color=TINTA2)
 guardar(fig, "05_comparacion.png")
