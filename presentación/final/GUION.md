@@ -23,8 +23,9 @@ aprieta, basta con leer el título y señalar la cifra grande.
 Por integrante: Raul 2:40 · Angel 2:30 · Marco 2:40 · Fernando 2:30. Si el ensayo pasa de 10:30, recortar primero la
 diapositiva 3 (solo el título) y la 9 (solo el título).
 
-La barra de arriba de cada diapositiva (Problema → Datos → Cómo medimos → Modelos → Resultados → Recomendación)
-marca en qué parte vamos: al cambiar de bloque, nombrarlo («pasamos a los modelos»). Las figuras se generan con
+El pie de cada diapositiva dice en qué bloque vamos (Problema, Datos, Cómo medimos, Modelo 1 de 4…, Resultados,
+Recomendación): al cambiar de bloque, nombrarlo («pasamos a los modelos»). La fuente (IBM Plex Sans, OFL) está en
+`fuentes/`, así que el PDF sale igual en cualquier sistema. Las figuras se generan con
 `python presentación/final/figuras.py`.
 
 ## Qué decir

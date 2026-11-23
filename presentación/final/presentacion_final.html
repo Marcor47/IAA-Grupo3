@@ -4,300 +4,256 @@
 <meta charset="utf-8">
 <title>Presentación final · Grupo 3</title>
 <style>
+  /* Fuente incluida en el repo (fuentes/, licencia OFL): el PDF sale igual en Windows y en Linux */
+  @font-face { font-family: "Plex"; font-weight: 400; src: url("fuentes/IBMPlexSans-400.ttf"); }
+  @font-face { font-family: "Plex"; font-weight: 600; src: url("fuentes/IBMPlexSans-600.ttf"); }
+  @font-face { font-family: "Plex"; font-weight: 700; src: url("fuentes/IBMPlexSans-700.ttf"); }
   :root {
-    --bg: #fcfcfb; --ink: #1d1d1f; --muted: #5f6368; --line: #e3e3e0;
-    --blue: #2a78d6; --orange: #eb6834; --gray: #c9c8c2; --soft: #f1f4f9; --softo: #fdf0ea;
+    --bg: #ffffff; --ink: #1b1f24; --muted: #55595f; --line: #e4e4e1;
+    --blue: #2a78d6; --orange: #eb6834; --gray: #c9c8c2; --soft: #eef4fc; --softo: #fdf0ea;
   }
   @page { size: 13.333in 7.5in; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: var(--bg); color: var(--ink);
-    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .slide { width: 13.333in; height: 7.5in; padding: 0.4in 0.7in 0.55in; position: relative; overflow: hidden;
-    page-break-after: always; display: flex; flex-direction: column; background: var(--bg); }
-  /* barra de recorrido: dice en qué parte de la exposición estamos */
-  .ruta { display: flex; gap: 6px; margin-bottom: 14px; }
-  .ruta span { flex: 1; font-size: 10pt; font-weight: 700; color: #9a9a96; padding-top: 6px;
-    border-top: 4px solid var(--line); letter-spacing: .02em; }
-  .ruta span.ok { color: var(--muted); border-top-color: #9cbfe9; }
-  .ruta span.on { color: var(--blue); border-top-color: var(--blue); }
-  h1 { font-size: 28pt; line-height: 1.18; font-weight: 800; margin: 0 0 6px; max-width: 12in; }
-  h1 em { font-style: normal; color: var(--blue); }
-  h1 b { color: var(--orange); }
-  .sub { font-size: 14pt; color: var(--muted); margin-bottom: 14px; line-height: 1.35; }
-  .foot { position: absolute; left: 0.7in; right: 0.7in; bottom: 0.22in; display: flex; justify-content: space-between;
-    font-size: 9.5pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 5px; }
-  .row { display: flex; gap: 28px; flex: 1; min-height: 0; align-items: center; }
-  .fig { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; height: 100%; }
+  html, body { background: var(--bg); color: var(--ink); font-family: "Plex", sans-serif;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .slide { width: 13.333in; height: 7.5in; padding: 0.55in 0.75in 0.6in; position: relative; overflow: hidden;
+    page-break-after: always; display: flex; flex-direction: column; gap: 18px; background: var(--bg); }
+  h1, .three, .tl, .msg, .verdicts { flex-shrink: 0; }
+  h1 { font-size: 30pt; line-height: 1.15; font-weight: 700; max-width: 11.4in; letter-spacing: -0.01em; }
+  .foot { position: absolute; left: 0.75in; right: 0.75in; bottom: 0.25in; display: flex; justify-content: space-between;
+    font-size: 10pt; color: var(--muted); }
+  .foot b { color: var(--ink); font-weight: 600; }
+  .fig { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
   .fig img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .side { flex: 0 0 3.3in; display: flex; flex-direction: column; gap: 22px; }
-  .big .n { font-size: 40pt; font-weight: 800; line-height: 1; }
-  .big .t { font-size: 13pt; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+  .row { flex: 1; min-height: 0; display: flex; gap: 36px; align-items: stretch; }
+  .row > div:not(.fig), .row > .three { align-self: center; }
+  .msg { font-size: 16pt; line-height: 1.35; color: var(--muted); }
+  .msg b { color: var(--ink); font-weight: 600; }
+  .num { font-size: 48pt; font-weight: 700; line-height: 1; }
+  .lab { font-size: 14pt; color: var(--muted); line-height: 1.3; margin-top: 6px; }
+  .lab b { color: var(--ink); font-weight: 600; }
   .b { color: var(--blue); } .o { color: var(--orange); }
-  .msg { font-size: 15pt; line-height: 1.4; border-left: 5px solid var(--blue); padding: 4px 0 4px 14px; }
-  .msg.warn { border-left-color: var(--orange); }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
-  .pill { display: inline-block; font-size: 11pt; font-weight: 700; padding: 4px 12px; border-radius: 99px;
+  .tag { display: inline-block; font-size: 12pt; font-weight: 600; padding: 3px 12px; border-radius: 6px;
     background: var(--soft); color: var(--blue); }
-  .pill.o { background: var(--softo); color: var(--orange); }
+  .tag.o { background: var(--softo); color: var(--orange); }
   /* portada */
-  .cover h1 { font-size: 42pt; margin-top: 0.55in; }
-  .cover .kicker { font-size: 11pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); }
-  .kpis { display: flex; gap: 56px; margin-top: 0.5in; }
-  .names { margin-top: auto; margin-bottom: 0.2in; font-size: 13pt; }
-  .names span { color: var(--muted); }
+  .cover { justify-content: center; gap: 0; }
+  .cover h1 { font-size: 46pt; max-width: 10in; }
+  .cover .lead { font-size: 18pt; color: var(--muted); margin-top: 14px; }
+  .cover .kpis { display: flex; gap: 70px; margin-top: 0.6in; }
+  .cover .names { position: absolute; left: 0.75in; bottom: 0.6in; font-size: 13pt; color: var(--muted); line-height: 1.4; }
+  .cover .names b { color: var(--ink); font-weight: 600; }
   /* dos preguntas */
-  .q2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; flex: 1; min-height: 0; }
-  .q2 .card { display: flex; flex-direction: column; gap: 14px; }
-  .q2 .q { font-size: 23pt; font-weight: 800; line-height: 1.2; }
-  .q2 .use { margin-top: auto; font-size: 14pt; color: var(--muted); }
-  .q2 .use b { color: var(--ink); }
-  .stk { display: flex; height: 46px; border-radius: 8px; overflow: hidden; font-size: 12.5pt; font-weight: 700; color: #fff; }
+  .two { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-content: center; }
+  .two > div { display: flex; flex-direction: column; gap: 18px; padding-top: 18px; border-top: 6px solid var(--blue); }
+  .two > div.t2 { border-top-color: var(--orange); }
+  .two .q { font-size: 24pt; font-weight: 600; line-height: 1.22; }
+  .stk { display: flex; height: 48px; border-radius: 6px; overflow: hidden; font-size: 13pt; font-weight: 600; color: #fff; gap: 2px; }
   .stk div { display: flex; align-items: center; justify-content: center; }
-  .stk-l { font-size: 12pt; color: var(--muted); margin-top: 6px; }
-  /* fuentes de datos */
-  .src3 { display: flex; flex-direction: column; gap: 12px; }
-  .src3 div { font-size: 13.5pt; line-height: 1.3; padding: 10px 14px; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
-  .src3 b { display: block; font-size: 14pt; }
-  .src3 .res { background: var(--blue); color: #fff; border-color: var(--blue); }
   /* línea de tiempo */
-  .tl { display: flex; height: 64px; border-radius: 10px; overflow: hidden; font-size: 14pt; font-weight: 700; color: #fff; }
-  .tl div { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
-  .tl small { font-weight: 400; font-size: 11pt; opacity: .9; }
-  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-  .metrics .card p { font-size: 13pt; color: var(--muted); margin-top: 8px; line-height: 1.35; }
-  .metrics .card h3 { font-size: 15pt; }
+  .tl { display: flex; height: 70px; border-radius: 8px; overflow: hidden; color: #fff; gap: 3px; }
+  .tl div { display: flex; flex-direction: column; justify-content: center; padding-left: 20px; font-size: 16pt; font-weight: 600; }
+  .tl small { font-size: 12pt; font-weight: 400; opacity: .92; }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; }
+  .three h3 { font-size: 19pt; font-weight: 600; margin-top: 10px; }
+  .three p { font-size: 15pt; color: var(--muted); margin-top: 4px; line-height: 1.3; }
   /* conclusiones */
-  .verdicts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
-  .verdicts .card { border-top: 6px solid var(--blue); }
-  .verdicts .card.o { border-top-color: var(--orange); }
-  .verdicts .q { font-size: 15pt; color: var(--muted); margin: 10px 0 4px; }
-  .verdicts .who { font-size: 26pt; font-weight: 800; line-height: 1.1; }
-  .verdicts p { font-size: 13pt; color: var(--muted); margin-top: 10px; line-height: 1.35; }
+  .verdicts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin: auto 0; }
+  .verdicts > div { border-top: 6px solid var(--blue); padding-top: 16px; }
+  .verdicts > div.t2 { border-top-color: var(--orange); }
+  .verdicts .q { font-size: 15pt; color: var(--muted); margin-top: 12px; }
+  .verdicts .who { font-size: 32pt; font-weight: 700; line-height: 1.1; margin-top: 4px; }
+  .verdicts p { font-size: 14pt; color: var(--muted); margin-top: 10px; line-height: 1.3; }
   /* anexo */
-  .kicker { font-size: 11pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); }
-  .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 1; margin-top: 12px; }
-  .qa .card { padding: 16px 18px; }
-  .qa .card h3 { font-size: 12.5pt; color: var(--blue); margin-bottom: 8px; }
-  .qa .card p { font-size: 11.5pt; line-height: 1.38; }
+  .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 44px; margin-top: 8px; }
+  .qa h3 { font-size: 15pt; font-weight: 600; color: var(--blue); margin-bottom: 6px; }
+  .qa p { font-size: 13pt; line-height: 1.4; color: var(--ink); }
 </style>
 </head>
 <body>
 
 <!-- 1 · PORTADA -->
 <section class="slide cover">
-  <div class="kicker">Inteligencia Artificial Aplicada · 1INF62 · PUCP 2026-2 · Grupo 3</div>
-  <h1>¿Dónde habrá <em>accidentes</em> mañana<br>y qué tan <b>graves</b> serán?</h1>
-  <p class="sub" style="font-size:16pt">Pronóstico de riesgo y triaje de gravedad en las carreteras nacionales del Perú</p>
+  <h1>¿Dónde habrá accidentes mañana y qué tan graves serán?</h1>
+  <p class="lead">Pronóstico de riesgo y triaje de gravedad en las carreteras nacionales del Perú</p>
   <div class="kpis">
-    <div class="big"><div class="n">8 105</div><div class="t">accidentes en carreteras<br>ene 2020 – sep 2021 (SUTRAN)</div></div>
-    <div class="big"><div class="n b">66 %</div><div class="t">de los días un departamento<br>no tiene ningún accidente</div></div>
-    <div class="big"><div class="n o">1 de 9</div><div class="t">accidentes es fatal</div></div>
+    <div><div class="num">8 105</div><div class="lab">accidentes en carreteras<br>ene 2020 – sep 2021</div></div>
+    <div><div class="num b">66 %</div><div class="lab">de los días un departamento<br>no tiene ningún accidente</div></div>
+    <div><div class="num o">1 de 9</div><div class="lab">accidentes es fatal</div></div>
   </div>
-  <div class="names">Marco Rodriguez · Angel Cerdán · Raul Malaver · Fernando De La Cruz
-    <span>&nbsp;·&nbsp; github.com/Marcor47/IAA-Grupo3</span></div>
-  <div class="foot"><span>Expone: Raul Malaver</span><span>1 / 11</span></div>
+  <div class="names"><b>Grupo 3</b> · Marco Rodriguez, Angel Cerdán, Raul Malaver, Fernando De La Cruz<br>
+    Inteligencia Artificial Aplicada (1INF62) · PUCP 2026-2</div>
+  <div class="foot"><span></span><span>Expone: Raul Malaver</span></div>
 </section>
 
 <!-- 2 · EL PROBLEMA -->
 <section class="slide">
-  <div class="ruta"><span class="on">1 · Problema</span><span>2 · Datos</span><span>3 · Cómo medimos</span><span>4 · Modelos</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>Patrullas y ambulancias son pocas: queremos responder <em>dos preguntas</em> para repartirlas mejor</h1>
-  <p class="sub">Toda la presentación sigue estas dos tareas.</p>
-  <div class="q2">
-    <div class="card" style="border-top:6px solid var(--blue)">
-      <span class="pill">Tarea 1 · antes del accidente</span>
+  <h1>Con pocas patrullas y ambulancias, queremos responder dos preguntas para repartirlas mejor</h1>
+  <div class="two">
+    <div>
+      <span class="tag" style="align-self:flex-start">Tarea 1 · antes del accidente</span>
       <div class="q">¿Cuántos accidentes habrá mañana en cada departamento, y habrá alguno fatal?</div>
-      <div><div class="stk"><div style="flex:66; background:var(--gray); color:var(--ink)">66 % sin accidentes</div><div style="flex:28.2; background:var(--blue)">con accidentes</div><div style="flex:5.8; background:var(--orange)"></div></div>
-        <div class="stk-l">15 336 departamento-días · <span class="o"><b>5.8 %</b> con al menos un fatal</span></div></div>
-      <div class="use"><b>Para qué:</b> decidir dónde poner patrullas y ambulancias.</div>
+      <div class="stk"><div style="flex:66; background:var(--gray); color:var(--ink)">66 % de días sin accidentes</div><div style="flex:28; background:var(--blue)">con accidentes</div><div style="flex:6; background:var(--orange)"></div></div>
+      <div class="msg">Sirve para decidir <b>dónde poner patrullas</b>.</div>
     </div>
-    <div class="card" style="border-top:6px solid var(--orange)">
-      <span class="pill o">Tarea 2 · cuando llega el reporte</span>
+    <div class="t2">
+      <span class="tag o" style="align-self:flex-start">Tarea 2 · cuando llega el reporte</span>
       <div class="q">¿El accidente es sin víctimas, con heridos o fatal?</div>
-      <div><div class="stk"><div style="flex:36; background:var(--gray); color:var(--ink)">sin víctimas 36 %</div><div style="flex:52; background:var(--blue)">heridos 52 %</div><div style="flex:12; background:var(--orange)">12 %</div></div>
-        <div class="stk-l">8 105 accidentes · <span class="o"><b>fatal: 1 de cada 9</b></span></div></div>
-      <div class="use"><b>Para qué:</b> decidir a qué accidente se despacha primero.</div>
+      <div class="stk"><div style="flex:36; background:var(--gray); color:var(--ink)">sin víctimas 36 %</div><div style="flex:52; background:var(--blue)">heridos 52 %</div><div style="flex:12; background:var(--orange)">12 %</div></div>
+      <div class="msg">Sirve para decidir <b>a qué accidente se va primero</b>.</div>
     </div>
   </div>
-  <div class="foot"><span>Expone: Raul Malaver</span><span>2 / 11</span></div>
+  <div class="foot"><span><b>Problema</b> · Expone: Raul Malaver</span><span>2 / 11</span></div>
 </section>
 
 <!-- 3 · DATOS -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="on">2 · Datos</span><span>3 · Cómo medimos</span><span>4 · Modelos</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>Unimos tres fuentes abiertas: cada accidente queda <em>ubicado en el mapa</em> y con el clima de esa hora</h1>
+  <h1>Unimos tres fuentes abiertas: cada accidente queda ubicado en el mapa y con el clima de esa hora</h1>
+  <div class="three">
+    <div><span class="tag">SUTRAN</span><h3>Qué pasó</h3><p>Fecha, vía, kilómetro, tipo de choque y víctimas</p></div>
+    <div><span class="tag">Red Vial del MTC</span><h3>Dónde fue</h3><p>Vía + km se convierte en un punto del mapa (80 %)</p></div>
+    <div><span class="tag">Open-Meteo</span><h3>Con qué clima</h3><p>Lluvia y clima de ese día y esa hora</p></div>
+  </div>
   <div class="row">
-    <div class="src3" style="flex:0 0 3.4in">
-      <div><b>SUTRAN</b>el accidente: fecha, vía, km, tipo, víctimas</div>
-      <div><b>Red Vial del MTC</b>vía + km → punto en el mapa (80 %)</div>
-      <div><b>Open-Meteo</b>lluvia y clima de ese día y hora</div>
-      <div class="res"><b>Un dataset con 7 grupos de factores</b>tipo de choque · vía · clima · luz · calendario · lugar · historia</div>
-    </div>
     <div class="fig"><img src="../avances/figuras/02_mapa_accidentes.png"></div>
     <div class="fig"><img src="../avances/figuras/01_dona_fatales.png"></div>
   </div>
-  <div class="foot"><span>Expone: Raul Malaver · Fuentes: SUTRAN (ODC-By), MTC/GEOCATMIN, Open-Meteo</span><span>3 / 11</span></div>
+  <div class="foot"><span><b>Datos</b> · Expone: Raul Malaver</span><span>3 / 11</span></div>
 </section>
 
 <!-- 4 · CÓMO MEDIMOS -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="on">3 · Cómo medimos</span><span>4 · Modelos</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>Probamos como en la vida real: el modelo aprende del pasado y <em>predice un futuro que no vio</em></h1>
-  <div style="margin:18px 0 26px">
-    <div class="tl">
-      <div style="flex:15; background:var(--blue)">Aprende<small>ene 2020 – mar 2021</small></div>
-      <div style="flex:6; background:var(--orange)">Examen final<small>abr – sep 2021 · se usa una sola vez</small></div>
+  <h1>Probamos como en la vida real: el modelo aprende del pasado y predice un futuro que no vio</h1>
+  <div class="tl">
+    <div style="flex:15; background:var(--blue)">Aprende<small>enero 2020 – marzo 2021</small></div>
+    <div style="flex:6; background:var(--orange)">Examen final<small>abril – setiembre 2021</small></div>
+  </div>
+  <div class="row">
+    <div style="flex:0 0 3.6in">
+      <div class="num o">88 %</div>
+      <div class="lab">de acierto tiene quien dice siempre «no es fatal». Por eso <b>no medimos exactitud</b>.</div>
+    </div>
+    <div class="three" style="flex:1">
+      <div><span class="tag">¿Cuántos?</span><h3>D² de Poisson</h3><p>Cuánto error quita frente a usar el promedio</p></div>
+      <div><span class="tag">¿Habrá fatal?</span><h3>PR-AUC</h3><p>Qué tan bien ordena los días de riesgo</p></div>
+      <div><span class="tag o">¿Qué tan grave?</span><h3>Macro-F1</h3><p>Acierto que pesa igual a las tres clases</p></div>
     </div>
   </div>
-  <div class="row" style="align-items:stretch; flex:0 0 auto">
-    <div class="side" style="flex:0 0 4.2in; justify-content:center">
-      <div class="big"><div class="n o">88 %</div>
-        <div class="t">de acierto logra quien dice siempre «no es fatal»…<br>sin detectar ni un solo fatal. Por eso <b>no usamos exactitud</b>.</div></div>
-    </div>
-    <div class="metrics" style="flex:1">
-      <div class="card"><span class="pill">¿Cuántos accidentes?</span><h3 style="margin-top:10px">D² de Poisson</h3>
-        <p>Cuánto del error se reduce frente a predecir siempre el promedio.</p></div>
-      <div class="card"><span class="pill">¿Habrá un fatal?</span><h3 style="margin-top:10px">PR-AUC</h3>
-        <p>Qué tan bien ordena los días de riesgo. Al azar: 0.06.</p></div>
-      <div class="card"><span class="pill o">¿Qué tan grave?</span><h3 style="margin-top:10px">Macro-F1</h3>
-        <p>Acierto que pesa igual sin víctimas, heridos y fatales.</p></div>
-    </div>
-  </div>
-  <p class="sub" style="margin-top:18px">Cada modelo se compara con una <b>regla sin ML</b> y con un <b>baseline lineal</b>.</p>
-  <div class="foot"><span>Expone: Angel Cerdán · Tarea 2: validación cruzada 5 × 5 y test 80/20</span><span>4 / 11</span></div>
+  <div class="foot"><span><b>Cómo medimos</b> · Expone: Angel Cerdán</span><span>4 / 11</span></div>
 </section>
 
 <!-- 5 · BINOMIAL NEGATIVA -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="on">4 · Modelos (1 de 4)</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>Binomial negativa: los conteos varían más de lo esperado, pero <em>no mejora al modelo simple</em></h1>
-  <p class="sub">Modelo 1 · Mhetre y Thube (2023) · Tarea 1</p>
+  <h1>Binomial negativa: los conteos varían más de lo esperado, pero no mejora al modelo simple</h1>
   <div class="row">
-    <div class="side">
-      <div class="big"><div class="n o">α = 0.10</div><div class="t">hay dispersión extra,<br>y es estadísticamente significativa…</div></div>
-      <div class="big"><div class="n b">= 0.256</div><div class="t">…pero predice igual que el Poisson:<br>el lugar y la historia ya la explican</div></div>
+    <div style="flex:0 0 3.3in">
+      <div class="num b">Empate</div>
+      <div class="lab">con el Poisson (0.256 en ambos): el lugar y la historia ya explican esa variación extra</div>
     </div>
     <div class="fig"><img src="figuras/01_binomial.png"></div>
   </div>
-  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/05_binomial_negativa.ipynb</span><span>5 / 11</span></div>
+  <div class="foot"><span><b>Modelo 1 de 4</b> · Mhetre y Thube (2023) · Expone: Marco Rodriguez</span><span>5 / 11</span></div>
 </section>
 
 <!-- 6 · RANDOM FOREST -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="on">4 · Modelos (2 de 4)</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>Random Forest: el <em>mejor para clasificar la gravedad</em>, pero se le escapan <b>3 de cada 4 fatales</b></h1>
-  <p class="sub">Modelo 2 · Muñoz et al. (2024) · Tarea 2</p>
+  <h1>Random Forest: el mejor para clasificar la gravedad, pero se le escapan 3 de cada 4 fatales</h1>
   <div class="fig"><img src="figuras/02_rf.png"></div>
-  <div class="msg">Gana porque capta combinaciones (atropello + de noche + recta) que un modelo lineal no ve.
-    Mejor que la logística en <b>25 de 25</b> pruebas.</div>
-  <div class="foot"><span>Expone: Angel Cerdán · notebooks/03_random_forest.ipynb</span><span>6 / 11</span></div>
+  <p class="msg">Gana porque capta combinaciones, como <b>atropello de noche en una recta</b>.</p>
+  <div class="foot"><span><b>Modelo 2 de 4</b> · Muñoz et al. (2024) · Expone: Angel Cerdán</span><span>6 / 11</span></div>
 </section>
 
 <!-- 7 · GRADIENT BOOSTING -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="on">4 · Modelos (3 de 4)</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>Gradient boosting: el <em>mejor modelo individual</em> para pronosticar cuántos accidentes habrá</h1>
-  <p class="sub">Modelo 3 · Babaoglu y Babaoglu (2021) · Tarea 1 · D² de Poisson, más alto = mejor</p>
+  <h1>Gradient boosting: el mejor modelo individual para pronosticar cuántos accidentes habrá</h1>
   <div class="fig"><img src="figuras/03_gbm.png"></div>
-  <div class="msg">En el futuro no visto supera a la regla «promedio de 28 días»; el Poisson no lo logra.
-    En la gravedad detecta pocos fatales (28 %), como el Random Forest.</div>
-  <div class="foot"><span>Expone: Raul Malaver · notebooks/04_gradient_boosting.ipynb</span><span>7 / 11</span></div>
+  <p class="msg">En el futuro no visto <b>supera al promedio de 28 días</b>; el Poisson no lo logra.</p>
+  <div class="foot"><span><b>Modelo 3 de 4</b> · Babaoglu y Babaoglu (2021) · Expone: Raul Malaver</span><span>7 / 11</span></div>
 </section>
 
 <!-- 8 · MLP Y ENSAMBLE -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="on">4 · Modelos (4 de 4)</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>La red neuronal sola no destaca; <em>combinada con los demás</em> logra el mejor equilibrio</h1>
-  <p class="sub">Modelo 4 · MLP y ensamble por votación · Emu et al. (2022) · Tareas 1 y 2</p>
+  <h1>La red neuronal sola no destaca; combinada con los demás logra el mejor equilibrio</h1>
   <div class="row">
-    <div class="side">
-      <div class="big"><div class="n">8 mil</div><div class="t">accidentes tenemos; el paper usa <b>5.8 millones</b>.<br>Sin datos, la red empata con la logística</div></div>
-      <div class="big"><div class="n b">Ensamble</div><div class="t">promedia lineal + red + RF + GBM:<br>el mejor en el conteo y nunca peor que el baseline</div></div>
+    <div style="flex:0 0 3.3in">
+      <div class="num">8 mil</div>
+      <div class="lab">accidentes tenemos; el paper entrena con 5.8 millones. Con tan pocos datos, la red no despega.</div>
     </div>
     <div class="fig"><img src="figuras/04_ensamble.png"></div>
   </div>
-  <div class="foot"><span>Expone: Fernando De La Cruz · notebooks/06_mlp.ipynb · gráfico: test de la Tarea 2</span><span>8 / 11</span></div>
+  <div class="foot"><span><b>Modelo 4 de 4</b> · Emu et al. (2022) · Expone: Fernando De La Cruz</span><span>8 / 11</span></div>
 </section>
 
 <!-- 9 · COMPARACIÓN FINAL -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="ok">4 · Modelos</span><span class="on">5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>El ML supera a las reglas simples en las tres preguntas; donde <em>más aporta es en la gravedad</em></h1>
-  <p class="sub">Regla sin ML → baseline lineal → modelo elegido · promedio de la validación cruzada</p>
+  <h1>El ML supera a las reglas simples en las tres preguntas, y donde más aporta es en la gravedad</h1>
   <div class="fig"><img src="figuras/05_comparacion.png"></div>
-  <div class="msg warn">Para anticipar un día fatal <b>todos los modelos empatan</b> (0.13–0.14): nos quedamos con el más simple.</div>
-  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/08_comparacion.ipynb</span><span>9 / 11</span></div>
+  <p class="msg">Para anticipar un día fatal <b>todos los modelos empatan</b>: nos quedamos con el más simple.</p>
+  <div class="foot"><span><b>Resultados</b> · Expone: Marco Rodriguez</span><span>9 / 11</span></div>
 </section>
 
 <!-- 10 · ABLACIÓN -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="ok">4 · Modelos</span><span class="on">5 · Resultados</span><span>6 · Recomendación</span></div>
-  <h1>La <em>lluvia</em> casi no cambia la predicción: lo que pesa es el <b>lugar</b> y el <b>tipo de choque</b></h1>
-  <p class="sub">Cuánto empeora el modelo si le quitamos cada grupo de factores (barra más larga = más importante)</p>
+  <h1>La lluvia casi no cambia la predicción: lo que pesa es el lugar y el tipo de choque</h1>
   <div class="fig"><img src="figuras/06_ablacion.png"></div>
-  <div class="msg">Sin el clima el modelo queda igual; sin el tipo de choque, la clasificación de gravedad cae en las 25 pruebas.</div>
-  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/07_ablacion.ipynb</span><span>10 / 11</span></div>
+  <p class="msg">Cuánto empeora el modelo si le quitamos cada grupo de factores: <b>barra más larga, factor más importante</b>.</p>
+  <div class="foot"><span><b>Resultados</b> · Expone: Marco Rodriguez</span><span>10 / 11</span></div>
 </section>
 
 <!-- 11 · RECOMENDACIÓN -->
 <section class="slide">
-  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="ok">4 · Modelos</span><span class="ok">5 · Resultados</span><span class="on">6 · Recomendación</span></div>
-  <h1>Un modelo para cada pregunta, y un límite que está en los <b>datos</b>, no en el algoritmo</h1>
-  <div class="verdicts" style="margin-top:22px">
-    <div class="card"><span class="pill">Tarea 1</span><div class="q">¿Cuántos accidentes mañana?</div>
-      <div class="who">Ensamble</div><p>Mejor en la validación y en el futuro no visto.</p></div>
-    <div class="card"><span class="pill">Tarea 1</span><div class="q">¿Habrá un fatal?</div>
-      <div class="who">Regresión logística</div><p>Todos empatan: gana el más simple. Ordena los departamentos por riesgo (2.4× el azar).</p></div>
-    <div class="card o"><span class="pill o">Tarea 2</span><div class="q">¿Qué tan grave es?</div>
-      <div class="who">Random Forest</div><p>O el <b>ensamble</b>, si dejar pasar un fatal cuesta más: detecta 37 % frente a 27 %.</p></div>
+  <h1>Recomendamos un modelo para cada pregunta; el límite está en los datos, no en el algoritmo</h1>
+  <div class="verdicts">
+    <div><span class="tag">Tarea 1</span><div class="q">¿Cuántos accidentes mañana?</div>
+      <div class="who">Ensamble</div><p>El mejor en la validación y en el futuro no visto</p></div>
+    <div><span class="tag">Tarea 1</span><div class="q">¿Habrá un fatal?</div>
+      <div class="who">Regresión logística</div><p>Todos empatan: gana el más simple</p></div>
+    <div class="t2"><span class="tag o">Tarea 2</span><div class="q">¿Qué tan grave es?</div>
+      <div class="who">Random Forest</div><p>O el ensamble, si perder un fatal cuesta más (37 % frente a 27 %)</p></div>
   </div>
-  <div class="msg warn" style="margin-top:30px">Las mejoras son modestas porque el registro no trae <b>vehículo, ocupantes, velocidad ni tráfico</b>.
-    Siguiente paso: sumar el flujo vehicular de los peajes.</div>
-  <div class="foot"><span>Expone: Fernando De La Cruz · código y resultados: github.com/Marcor47/IAA-Grupo3</span><span>11 / 11</span></div>
+  <p class="msg" style="margin-bottom:0.2in">El registro no trae <b>vehículo, ocupantes, velocidad ni tráfico</b>.
+    Siguiente paso: sumar el flujo vehicular de los peajes.</p>
+  <div class="foot"><span><b>Recomendación</b> · Expone: Fernando De La Cruz · github.com/Marcor47/IAA-Grupo3</span><span>11 / 11</span></div>
 </section>
 
 <!-- ANEXO · PREGUNTAS PROBABLES -->
 <section class="slide">
-  <div class="kicker">Anexo · preguntas probables (1/2)</div>
-  <h1>Validación y desbalance</h1>
+  <h1>Anexo: validación y desbalance</h1>
   <div class="qa">
-    <div class="card"><h3>¿Por qué validación temporal y no aleatoria en la Tarea 1?</h3>
-      <p>La serie tiene memoria (la historia es lo que más usa el modelo) y cambia de nivel con la cuarentena. Con
-        pliegues aleatorios el modelo vería días posteriores a los que pronostica: fuga del futuro. Además, toda la
-        historia se calcula hasta t − 1.</p></div>
-    <div class="card"><h3>¿Cómo manejaron el desbalance?</h3>
-      <p>Métricas que no lo esconden (PR-AUC, macro-F1, PR-AUC de fatales) y pesos de clase balanceados en GRAVEDAD.
-        En HAY_FATAL no se usan pesos, para que las probabilidades queden calibradas (Brier 0.060). Sin sobremuestreo.</p></div>
-    <div class="card"><h3>¿Por qué no reportan exactitud, como los papers?</h3>
-      <p>Predecir siempre «no fatal» acierta el 88 % de los accidentes y predecir 0 accidentes acierta el 66 % de los
-        días. La exactitud premia ignorar justo los casos que importan.</p></div>
-    <div class="card"><h3>¿Hubo fuga de información?</h3>
-      <p>No: el encoding se ajusta dentro de cada pliegue, el número de víctimas solo forma el objetivo, los
-        hiperparámetros se eligen sin mirar el holdout ni el test, y estos se usan una sola vez.</p></div>
+    <div><h3>¿Por qué validación temporal y no aleatoria en la Tarea 1?</h3>
+      <p>La serie tiene memoria y cambia de nivel con la cuarentena. Con pliegues aleatorios el modelo vería días
+        posteriores a los que pronostica. Toda la historia se calcula hasta t − 1.</p></div>
+    <div><h3>¿Cómo manejaron el desbalance?</h3>
+      <p>Métricas que no lo esconden (PR-AUC, macro-F1) y pesos de clase balanceados en GRAVEDAD. En HAY_FATAL sin
+        pesos, para que las probabilidades queden calibradas (Brier 0.060).</p></div>
+    <div><h3>¿Por qué no reportan exactitud, como los papers?</h3>
+      <p>Decir siempre «no fatal» acierta el 88 % de los accidentes y decir «0 accidentes» acierta el 66 % de los días.
+        La exactitud premia ignorar justo los casos que importan.</p></div>
+    <div><h3>¿Hubo fuga de información?</h3>
+      <p>No: el encoding se ajusta dentro de cada pliegue, las víctimas solo forman el objetivo y los hiperparámetros se
+        eligen sin mirar el holdout ni el test, que se usan una sola vez.</p></div>
   </div>
-  <div class="foot"><span>Respaldo para la ronda de preguntas</span><span>A1</span></div>
+  <div class="foot"><span>Respaldo para preguntas</span><span>A1</span></div>
 </section>
 
 <section class="slide">
-  <div class="kicker">Anexo · preguntas probables (2/2)</div>
-  <h1>Por qué ganó cada modelo</h1>
+  <h1>Anexo: por qué ganó cada modelo</h1>
   <div class="qa">
-    <div class="card"><h3>¿Las diferencias son significativas?</h3>
-      <p>Cada modelo se compara con el baseline pliegue a pliegue (IC 95 % aprox.). En GRAVEDAD sí: RF +0.033 (25/25),
-        ensamble +0.028, GBM +0.014. En N_ACC y HAY_FATAL ningún IC excluye el 0 en la CV; la ventaja en N_ACC aparece en el holdout.</p></div>
-    <div class="card"><h3>¿Por qué el ensamble no gana en todo?</h3>
+    <div><h3>¿Las diferencias son significativas?</h3>
+      <p>Comparación pareada con el baseline (IC 95 %). En GRAVEDAD sí: RF +0.033 (25 de 25 pliegues), ensamble
+        +0.028, GBM +0.014. En N_ACC y HAY_FATAL ningún IC excluye el 0; la ventaja en N_ACC aparece en el holdout.</p></div>
+    <div><h3>¿Por qué el ensamble no gana en todo?</h3>
       <p>Promediar ayuda cuando los miembros se equivocan distinto. En el conteo predicen casi lo mismo (correlación
-        0.96–0.98) y aporta poco; en la clase fatal discrepan (0.66–0.90) y ahí combina las fortalezas del RF y la logística.</p></div>
-    <div class="card"><h3>La literatura dice que el clima importa. ¿Por qué aquí no?</h3>
-      <p>Medimos la lluvia de reanálisis en celdas de ~11 km (y la de la capital en la Tarea 1); su efecto queda absorbido
-        por la estación y el lugar. Babaoglu y Babaoglu también hallan que la mayoría de muertes ocurre con clima no extremo.</p></div>
-    <div class="card"><h3>¿Por qué el MLP no rinde como en Emu et al.?</h3>
-      <p>Ellos usan 5.8 millones de choques con variables del vehículo y las personas; aquí hay 8 105 sin ellas. La grilla
-        eligió la red más chica y su resultado depende de la semilla (± 0.009 de macro-F1).</p></div>
+        0.96–0.98); en la clase fatal discrepan (0.66–0.90) y ahí sí combina.</p></div>
+    <div><h3>La literatura dice que el clima importa. ¿Por qué aquí no?</h3>
+      <p>La lluvia viene de reanálisis en celdas de ~11 km y su efecto queda absorbido por la estación y el lugar.
+        Babaoglu y Babaoglu también hallan que la mayoría de muertes ocurre con clima no extremo.</p></div>
+    <div><h3>¿Por qué el MLP no rinde como en Emu et al.?</h3>
+      <p>Ellos usan 5.8 millones de choques con datos del vehículo y las personas; aquí hay 8 105 sin ellos. El
+        resultado varía ± 0.009 de macro-F1 según la semilla.</p></div>
   </div>
-  <div class="foot"><span>Respaldo para la ronda de preguntas</span><span>A2</span></div>
+  <div class="foot"><span>Respaldo para preguntas</span><span>A2</span></div>
 </section>
-
 
 </body>
 </html>

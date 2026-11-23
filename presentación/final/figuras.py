@@ -6,6 +6,7 @@ Lee results/metrics.csv. El recall de fatales y la ablación vienen de results/m
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib import font_manager
 import numpy as np
 import pandas as pd
 
@@ -13,12 +14,16 @@ RAIZ = Path(__file__).resolve().parents[2]
 SALIDA = Path(__file__).resolve().parent / "figuras"
 SALIDA.mkdir(exist_ok=True)
 
+# Misma fuente que el HTML (IBM Plex Sans, OFL, en fuentes/) para que figuras y texto combinen
+for ttf in (Path(__file__).resolve().parent / "fuentes").glob("*.ttf"):
+    font_manager.fontManager.addfont(str(ttf))
+
 # Misma paleta que el avance: azul = lo que se destaca, naranja = fatal / costo, gris = resto
 AZUL, NARANJA, GRIS = "#2a78d6", "#eb6834", "#c9c8c2"
-TINTA, TINTA2, FONDO = "#1b1f24", "#52514e", "#fcfcfb"
+TINTA, TINTA2, FONDO = "#1b1f24", "#55595f", "#ffffff"
 plt.rcParams.update({
     "figure.facecolor": FONDO, "axes.facecolor": FONDO, "savefig.facecolor": FONDO,
-    "font.size": 16, "axes.titlesize": 17, "axes.titleweight": "bold", "axes.titlelocation": "left",
+    "font.family": "IBM Plex Sans", "font.size": 16, "axes.titlesize": 17, "axes.titleweight": "bold", "axes.titlelocation": "left",
     "axes.titlepad": 14, "axes.titlecolor": TINTA2, "xtick.color": TINTA, "ytick.color": TINTA,
     "ytick.labelsize": 16, "xtick.labelsize": 16, "axes.edgecolor": GRIS, "axes.spines.top": False,
     "axes.spines.right": False, "axes.spines.bottom": False, "text.color": TINTA,
@@ -101,13 +106,13 @@ for e, r in RECALL.items():
     ax.scatter(r, f1, s=380 if e == "Ensamble" else 220, color=c, zorder=3, edgecolor=FONDO, lw=2)
     ax.annotate(e, (r, f1), xytext=(0, 16), textcoords="offset points", ha="center", fontsize=15,
                 fontweight="bold" if e == "Ensamble" else "normal", color=TINTA if e == "Ensamble" else TINTA2)
-ax.set_xlabel("Fatales detectados (%)  →", fontsize=15)
-ax.set_ylabel("Acierto en las 3 clases (macro-F1)  →", fontsize=15)
+ax.set_xlabel("Fatales detectados (%) · más es mejor", fontsize=15)
+ax.set_ylabel("Acierto en las 3 clases (macro-F1)", fontsize=15)
 ax.set_xlim(20, 58), ax.set_ylim(0.422, 0.452)
 ax.spines["bottom"].set_visible(True)
 ax.grid(color="#ecebe7", lw=1)
 ax.set_axisbelow(True)
-ax.text(57, 0.4505, "ideal ↗", ha="right", fontsize=14, color=TINTA2)
+ax.text(57, 0.4505, "ideal: arriba a la derecha", ha="right", fontsize=14, color=TINTA2)
 guardar(fig, "04_ensamble.png")
 
 # 5 · Comparación final: referencia sin ML → baseline → modelo elegido (CV).

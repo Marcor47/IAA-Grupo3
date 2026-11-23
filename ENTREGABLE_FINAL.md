@@ -19,7 +19,7 @@
 | `results/model_comparison.txt` con resumen y análisis detallado | ✅ | [`results/model_comparison.txt`](results/model_comparison.txt): Tabla I, una sección por modelo, comparación final, ablación y conclusiones |
 | Análisis de por qué un modelo funcionó mejor, limitaciones e insights | ✅ | `model_comparison.txt` §9–12 (comparación final, ablación, conclusiones por variable objetivo y limitaciones) y README §5.3 |
 | Paper/reporte académico (3-5 páginas) en `report.pdf` | ✅ | [`report.pdf`](report.pdf) (5 páginas, plantilla del curso `Plantilla_reporte_TA.docx`): Introducción, Trabajo relacionado, Dataset y EDA, Metodología, Resultados (Tabla I de métricas en prueba y Tabla II de hiperparámetros), Discusión, Conclusiones, Declaración de uso de IA, Contribuciones y Referencias IEEE. Fuente editable: [`report.docx`](report.docx) |
-| Presentación en `presentation.pdf` | ✅ | [`presentation.pdf`](presentation.pdf): 11 diapositivas (≈ 10 min, cada integrante expone su modelo; barra de recorrido y una figura por diapositiva) y 2 de anexo con preguntas probables. Fuente y guion con tiempos en [`presentación/final/`](presentación/final/). La de avances está archivada en `presentación/avances/` |
+| Presentación en `presentation.pdf` | ✅ | [`presentation.pdf`](presentation.pdf): 11 diapositivas (≈ 10 min, cada integrante expone su modelo; una figura por diapositiva y poco texto) y 2 de anexo con preguntas probables. Fuente y guion con tiempos en [`presentación/final/`](presentación/final/). La de avances está archivada en `presentación/avances/` |
 | `ENTREGABLE_FINAL.md` confirmando completitud | ✅ | Este archivo |
 
 ## Resultado final (métrica principal; `model_comparison.txt` §2 y §11)
