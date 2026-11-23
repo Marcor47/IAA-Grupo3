@@ -53,11 +53,11 @@ Recomendación): al cambiar de bloque, nombrarlo («pasamos a los modelos»). La
 8. **MLP y ensamble (Fernando).** La red sola empata con la logística: con 8 105 accidentes no hay datos para
    aprovecharla (Emu et al. usan 5.8 millones) y varía con la semilla. El ensamble promedia los cuatro modelos: es el
    mejor en el conteo (0.268 / 0.296) y en el triaje queda en medio (37 % de fatales) sin bajar del baseline.
-9. **Comparación (Marco).** Una barra por pregunta: cuánto mejora el modelo elegido sobre la regla sin ML. El salto
-   grande está en la gravedad (+98 % sobre el Dummy). En HAY_FATAL los seis modelos quedan entre 0.130 y 0.140 (ningún
-   IC excluye el 0) y en el holdout la logística queda arriba (0.161), por eso la elegimos. Si preguntan por la mejora
-   sobre el baseline lineal: es menor (+5 % en el conteo, +8 % en la gravedad, 0 en HAY_FATAL). En las diapositivas
-   5–8, leer la línea del paper: qué se tomó de él.
+9. **Comparación (Marco).** Una barra por pregunta: cuánto mejora el modelo elegido sobre el baseline lineal. Solo la
+   gravedad mejora de forma significativa (RF +8 %, 25 de 25 pliegues). En el conteo el ensamble suma +4 % en la CV,
+   sin significancia, y +11 % en el holdout. En HAY_FATAL los seis modelos quedan entre 0.130 y 0.140 y se queda la
+   logística. Cerrar con la línea de abajo: frente a no usar ML la mejora es grande (+19 % a +98 %), pero casi todo el
+   salto ya lo da el modelo lineal. En las diapositivas 5–8, leer la línea del paper: qué se tomó de él.
 10. **Ablación (Marco).** Quitamos un grupo de variables a la vez. Sin el clima el modelo casi no cambia (+0.001 de D²);
    sin el tipo de choque el triaje cae 0.042. La lluvia del día no agrega información una vez que se conocen el lugar
    y la historia.
