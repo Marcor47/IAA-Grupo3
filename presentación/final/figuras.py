@@ -115,28 +115,33 @@ ax.set_axisbelow(True)
 ax.text(57, 0.4505, "ideal: arriba a la derecha", ha="right", fontsize=14, color=TINTA2)
 guardar(fig, "04_ensamble.png")
 
-# 5 · Comparación final: referencia sin ML → baseline → modelo elegido (CV).
-# En HAY_FATAL todos empatan (0.130–0.140): se elige la logística, que es el mismo baseline.
+# 5 · Comparación final: referencia sin ML → baseline → modelo elegido (CV). En HAY_FATAL se muestran todos los
+# modelos: empatan (0.130–0.140, ningún IC excluye el 0) y se elige la logística, que es el mismo baseline.
 panel = [
     ("Accidentes por día", "D² de Poisson", C, [("Sin ML", "Ingenuo · media 28 días"), ("Baseline", "Baseline · Poisson"),
-                                                 ("Ensamble", "Ensamble (votación)")], "d2_poisson"),
-    ("¿Habrá un fatal?", "PR-AUC", H, [("Sin ML", "Ingenuo · fatales últimos 28 días"),
-                                       ("Logística\n(baseline)", "Baseline · Reg. logística")], "pr_auc"),
+                                                 ("Ensamble", "Ensamble (votación)")], "d2_poisson", 2),
+    ("¿Habrá un fatal? · todos empatan", "PR-AUC", H, [
+        ("Sin ML", "Ingenuo · fatales últimos 28 días"), ("Logística", "Baseline · Reg. logística"),
+        ("Bin.\nnegativa", "Binomial negativa (N_FATALES)"), ("Ensam-\nble", "Ensamble (votación)"),
+        ("GBM", "Gradient boosting (ajustado)"), ("MLP", "MLP (ajustado)"), ("RF", "Random Forest (ajustado)")],
+     "pr_auc", 1),
     ("Gravedad del accidente", "macro-F1", G, [("Sin ML", "Dummy (proporciones)"),
                                                ("Baseline", "Baseline · Reg. logística multinomial"),
-                                               ("RF", "Random Forest (ajustado)")], "macro_f1"),
+                                               ("RF", "Random Forest (ajustado)")], "macro_f1", 2),
 ]
-fig, axs = plt.subplots(1, 3, figsize=(14, 4.8), gridspec_kw={"wspace": 0.25})
-for ax, (titulo, metrica, t, mods, col) in zip(axs, panel):
+fig, axs = plt.subplots(1, 3, figsize=(16, 4.8), gridspec_kw={"wspace": 0.16, "width_ratios": [3.6, 6.2, 3.6]})
+for ax, (titulo, metrica, t, mods, col, k) in zip(axs, panel):
     v = [met(t, mod, "CV", col) for _, mod in mods]
     x = np.arange(len(v))
-    ax.bar(x, v, color=[GRIS] * (len(v) - 1) + [AZUL], width=0.72)
+    ax.bar(x, v, color=[AZUL if i == k else GRIS for i in x], width=0.72)
+    chico = len(v) > 3
     for xi, vi in zip(x, v):
-        ax.text(xi, vi + max(v) * 0.02, f"{vi:.3f}", ha="center", va="bottom", fontsize=17, fontweight="bold")
-    ax.set_xlim(-0.6, 2.6)
-    ax.text(x[-1], v[-1] * 1.13, f"+{100 * (v[-1] / v[0] - 1):.0f} % vs sin ML", ha="center", va="bottom",
-            fontsize=14, color=AZUL, fontweight="bold")
-    ax.set_xticks(x, [n for n, _ in mods], fontsize=14)
+        ax.text(xi, vi + max(v) * 0.02, f"{vi:.3f}", ha="center", va="bottom", fontsize=14 if chico else 17,
+                fontweight="bold")
+    ax.set_xlim(-0.6, len(v) - 0.4)
+    ax.text(x[k], v[k] * 1.13 if not chico else max(v) * 1.13, f"+{100 * (v[k] / v[0] - 1):.0f} % vs sin ML",
+            ha="center", va="bottom", fontsize=14, color=AZUL, fontweight="bold")
+    ax.set_xticks(x, [n for n, _ in mods], fontsize=12.5 if chico else 14)
     ax.tick_params(axis="x", length=0)
     ax.set_yticks([]), ax.spines["left"].set_visible(False), ax.set_ylim(0, max(v) * 1.32)
     ax.set_title(f"{titulo}\n", fontsize=17)
