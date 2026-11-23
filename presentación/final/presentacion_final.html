@@ -6,68 +6,79 @@
 <style>
   :root {
     --bg: #fcfcfb; --ink: #1d1d1f; --muted: #5f6368; --line: #e3e3e0;
-    --blue: #2a78d6; --orange: #eb6834; --soft: #f1f4f9; --softo: #fdf0ea;
+    --blue: #2a78d6; --orange: #eb6834; --gray: #c9c8c2; --soft: #f1f4f9; --softo: #fdf0ea;
   }
   @page { size: 13.333in 7.5in; margin: 0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { background: var(--bg); color: var(--ink);
     font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .slide { width: 13.333in; height: 7.5in; padding: 0.55in 0.7in 0.5in; position: relative; overflow: hidden;
+  .slide { width: 13.333in; height: 7.5in; padding: 0.4in 0.7in 0.55in; position: relative; overflow: hidden;
     page-break-after: always; display: flex; flex-direction: column; background: var(--bg); }
-  .kicker { font-size: 11pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); }
-  h1 { font-size: 27pt; line-height: 1.15; font-weight: 800; margin: 6px 0 18px; max-width: 11.6in; }
+  /* barra de recorrido: dice en qué parte de la exposición estamos */
+  .ruta { display: flex; gap: 6px; margin-bottom: 14px; }
+  .ruta span { flex: 1; font-size: 10pt; font-weight: 700; color: #9a9a96; padding-top: 6px;
+    border-top: 4px solid var(--line); letter-spacing: .02em; }
+  .ruta span.ok { color: var(--muted); border-top-color: #9cbfe9; }
+  .ruta span.on { color: var(--blue); border-top-color: var(--blue); }
+  h1 { font-size: 28pt; line-height: 1.18; font-weight: 800; margin: 0 0 6px; max-width: 12in; }
   h1 em { font-style: normal; color: var(--blue); }
   h1 b { color: var(--orange); }
-  .foot { position: absolute; left: 0.7in; right: 0.7in; bottom: 0.25in; display: flex; justify-content: space-between;
-    font-size: 9pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 5px; }
-  .grid { display: grid; gap: 22px; flex: 1; min-height: 0; }
-  .g2 { grid-template-columns: 1fr 1fr; }
-  .g37 { grid-template-columns: 3.3fr 6.7fr; }
-  .g46 { grid-template-columns: 4.2fr 5.8fr; }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
-  .card h3 { font-size: 13pt; margin-bottom: 8px; }
-  .card p, li { font-size: 12.5pt; line-height: 1.38; }
-  ul { padding-left: 1.1em; } li { margin: 3px 0; }
-  .kpis { display: flex; gap: 34px; margin: 6px 0 10px; }
-  .kpi .n { font-size: 34pt; font-weight: 800; line-height: 1; }
-  .kpi .n.o { color: var(--orange); } .kpi .n.b { color: var(--blue); }
-  .kpi .l { font-size: 10.5pt; color: var(--muted); margin-top: 4px; max-width: 2.6in; line-height: 1.3; }
-  .stack { display: flex; flex-direction: column; gap: 12px; }
-  .big { display: flex; align-items: baseline; gap: 10px; }
-  .big .n { font-size: 30pt; font-weight: 800; }
-  .big .t { font-size: 11.5pt; color: var(--muted); line-height: 1.3; }
-  .fig { display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .sub { font-size: 14pt; color: var(--muted); margin-bottom: 14px; line-height: 1.35; }
+  .foot { position: absolute; left: 0.7in; right: 0.7in; bottom: 0.22in; display: flex; justify-content: space-between;
+    font-size: 9.5pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 5px; }
+  .row { display: flex; gap: 28px; flex: 1; min-height: 0; align-items: center; }
+  .fig { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; height: 100%; }
   .fig img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .src { font-size: 9.5pt; color: var(--muted); margin-top: 6px; }
-  .pill { display: inline-block; font-size: 10pt; font-weight: 700; padding: 3px 10px; border-radius: 99px;
-    background: var(--soft); color: var(--blue); margin-right: 6px; }
+  .side { flex: 0 0 3.3in; display: flex; flex-direction: column; gap: 22px; }
+  .big .n { font-size: 40pt; font-weight: 800; line-height: 1; }
+  .big .t { font-size: 13pt; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+  .b { color: var(--blue); } .o { color: var(--orange); }
+  .msg { font-size: 15pt; line-height: 1.4; border-left: 5px solid var(--blue); padding: 4px 0 4px 14px; }
+  .msg.warn { border-left-color: var(--orange); }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; }
+  .pill { display: inline-block; font-size: 11pt; font-weight: 700; padding: 4px 12px; border-radius: 99px;
+    background: var(--soft); color: var(--blue); }
   .pill.o { background: var(--softo); color: var(--orange); }
-  table { border-collapse: collapse; width: 100%; font-size: 12pt; }
-  th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; }
-  th { font-size: 10.5pt; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-  td.n { text-align: right; font-variant-numeric: tabular-nums; }
-  .hl { color: var(--blue); font-weight: 800; }
-  .warn { color: var(--orange); font-weight: 700; }
   /* portada */
-  .cover h1 { font-size: 38pt; margin-top: 0.5in; }
-  .cover .sub { font-size: 15pt; color: var(--muted); max-width: 10in; line-height: 1.4; }
-  .cover .names { margin-top: auto; font-size: 13pt; color: var(--ink); }
-  .cover .names span { color: var(--muted); }
-  /* flujo de datos */
-  .flow { display: flex; flex-direction: column; gap: 8px; }
-  .box { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 8px 12px; font-size: 11.5pt; line-height: 1.3; }
-  .box b { display: block; font-size: 12pt; }
-  .box.res { background: var(--blue); color: #fff; border-color: var(--blue); }
-  .arrow { text-align: center; color: var(--muted); font-size: 14pt; line-height: 1; }
+  .cover h1 { font-size: 42pt; margin-top: 0.55in; }
+  .cover .kicker { font-size: 11pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); }
+  .kpis { display: flex; gap: 56px; margin-top: 0.5in; }
+  .names { margin-top: auto; margin-bottom: 0.2in; font-size: 13pt; }
+  .names span { color: var(--muted); }
+  /* dos preguntas */
+  .q2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; flex: 1; min-height: 0; }
+  .q2 .card { display: flex; flex-direction: column; gap: 14px; }
+  .q2 .q { font-size: 23pt; font-weight: 800; line-height: 1.2; }
+  .q2 .use { margin-top: auto; font-size: 14pt; color: var(--muted); }
+  .q2 .use b { color: var(--ink); }
+  .stk { display: flex; height: 46px; border-radius: 8px; overflow: hidden; font-size: 12.5pt; font-weight: 700; color: #fff; }
+  .stk div { display: flex; align-items: center; justify-content: center; }
+  .stk-l { font-size: 12pt; color: var(--muted); margin-top: 6px; }
+  /* fuentes de datos */
+  .src3 { display: flex; flex-direction: column; gap: 12px; }
+  .src3 div { font-size: 13.5pt; line-height: 1.3; padding: 10px 14px; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+  .src3 b { display: block; font-size: 14pt; }
+  .src3 .res { background: var(--blue); color: #fff; border-color: var(--blue); }
   /* línea de tiempo */
-  .tl { display: flex; height: 34px; border-radius: 6px; overflow: hidden; font-size: 10.5pt; font-weight: 700; color: #fff; }
-  .tl div { display: flex; align-items: center; justify-content: center; }
-  .verdict { border-left: 5px solid var(--blue); }
-  .verdict.o { border-left-color: var(--orange); }
-  .verdict .who { font-size: 20pt; font-weight: 800; margin: 2px 0 6px; }
-  .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 1; }
-  .qa .card h3 { font-size: 12.5pt; color: var(--blue); }
-  .qa .card p { font-size: 11.5pt; }
+  .tl { display: flex; height: 64px; border-radius: 10px; overflow: hidden; font-size: 14pt; font-weight: 700; color: #fff; }
+  .tl div { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
+  .tl small { font-weight: 400; font-size: 11pt; opacity: .9; }
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .metrics .card p { font-size: 13pt; color: var(--muted); margin-top: 8px; line-height: 1.35; }
+  .metrics .card h3 { font-size: 15pt; }
+  /* conclusiones */
+  .verdicts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .verdicts .card { border-top: 6px solid var(--blue); }
+  .verdicts .card.o { border-top-color: var(--orange); }
+  .verdicts .q { font-size: 15pt; color: var(--muted); margin: 10px 0 4px; }
+  .verdicts .who { font-size: 26pt; font-weight: 800; line-height: 1.1; }
+  .verdicts p { font-size: 13pt; color: var(--muted); margin-top: 10px; line-height: 1.35; }
+  /* anexo */
+  .kicker { font-size: 11pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--blue); }
+  .qa { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; flex: 1; margin-top: 12px; }
+  .qa .card { padding: 16px 18px; }
+  .qa .card h3 { font-size: 12.5pt; color: var(--blue); margin-bottom: 8px; }
+  .qa .card p { font-size: 11.5pt; line-height: 1.38; }
 </style>
 </head>
 <body>
@@ -75,232 +86,174 @@
 <!-- 1 · PORTADA -->
 <section class="slide cover">
   <div class="kicker">Inteligencia Artificial Aplicada · 1INF62 · PUCP 2026-2 · Grupo 3</div>
-  <h1>¿Dónde habrá <em>accidentes</em> mañana y qué tan <b>graves</b> serán?</h1>
-  <p class="sub">Pronóstico de riesgo y triaje de gravedad en las carreteras del Perú con datos abiertos de SUTRAN,
-    la Red Vial Nacional del MTC y el clima de Open-Meteo.</p>
-  <div class="kpis" style="margin-top:0.45in">
-    <div class="kpi"><div class="n">8 105</div><div class="l">accidentes en carreteras nacionales<br>SUTRAN · ene 2020 – sep 2021</div></div>
-    <div class="kpi"><div class="n b">15 336</div><div class="l">departamento-días; el 66 % sin ningún accidente</div></div>
-    <div class="kpi"><div class="n o">11.7 %</div><div class="l">de los accidentes son fatales: clases desbalanceadas</div></div>
+  <h1>¿Dónde habrá <em>accidentes</em> mañana<br>y qué tan <b>graves</b> serán?</h1>
+  <p class="sub" style="font-size:16pt">Pronóstico de riesgo y triaje de gravedad en las carreteras nacionales del Perú</p>
+  <div class="kpis">
+    <div class="big"><div class="n">8 105</div><div class="t">accidentes en carreteras<br>ene 2020 – sep 2021 (SUTRAN)</div></div>
+    <div class="big"><div class="n b">66 %</div><div class="t">de los días un departamento<br>no tiene ningún accidente</div></div>
+    <div class="big"><div class="n o">1 de 9</div><div class="t">accidentes es fatal</div></div>
   </div>
   <div class="names">Marco Rodriguez · Angel Cerdán · Raul Malaver · Fernando De La Cruz
     <span>&nbsp;·&nbsp; github.com/Marcor47/IAA-Grupo3</span></div>
-  <div class="foot"><span>Expone: Raul Malaver</span><span>1 / 10</span></div>
+  <div class="foot"><span>Expone: Raul Malaver</span><span>1 / 11</span></div>
 </section>
 
-<!-- 2 · PROBLEMA Y DATOS -->
+<!-- 2 · EL PROBLEMA -->
 <section class="slide">
-  <div class="kicker">1 · Problema y datos</div>
-  <h1>Dos preguntas para repartir <em>patrullas y ambulancias</em>, con un registro que no trae ni coordenadas ni clima</h1>
-  <div class="grid g37">
-    <div class="flow">
-      <div class="box"><b>Accidentes SUTRAN</b>fecha, hora, departamento, vía, km, modalidad, víctimas</div>
-      <div class="box"><b>Red Vial Nacional (MTC)</b>vía + km → ubicación (80 %) y atributos del tramo</div>
-      <div class="box"><b>Open-Meteo</b>lluvia diaria y clima por hora en la celda (~11 km), luz del día</div>
-      <div class="arrow">↓</div>
-      <div class="box res"><b>7 grupos de factores de la literatura</b>tipo de choque · vía · clima · luz y hora · calendario · lugar · historia</div>
+  <div class="ruta"><span class="on">1 · Problema</span><span>2 · Datos</span><span>3 · Cómo medimos</span><span>4 · Modelos</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>Patrullas y ambulancias son pocas: queremos responder <em>dos preguntas</em> para repartirlas mejor</h1>
+  <p class="sub">Toda la presentación sigue estas dos tareas.</p>
+  <div class="q2">
+    <div class="card" style="border-top:6px solid var(--blue)">
+      <span class="pill">Tarea 1 · antes del accidente</span>
+      <div class="q">¿Cuántos accidentes habrá mañana en cada departamento, y habrá alguno fatal?</div>
+      <div><div class="stk"><div style="flex:66; background:var(--gray); color:var(--ink)">66 % sin accidentes</div><div style="flex:28.2; background:var(--blue)">con accidentes</div><div style="flex:5.8; background:var(--orange)"></div></div>
+        <div class="stk-l">15 336 departamento-días · <span class="o"><b>5.8 %</b> con al menos un fatal</span></div></div>
+      <div class="use"><b>Para qué:</b> decidir dónde poner patrullas y ambulancias.</div>
     </div>
-    <div class="grid g2" style="align-items:start">
-      <div class="card">
-        <span class="pill">Tarea 1 · pronóstico</span>
-        <h3 style="margin-top:10px">¿Cuántos accidentes habrá mañana en cada departamento? ¿Habrá alguno fatal?</h3>
-        <ul>
-          <li>Panel departamento × día con los días sin accidentes (15 336 filas).</li>
-          <li><b>N_ACC</b>: conteo · <b>HAY_FATAL</b>: sí/no (5.8 % de los días).</li>
-          <li>Se conoce la historia hasta ayer, el calendario y la lluvia.</li>
-          <li><b>Uso:</b> asignar patrullas y ambulancias.</li>
-        </ul>
-      </div>
-      <div class="card">
-        <span class="pill o">Tarea 2 · triaje</span>
-        <h3 style="margin-top:10px">Llegó un reporte: ¿es sin víctimas, con heridos o fatal?</h3>
-        <ul>
-          <li>Un accidente por fila (8 105).</li>
-          <li><b>GRAVEDAD</b>: sin víctimas 36 % · heridos 52 % · <span class="warn">fatal 11.7 %</span>.</li>
-          <li>Se conoce el tipo de choque, el lugar, la vía, el clima y la luz.</li>
-          <li><b>Uso:</b> priorizar el despacho.</li>
-        </ul>
-      </div>
+    <div class="card" style="border-top:6px solid var(--orange)">
+      <span class="pill o">Tarea 2 · cuando llega el reporte</span>
+      <div class="q">¿El accidente es sin víctimas, con heridos o fatal?</div>
+      <div><div class="stk"><div style="flex:36; background:var(--gray); color:var(--ink)">sin víctimas 36 %</div><div style="flex:52; background:var(--blue)">heridos 52 %</div><div style="flex:12; background:var(--orange)">12 %</div></div>
+        <div class="stk-l">8 105 accidentes · <span class="o"><b>fatal: 1 de cada 9</b></span></div></div>
+      <div class="use"><b>Para qué:</b> decidir a qué accidente se despacha primero.</div>
     </div>
   </div>
-  <div class="foot"><span>Expone: Raul Malaver · Fuentes: SUTRAN (ODC-By), MTC/GEOCATMIN, Open-Meteo</span><span>2 / 10</span></div>
+  <div class="foot"><span>Expone: Raul Malaver</span><span>2 / 11</span></div>
 </section>
 
-<!-- 3 · VALIDACIÓN, MÉTRICAS Y BASELINE -->
+<!-- 3 · DATOS -->
 <section class="slide">
-  <div class="kicker">2 · Cómo medimos · baseline</div>
-  <h1>Validamos como se usaría el modelo: <em>prediciendo un futuro que no vio</em>, con métricas que no premian decir «nunca fatal»</h1>
-  <div class="grid g2">
-    <div class="stack">
-      <div class="card">
-        <h3>Tarea 1 · validación temporal</h3>
-        <div class="tl" style="margin:6px 0 6px">
-          <div style="flex:15; background:var(--blue)">train ene 2020 – mar 2021 · 5 pliegues de origen móvil</div>
-          <div style="flex:6; background:var(--orange)">holdout abr – sep 2021</div>
-        </div>
-        <p>La serie tiene memoria y cae con la cuarentena: mezclar días al azar filtraría el futuro. El holdout se usa una sola vez.</p>
-      </div>
-      <div class="card">
-        <h3>Tarea 2 · validación cruzada 5 × 5 + test 80/20</h3>
-        <p>Los mismos 25 pliegues para todos los modelos; cada uno se compara con el baseline pliegue a pliegue (IC 95 %).</p>
-      </div>
-      <div class="card">
-        <h3>Métricas (la exactitud no sirve: «nunca fatal» acierta el 88 %)</h3>
-        <p><b>D² de Poisson</b> (N_ACC): devianza explicada; 0 = predecir la media.<br>
-           <b>PR-AUC</b> (HAY_FATAL): el azar es 0.06.<br>
-           <b>Macro-F1</b> (GRAVEDAD): pesa igual las tres clases; + PR-AUC de fatales.</p>
-      </div>
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="on">2 · Datos</span><span>3 · Cómo medimos</span><span>4 · Modelos</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>Unimos tres fuentes abiertas: cada accidente queda <em>ubicado en el mapa</em> y con el clima de esa hora</h1>
+  <div class="row">
+    <div class="src3" style="flex:0 0 3.4in">
+      <div><b>SUTRAN</b>el accidente: fecha, vía, km, tipo, víctimas</div>
+      <div><b>Red Vial del MTC</b>vía + km → punto en el mapa (80 %)</div>
+      <div><b>Open-Meteo</b>lluvia y clima de ese día y hora</div>
+      <div class="res"><b>Un dataset con 7 grupos de factores</b>tipo de choque · vía · clima · luz · calendario · lugar · historia</div>
     </div>
-    <div class="card">
-      <h3>Baseline: modelos lineales sin ajuste</h3>
-      <table>
-        <tr><th>Variable</th><th>Referencia sin ML</th><th class="n">Ref.</th><th class="n">Baseline</th></tr>
-        <tr><td>N_ACC · D²</td><td>media de 28 días</td><td class="n">0.217</td><td class="n hl">0.256</td></tr>
-        <tr><td>HAY_FATAL · PR-AUC</td><td>fatales de 28 días</td><td class="n">0.112</td><td class="n hl">0.133</td></tr>
-        <tr><td>GRAVEDAD · macro-F1</td><td>Dummy</td><td class="n">0.228</td><td class="n hl">0.419</td></tr>
-      </table>
-      <p style="margin-top:14px">Poisson, logística y logística multinomial con pesos balanceados.
-        Hay señal más allá de la inercia (Poisson gana a la media en 5 de 5 pliegues), pero
-        <b>con 67 columnas el modelo lineal no mejora al de 4 variables del avance</b> (−0.002): sin interacciones,
-        la vía, el clima y la luz no suman.</p>
-      <p style="margin-top:10px" class="warn">→ ¿Lo logran los modelos de la literatura?</p>
-    </div>
+    <div class="fig"><img src="../avances/figuras/02_mapa_accidentes.png"></div>
+    <div class="fig"><img src="../avances/figuras/01_dona_fatales.png"></div>
   </div>
-  <div class="foot"><span>Expone: Angel Cerdán · CV de N_ACC y HAY_FATAL: 5 pliegues; GRAVEDAD: 25 pliegues</span><span>3 / 10</span></div>
+  <div class="foot"><span>Expone: Raul Malaver · Fuentes: SUTRAN (ODC-By), MTC/GEOCATMIN, Open-Meteo</span><span>3 / 11</span></div>
 </section>
 
-<!-- 4 · BINOMIAL NEGATIVA -->
+<!-- 4 · CÓMO MEDIMOS -->
 <section class="slide">
-  <div class="kicker">3 · Modelo 1 · Binomial negativa (Mhetre y Thube, 2023)</div>
-  <h1>Los conteos tienen <b>sobredispersión</b>, pero es pequeña: <em>el Poisson ya basta</em></h1>
-  <div class="grid g46">
-    <div class="stack">
-      <div class="card">
-        <p>NB2: media e<sup>Xβ</sup> y varianza μ + αμ². Si α → 0 es un Poisson. Para HAY_FATAL se modela el número de
-          fatales y P(≥ 1) = 1 − P(0). Penalización L2 elegida en la CV temporal (0.0001 a 1 → <b>0.001</b>).</p>
-      </div>
-      <div class="big"><span class="n" style="color:var(--orange)">α = 0.10</span><span class="t">sobredispersión significativa<br>(AIC 16 799 frente a 16 816)</span></div>
-      <div class="big"><span class="n" style="color:var(--blue)">0.256</span><span class="t">D² en la CV, igual que el Poisson<br>(−0.001, IC −0.002 a +0.000)</span></div>
-      <div class="big"><span class="n">α ≈ 0</span><span class="t">en los fatales: el modelo se reduce a un Poisson<br>(PR-AUC 0.130 frente a 0.133)</span></div>
-      <p class="src">Lectura: el departamento, la historia y el calendario ya explican casi toda la variación extra.
-        Mhetre y Thube modelan un solo tramo con pocas variables; aquí la historia la absorbe.</p>
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="on">3 · Cómo medimos</span><span>4 · Modelos</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>Probamos como en la vida real: el modelo aprende del pasado y <em>predice un futuro que no vio</em></h1>
+  <div style="margin:18px 0 26px">
+    <div class="tl">
+      <div style="flex:15; background:var(--blue)">Aprende<small>ene 2020 – mar 2021</small></div>
+      <div style="flex:6; background:var(--orange)">Examen final<small>abr – sep 2021 · se usa una sola vez</small></div>
     </div>
-    <div class="fig"><img src="../../results/plots/modelo_09_t1_binomial_negativa.png"></div>
   </div>
-  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/05_binomial_negativa.ipynb</span><span>4 / 10</span></div>
-</section>
-
-<!-- 5 · RANDOM FOREST -->
-<section class="slide">
-  <div class="kicker">4 · Modelo 2 · Random Forest (Muñoz et al., 2024)</div>
-  <h1>El Random Forest es el <em>mejor en el triaje</em>: +0.033 de macro-F1 en los 25 pliegues… pero detecta <b>1 de cada 4 fatales</b></h1>
-  <div class="grid g46">
-    <div class="stack">
-      <div class="big"><span class="n" style="color:var(--blue)">0.452</span><span class="t">macro-F1 en la CV (logística 0.419)<br>mejor en 25 de 25 pliegues</span></div>
-      <div class="big"><span class="n" style="color:var(--blue)">0.293</span><span class="t">D² de N_ACC en el holdout<br>(Poisson 0.267; media de 28 días 0.277)</span></div>
-      <div class="big"><span class="n" style="color:var(--orange)">27 %</span><span class="t">de fatales detectados en el test<br>(logística 51 %)</span></div>
-      <div class="card"><p><b>Por qué gana:</b> la gravedad depende de combinaciones (atropello de noche en una recta)
-        que un modelo lineal no ve. Búsqueda aleatoria de 20 combinaciones (hojas, max_features, profundidad, tipo de pesos).
-        <b>Costo:</b> separa sin víctimas de heridos y sacrifica la clase fatal.</p></div>
+  <div class="row" style="align-items:stretch; flex:0 0 auto">
+    <div class="side" style="flex:0 0 4.2in; justify-content:center">
+      <div class="big"><div class="n o">88 %</div>
+        <div class="t">de acierto logra quien dice siempre «no es fatal»…<br>sin detectar ni un solo fatal. Por eso <b>no usamos exactitud</b>.</div></div>
     </div>
-    <div class="fig"><img src="../../results/plots/modelo_06_t2_rf_test.png"></div>
-  </div>
-  <div class="foot"><span>Expone: Angel Cerdán · notebooks/03_random_forest.ipynb</span><span>5 / 10</span></div>
-</section>
-
-<!-- 6 · GRADIENT BOOSTING -->
-<section class="slide">
-  <div class="kicker">5 · Modelo 3 · Gradient boosting (Babaoglu y Babaoglu, 2021)</div>
-  <h1>Gradient boosting: el <em>mejor modelo individual en el conteo</em>; en el triaje gana en macro-F1 pero <b>pierde fatales</b></h1>
-  <div class="grid g46">
-    <div class="stack">
-      <div class="big"><span class="n" style="color:var(--blue)">0.267</span><span class="t">D² de N_ACC en la CV (Poisson 0.256)<br>+0.011, IC −0.013 a +0.035</span></div>
-      <div class="big"><span class="n" style="color:var(--blue)">0.289</span><span class="t">D² en el holdout: supera a la media de<br>28 días (0.277), el Poisson no (0.267)</span></div>
-      <div class="big"><span class="n" style="color:var(--orange)">28 %</span><span class="t">de fatales detectados (logística 51 %), aunque<br>macro-F1 +0.013 (IC sin el 0)</span></div>
-      <div class="card"><p>HistGradientBoosting con <b>pérdida de Poisson</b> y categóricas nativas. Grilla completa
-        (72, 48 y 108 combinaciones). En la Tarea 1 eligió lo <b>más regularizado</b>: 100–150 árboles, tasa 0.03, 7 hojas.
-        Con 10 776 departamento-días, más flexibilidad sobreajusta.</p></div>
+    <div class="metrics" style="flex:1">
+      <div class="card"><span class="pill">¿Cuántos accidentes?</span><h3 style="margin-top:10px">D² de Poisson</h3>
+        <p>Cuánto del error se reduce frente a predecir siempre el promedio.</p></div>
+      <div class="card"><span class="pill">¿Habrá un fatal?</span><h3 style="margin-top:10px">PR-AUC</h3>
+        <p>Qué tan bien ordena los días de riesgo. Al azar: 0.06.</p></div>
+      <div class="card"><span class="pill o">¿Qué tan grave?</span><h3 style="margin-top:10px">Macro-F1</h3>
+        <p>Acierto que pesa igual sin víctimas, heridos y fatales.</p></div>
     </div>
-    <div class="fig"><img src="../../results/plots/modelo_13_t1_conteo_gbm_holdout.png"></div>
   </div>
-  <div class="foot"><span>Expone: Raul Malaver · notebooks/04_gradient_boosting.ipynb · la figura suma el pronóstico diario por semana</span><span>6 / 10</span></div>
+  <p class="sub" style="margin-top:18px">Cada modelo se compara con una <b>regla sin ML</b> y con un <b>baseline lineal</b>.</p>
+  <div class="foot"><span>Expone: Angel Cerdán · Tarea 2: validación cruzada 5 × 5 y test 80/20</span><span>4 / 11</span></div>
 </section>
 
-<!-- 7 · MLP Y ENSAMBLE -->
+<!-- 5 · BINOMIAL NEGATIVA -->
 <section class="slide">
-  <div class="kicker">6 · Modelo 4 · MLP y ensamble por votación (Emu et al., 2022)</div>
-  <h1>La red sola no supera al modelo lineal; <em>combinada con los demás</em> da el modelo más equilibrado</h1>
-  <div class="grid g46">
-    <div class="stack">
-      <div class="card">
-        <h3>Perceptrón multicapa</h3>
-        <p>Empata con la logística (macro-F1 0.422 frente a 0.419) y ordena peor a los fatales. Varía con la semilla
-          (± 0.009) tanto como la diferencia con el baseline. Emu et al. entrenan con <b>5.8 millones</b> de choques; aquí hay 8 105.</p>
-      </div>
-      <div class="card verdict">
-        <h3>Ensamble: promedio de lineal + MLP + RF + GBM</h3>
-        <p><span class="hl">N_ACC:</span> el mejor en la CV (0.268) y en el holdout (0.296).<br>
-           <span class="hl">GRAVEDAD:</span> mejor macro-F1 del test (0.447) y detecta el <b>37 %</b> de los fatales
-           (RF 27 %, logística 51 %).<br>
-           Nunca queda por debajo del baseline. Funciona donde los miembros discrepan (correlación 0.66–0.90 en fatales).</p>
-      </div>
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="on">4 · Modelos (1 de 4)</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>Binomial negativa: los conteos varían más de lo esperado, pero <em>no mejora al modelo simple</em></h1>
+  <p class="sub">Modelo 1 · Mhetre y Thube (2023) · Tarea 1</p>
+  <div class="row">
+    <div class="side">
+      <div class="big"><div class="n o">α = 0.10</div><div class="t">hay dispersión extra,<br>y es estadísticamente significativa…</div></div>
+      <div class="big"><div class="n b">= 0.256</div><div class="t">…pero predice igual que el Poisson:<br>el lugar y la historia ya la explican</div></div>
     </div>
-    <div class="fig"><img src="../../results/plots/modelo_18_t2_ensamble_test.png"></div>
+    <div class="fig"><img src="figuras/01_binomial.png"></div>
   </div>
-  <div class="foot"><span>Expone: Fernando De La Cruz · notebooks/06_mlp.ipynb (§4: ensamble)</span><span>7 / 10</span></div>
+  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/05_binomial_negativa.ipynb</span><span>5 / 11</span></div>
 </section>
 
-<!-- 8 · COMPARACIÓN FINAL -->
+<!-- 6 · RANDOM FOREST -->
 <section class="slide">
-  <div class="kicker">7 · Comparación final de todos los modelos</div>
-  <h1>Los modelos no lineales ganan en el <em>triaje</em> y en el <em>holdout</em>; para anticipar un día fatal <b>todos empatan</b></h1>
-  <div class="fig" style="flex:1"><img src="../../results/plots/modelo_19_comparacion_metrica_principal.png"></div>
-  <p class="src">Gris: cada pliegue de la CV · azul: promedio · naranja: holdout (Tarea 1) o test (Tarea 2) · línea punteada: baseline.
-    En N_ACC ninguno supera al Poisson con IC sin el 0 en la CV; en GRAVEDAD sí lo hacen el RF (+0.033), el ensamble (+0.028) y el GBM (+0.014).</p>
-  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/08_comparacion.ipynb</span><span>8 / 10</span></div>
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="on">4 · Modelos (2 de 4)</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>Random Forest: el <em>mejor para clasificar la gravedad</em>, pero se le escapan <b>3 de cada 4 fatales</b></h1>
+  <p class="sub">Modelo 2 · Muñoz et al. (2024) · Tarea 2</p>
+  <div class="fig"><img src="figuras/02_rf.png"></div>
+  <div class="msg">Gana porque capta combinaciones (atropello + de noche + recta) que un modelo lineal no ve.
+    Mejor que la logística en <b>25 de 25</b> pruebas.</div>
+  <div class="foot"><span>Expone: Angel Cerdán · notebooks/03_random_forest.ipynb</span><span>6 / 11</span></div>
 </section>
 
-<!-- 9 · ABLACIÓN -->
+<!-- 7 · GRADIENT BOOSTING -->
 <section class="slide">
-  <div class="kicker">8 · ¿Qué factores sostienen la predicción? · ablación</div>
-  <h1>La <em>lluvia</em> casi no aporta: lo que importa es el <b>lugar</b>, la historia y el <b>tipo de choque</b></h1>
-  <div class="grid g37">
-    <div class="stack">
-      <div class="card"><p>Se reentrena el mejor modelo de cada variable <b>quitando un grupo a la vez</b> y se mide
-        cuánto cae la métrica en la misma CV.</p></div>
-      <div class="big"><span class="n" style="color:var(--blue)">+0.001</span><span class="t">D² que aporta el clima en N_ACC;<br>0.000 en HAY_FATAL y en GRAVEDAD</span></div>
-      <div class="big"><span class="n" style="color:var(--orange)">−0.042</span><span class="t">macro-F1 sin el tipo de choque<br>(peor en 25 de 25 pliegues)</span></div>
-      <div class="big"><span class="n">−0.022</span><span class="t">D² sin el lugar: el único grupo<br>peor en 5 de 5 pliegues</span></div>
-      <p class="src">La historia es lo que más usa el modelo (permutación), pero lleva la misma información que el lugar.</p>
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="on">4 · Modelos (3 de 4)</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>Gradient boosting: el <em>mejor modelo individual</em> para pronosticar cuántos accidentes habrá</h1>
+  <p class="sub">Modelo 3 · Babaoglu y Babaoglu (2021) · Tarea 1 · D² de Poisson, más alto = mejor</p>
+  <div class="fig"><img src="figuras/03_gbm.png"></div>
+  <div class="msg">En el futuro no visto supera a la regla «promedio de 28 días»; el Poisson no lo logra.
+    En la gravedad detecta pocos fatales (28 %), como el Random Forest.</div>
+  <div class="foot"><span>Expone: Raul Malaver · notebooks/04_gradient_boosting.ipynb</span><span>7 / 11</span></div>
+</section>
+
+<!-- 8 · MLP Y ENSAMBLE -->
+<section class="slide">
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="on">4 · Modelos (4 de 4)</span><span>5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>La red neuronal sola no destaca; <em>combinada con los demás</em> logra el mejor equilibrio</h1>
+  <p class="sub">Modelo 4 · MLP y ensamble por votación · Emu et al. (2022) · Tareas 1 y 2</p>
+  <div class="row">
+    <div class="side">
+      <div class="big"><div class="n">8 mil</div><div class="t">accidentes tenemos; el paper usa <b>5.8 millones</b>.<br>Sin datos, la red empata con la logística</div></div>
+      <div class="big"><div class="n b">Ensamble</div><div class="t">promedia lineal + red + RF + GBM:<br>el mejor en el conteo y nunca peor que el baseline</div></div>
     </div>
-    <div class="fig"><img src="../../results/plots/modelo_07_ablacion.png"></div>
+    <div class="fig"><img src="figuras/04_ensamble.png"></div>
   </div>
-  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/07_ablacion.ipynb</span><span>9 / 10</span></div>
+  <div class="foot"><span>Expone: Fernando De La Cruz · notebooks/06_mlp.ipynb · gráfico: test de la Tarea 2</span><span>8 / 11</span></div>
 </section>
 
-<!-- 10 · CONCLUSIONES -->
+<!-- 9 · COMPARACIÓN FINAL -->
 <section class="slide">
-  <div class="kicker">9 · Conclusiones</div>
-  <h1>Un modelo distinto para cada pregunta, y un límite que está en los <b>datos</b>, no en el algoritmo</h1>
-  <div class="grid" style="grid-template-columns:1fr 1fr 1fr; flex:0 0 auto">
-    <div class="card verdict"><span class="pill">N_ACC</span><div class="who">Ensamble</div>
-      <p>D² 0.268 en la CV y <b>0.296</b> en el holdout. El GBM rinde casi igual con un solo modelo.</p></div>
-    <div class="card verdict"><span class="pill">HAY_FATAL</span><div class="who">Logística</div>
-      <p>Todos empatan (PR-AUC ≈ 0.16, 2.4× el azar): gana el más simple y calibrado. Sirve para ordenar departamentos por riesgo.</p></div>
-    <div class="card verdict o"><span class="pill o">GRAVEDAD</span><div class="who">Random Forest · Ensamble</div>
-      <p>RF por macro-F1 (<b>0.452</b>). Para un despacho que no puede perder fatales, el ensamble (37 % detectados).</p></div>
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="ok">4 · Modelos</span><span class="on">5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>El ML supera a las reglas simples en las tres preguntas; donde <em>más aporta es en la gravedad</em></h1>
+  <p class="sub">Regla sin ML → baseline lineal → modelo elegido · promedio de la validación cruzada</p>
+  <div class="fig"><img src="figuras/05_comparacion.png"></div>
+  <div class="msg warn">Para anticipar un día fatal <b>todos los modelos empatan</b> (0.13–0.14): nos quedamos con el más simple.</div>
+  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/08_comparacion.ipynb</span><span>9 / 11</span></div>
+</section>
+
+<!-- 10 · ABLACIÓN -->
+<section class="slide">
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="ok">4 · Modelos</span><span class="on">5 · Resultados</span><span>6 · Recomendación</span></div>
+  <h1>La <em>lluvia</em> casi no cambia la predicción: lo que pesa es el <b>lugar</b> y el <b>tipo de choque</b></h1>
+  <p class="sub">Cuánto empeora el modelo si le quitamos cada grupo de factores (barra más larga = más importante)</p>
+  <div class="fig"><img src="figuras/06_ablacion.png"></div>
+  <div class="msg">Sin el clima el modelo queda igual; sin el tipo de choque, la clasificación de gravedad cae en las 25 pruebas.</div>
+  <div class="foot"><span>Expone: Marco Rodriguez · notebooks/07_ablacion.ipynb</span><span>10 / 11</span></div>
+</section>
+
+<!-- 11 · RECOMENDACIÓN -->
+<section class="slide">
+  <div class="ruta"><span class="ok">1 · Problema</span><span class="ok">2 · Datos</span><span class="ok">3 · Cómo medimos</span><span class="ok">4 · Modelos</span><span class="ok">5 · Resultados</span><span class="on">6 · Recomendación</span></div>
+  <h1>Un modelo para cada pregunta, y un límite que está en los <b>datos</b>, no en el algoritmo</h1>
+  <div class="verdicts" style="margin-top:22px">
+    <div class="card"><span class="pill">Tarea 1</span><div class="q">¿Cuántos accidentes mañana?</div>
+      <div class="who">Ensamble</div><p>Mejor en la validación y en el futuro no visto.</p></div>
+    <div class="card"><span class="pill">Tarea 1</span><div class="q">¿Habrá un fatal?</div>
+      <div class="who">Regresión logística</div><p>Todos empatan: gana el más simple. Ordena los departamentos por riesgo (2.4× el azar).</p></div>
+    <div class="card o"><span class="pill o">Tarea 2</span><div class="q">¿Qué tan grave es?</div>
+      <div class="who">Random Forest</div><p>O el <b>ensamble</b>, si dejar pasar un fatal cuesta más: detecta 37 % frente a 27 %.</p></div>
   </div>
-  <div class="grid g2" style="margin-top:18px; flex:0 0 auto">
-    <div class="card"><h3>Lo que aprendimos</h3>
-      <ul><li>La lluvia del día casi no cambia el riesgo una vez que se conocen el lugar y la historia.</li>
-          <li>Los árboles ganan donde hay interacciones (triaje) o cambios de nivel (salida de la cuarentena).</li>
-          <li>Mejoras modestas (+0.01 a +0.03): el registro no trae vehículo, ocupantes, cinturón ni velocidad.</li></ul></div>
-    <div class="card"><h3>Trabajo futuro</h3>
-      <ul><li>Exposición: flujo vehicular en peajes.</li>
-          <li>Más de un holdout (periodo más largo, fuera de la pandemia).</li>
-          <li>Umbrales por clase según el costo de dejar pasar un fatal.</li></ul></div>
-  </div>
-  <div class="foot"><span>Expone: Fernando De La Cruz · todo el código y los resultados: github.com/Marcor47/IAA-Grupo3</span><span>10 / 10</span></div>
+  <div class="msg warn" style="margin-top:30px">Las mejoras son modestas porque el registro no trae <b>vehículo, ocupantes, velocidad ni tráfico</b>.
+    Siguiente paso: sumar el flujo vehicular de los peajes.</div>
+  <div class="foot"><span>Expone: Fernando De La Cruz · código y resultados: github.com/Marcor47/IAA-Grupo3</span><span>11 / 11</span></div>
 </section>
 
 <!-- ANEXO · PREGUNTAS PROBABLES -->
@@ -344,6 +297,7 @@
   </div>
   <div class="foot"><span>Respaldo para la ronda de preguntas</span><span>A2</span></div>
 </section>
+
 
 </body>
 </html>
