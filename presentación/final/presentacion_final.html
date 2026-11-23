@@ -21,8 +21,10 @@
   h1, .three, .tl, .msg, .verdicts { flex-shrink: 0; }
   h1 { font-size: 30pt; line-height: 1.15; font-weight: 700; max-width: 11.4in; letter-spacing: -0.01em; }
   .foot { position: absolute; left: 0.75in; right: 0.75in; bottom: 0.25in; display: flex; justify-content: space-between;
-    font-size: 10pt; color: var(--muted); }
+    font-size: 12pt; color: var(--muted); }
   .foot b { color: var(--ink); font-weight: 600; }
+  .paper { font-size: 15pt; color: var(--muted); margin-top: -8px; flex-shrink: 0; }
+  .paper b { color: var(--ink); font-weight: 600; }
   .fig { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
   .fig img { max-width: 100%; max-height: 100%; object-fit: contain; }
   .row { flex: 1; min-height: 0; display: flex; gap: 36px; align-items: stretch; }
@@ -115,8 +117,8 @@
     <div><span class="tag">Open-Meteo</span><h3>Con qué clima</h3><p>Lluvia y clima de ese día y esa hora</p></div>
   </div>
   <div class="row">
-    <div class="fig"><img src="../avances/figuras/02_mapa_accidentes.png"></div>
-    <div class="fig"><img src="../avances/figuras/01_dona_fatales.png"></div>
+    <div class="fig"><img src="figuras/07_mapa.png"></div>
+    <div class="fig"><img src="figuras/08_dona.png"></div>
   </div>
   <div class="foot"><span><b>Datos</b> · Expone: Raul Malaver</span><span>3 / 11</span></div>
 </section>
@@ -145,6 +147,7 @@
 <!-- 5 · BINOMIAL NEGATIVA -->
 <section class="slide">
   <h1>Binomial negativa: los conteos varían más de lo esperado, pero no mejora al modelo simple</h1>
+  <p class="paper">Del paper de <b>Mhetre y Thube (2023)</b>: modelar los conteos de accidentes con binomial negativa</p>
   <div class="row">
     <div style="flex:0 0 3.3in">
       <div class="num b">Empate</div>
@@ -152,28 +155,31 @@
     </div>
     <div class="fig"><img src="figuras/01_binomial.png"></div>
   </div>
-  <div class="foot"><span><b>Modelo 1 de 4</b> · Mhetre y Thube (2023) · Expone: Marco Rodriguez</span><span>5 / 11</span></div>
+  <div class="foot"><span><b>Modelo 1 de 4</b> · Expone: Marco Rodriguez</span><span>5 / 11</span></div>
 </section>
 
 <!-- 6 · RANDOM FOREST -->
 <section class="slide">
   <h1>Random Forest: el mejor para clasificar la gravedad, pero se le escapan 3 de cada 4 fatales</h1>
+  <p class="paper">Del paper de <b>Muñoz et al. (2024)</b>: Random Forest para ordenar los factores de la gravedad</p>
   <div class="fig"><img src="figuras/02_rf.png"></div>
   <p class="msg">Gana porque capta combinaciones, como <b>atropello de noche en una recta</b>.</p>
-  <div class="foot"><span><b>Modelo 2 de 4</b> · Muñoz et al. (2024) · Expone: Angel Cerdán</span><span>6 / 11</span></div>
+  <div class="foot"><span><b>Modelo 2 de 4</b> · Expone: Angel Cerdán</span><span>6 / 11</span></div>
 </section>
 
 <!-- 7 · GRADIENT BOOSTING -->
 <section class="slide">
   <h1>Gradient boosting: en la validación cruzada, el mejor modelo individual para el conteo de accidentes</h1>
+  <p class="paper">Del paper de <b>Babaoglu y Babaoglu (2021)</b>: gradient boosting (XGBoost) para predecir la fatalidad</p>
   <div class="fig"><img src="figuras/03_gbm.png"></div>
   <p class="msg">En el futuro no visto <b>supera al promedio de 28 días</b>; el Poisson no lo logra.</p>
-  <div class="foot"><span><b>Modelo 3 de 4</b> · Babaoglu y Babaoglu (2021) · Expone: Raul Malaver</span><span>7 / 11</span></div>
+  <div class="foot"><span><b>Modelo 3 de 4</b> · Expone: Raul Malaver</span><span>7 / 11</span></div>
 </section>
 
 <!-- 8 · MLP Y ENSAMBLE -->
 <section class="slide">
   <h1>La red neuronal sola no destaca; combinada con los demás logra el mejor equilibrio</h1>
+  <p class="paper">Del paper de <b>Emu et al. (2022)</b>: red neuronal y ensamble por votación de varios modelos</p>
   <div class="row">
     <div style="flex:0 0 3.3in">
       <div class="num">8 mil</div>
@@ -181,14 +187,14 @@
     </div>
     <div class="fig"><img src="figuras/04_ensamble.png"></div>
   </div>
-  <div class="foot"><span><b>Modelo 4 de 4</b> · Emu et al. (2022) · Expone: Fernando De La Cruz</span><span>8 / 11</span></div>
+  <div class="foot"><span><b>Modelo 4 de 4</b> · Expone: Fernando De La Cruz</span><span>8 / 11</span></div>
 </section>
 
 <!-- 9 · COMPARACIÓN FINAL -->
 <section class="slide">
   <h1>El ML supera a las reglas simples en las tres preguntas, y donde más aporta es en la gravedad</h1>
   <div class="fig"><img src="figuras/05_comparacion.png"></div>
-  <p class="msg">¿Habrá un fatal?: el 0.140 del RF no es significativamente mejor y en el futuro no visto la logística queda arriba (0.161 frente a 0.158). <b>Nos quedamos con la logística, la más simple</b>.</p>
+  <p class="msg">Para anticipar un fatal todos empatan: <b>nos quedamos con la logística, la más simple</b>.</p>
   <div class="foot"><span><b>Resultados</b> · Expone: Marco Rodriguez</span><span>9 / 11</span></div>
 </section>
 

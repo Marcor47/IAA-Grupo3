@@ -54,8 +54,9 @@ Recomendación): al cambiar de bloque, nombrarlo («pasamos a los modelos»). La
    aprovecharla (Emu et al. usan 5.8 millones) y varía con la semilla. El ensamble promedia los cuatro modelos: es el
    mejor en el conteo (0.268 / 0.296) y en el triaje queda en medio (37 % de fatales) sin bajar del baseline.
 9. **Comparación (Marco).** Cada panel va de la regla sin ML al baseline y al modelo elegido. El salto grande
-   está en la gravedad (+98 % sobre el Dummy). En HAY_FATAL el panel muestra los cinco modelos junto a la logística:
-   todos quedan entre 0.13 y 0.14 (ningún IC excluye el 0), por eso elegimos la logística.
+   está en la gravedad (+98 % sobre el Dummy). En HAY_FATAL la barra rayada es el rango de los otros cinco modelos
+   (0.130–0.140): ninguno mejora a la logística de forma significativa (ningún IC excluye el 0) y en el holdout la
+   logística queda arriba (0.161), por eso la elegimos. En las diapositivas 5–8, leer la línea del paper: qué se tomó de él.
 10. **Ablación (Marco).** Quitamos un grupo de variables a la vez. Sin el clima el modelo casi no cambia (+0.001 de D²);
    sin el tipo de choque el triaje cae 0.042. La lluvia del día no agrega información una vez que se conocen el lugar
    y la historia.
