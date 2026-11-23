@@ -115,49 +115,26 @@ ax.set_axisbelow(True)
 ax.text(57, 0.4505, "ideal: arriba a la derecha", ha="right", fontsize=14, color=TINTA2)
 guardar(fig, "04_ensamble.png")
 
-# 5 · Comparación final: referencia sin ML → baseline → modelo elegido (CV). En HAY_FATAL los otros cinco modelos van
-# como rango (0.130–0.140): empatan con la logística (ningún IC excluye el 0) y se elige la logística, que es el baseline.
-OTROS = ["Binomial negativa (N_FATALES)", "Ensamble (votación)", "Gradient boosting (ajustado)", "MLP (ajustado)",
-         "Random Forest (ajustado)"]
-panel = [
-    ("Accidentes por día", "D² de Poisson", C, [("Sin ML", "Ingenuo · media 28 días"), ("Baseline", "Baseline · Poisson"),
-                                                 ("Ensamble", "Ensamble (votación)")], "d2_poisson", 2),
-    ("¿Habrá un fatal?", "PR-AUC", H, [("Sin ML", "Ingenuo · fatales últimos 28 días"),
-                                       ("Logística", "Baseline · Reg. logística"), ("Otros 5\nmodelos", OTROS)],
-     "pr_auc", 1),
-    ("Gravedad del accidente", "macro-F1", G, [("Sin ML", "Dummy (proporciones)"),
-                                               ("Baseline", "Baseline · Reg. logística multinomial"),
-                                               ("RF", "Random Forest (ajustado)")], "macro_f1", 2),
+# 5 · Comparación final en una sola escala: cuánto mejora el modelo elegido sobre la regla sin ML (CV). En HAY_FATAL
+# todos los modelos empatan (0.130–0.140, ningún IC excluye el 0) y se elige la logística, que es el mismo baseline.
+filas = [
+    ("¿Cuántos accidentes mañana?", "Ensamble", C, "Ingenuo · media 28 días", "Ensamble (votación)", "d2_poisson"),
+    ("¿Habrá un fatal?", "Logística (todos empatan)", H, "Ingenuo · fatales últimos 28 días",
+     "Baseline · Reg. logística", "pr_auc"),
+    ("¿Qué tan grave es?", "Random Forest", G, "Dummy (proporciones)", "Random Forest (ajustado)", "macro_f1"),
 ]
-fig, axs = plt.subplots(1, 3, figsize=(14, 4.8), gridspec_kw={"wspace": 0.25})
-for ax, (titulo, metrica, t, mods, col, k) in zip(axs, panel):
-    v = [[met(t, x, "CV", col) for x in mod] if isinstance(mod, list) else met(t, mod, "CV", col) for _, mod in mods]
-    alto = [min(x) if isinstance(x, list) else x for x in v]
-    tope = max(max(x) if isinstance(x, list) else x for x in v)
-    x = np.arange(len(v))
-    ax.bar(x, alto, color=[AZUL if i == k else GRIS for i in x], width=0.72)
-    for xi, vi in zip(x, v):
-        if isinstance(vi, list):  # rango de los otros modelos: tramo claro de mínimo a máximo
-            ax.bar(xi, max(vi) - min(vi), bottom=min(vi), color="#e4e3de", width=0.72, hatch="///", edgecolor=GRIS, lw=0)
-            txt, y = f"{min(vi):.3f}\n–{max(vi):.3f}", max(vi)
-        else:
-            txt, y = f"{vi:.3f}", vi
-        ax.text(xi, y + tope * 0.02, txt, ha="center", va="bottom", fontsize=13 if isinstance(vi, list) else 17,
-                fontweight="bold")
-    ax.set_xlim(-0.6, 2.6)
-    if t == H:
-        ax.text(1.5, tope * 1.2, "empate: ninguna diferencia\nes significativa", ha="center", va="bottom", fontsize=14,
-                color=TINTA, fontweight="bold")
-        ax.text(x[k], alto[k] / 2, f"+{100 * (alto[k] / alto[0] - 1):.0f} %", ha="center", va="center",
-                fontsize=14, color="white", fontweight="bold")
-    else:
-        ax.text(x[k], alto[k] * 1.13, f"+{100 * (alto[k] / alto[0] - 1):.0f} % vs sin ML", ha="center", va="bottom",
-                fontsize=14, color=AZUL, fontweight="bold")
-    ax.set_xticks(x, [n for n, _ in mods], fontsize=14)
-    ax.tick_params(axis="x", length=0)
-    ax.set_yticks([]), ax.spines["left"].set_visible(False), ax.set_ylim(0, tope * 1.45)
-    ax.set_title(f"{titulo}\n", fontsize=17)
-    ax.text(0, 1.03, metrica, transform=ax.transAxes, fontsize=13, color=TINTA2)
+fig, ax = plt.subplots(figsize=(13, 4.2))
+y = np.arange(len(filas))[::-1]
+for yi, (preg, modelo, t, ref, mod, col) in zip(y, filas):
+    a, b = met(t, ref, "CV", col), met(t, mod, "CV", col)
+    mejora = 100 * (b / a - 1)
+    ax.barh(yi, mejora, color=AZUL if t == G else GRIS, height=0.6)
+    ax.text(mejora + 1.5, yi + 0.1, f"+{mejora:.0f} %", va="center", fontsize=22, fontweight="bold")
+    ax.text(mejora + 1.5, yi - 0.2, f"{modelo}: de {a:.3f} a {b:.3f}", va="center", fontsize=13, color=TINTA2)
+ax.set_yticks(y, [f[0] for f in filas], fontsize=17)
+ax.tick_params(axis="y", length=0)
+ax.set_xticks([]), ax.set_xlim(0, 135)
+ax.set_title("Mejora del modelo elegido sobre la regla sin ML (validación cruzada)", fontsize=16)
 guardar(fig, "05_comparacion.png")
 
 # 6 · Ablación: cuánto empeora el modelo si se quita cada grupo (model_comparison.txt §ablación)
