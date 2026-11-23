@@ -115,29 +115,34 @@ ax.set_axisbelow(True)
 ax.text(57, 0.4505, "ideal: arriba a la derecha", ha="right", fontsize=14, color=TINTA2)
 guardar(fig, "04_ensamble.png")
 
-# 5 · Comparación final en una sola escala: cuánto mejora el modelo elegido sobre el baseline lineal en la prueba
-# final (holdout abr-sep 2021 en la Tarea 1, test 80/20 en la Tarea 2), la misma de la Tabla I del informe.
+# 5 · Comparación final en una sola escala: cuánto mejora el modelo elegido sobre el baseline lineal, en la validación
+# cruzada (con la que se eligió) y en la prueba final (holdout abr-sep 2021 / test 80/20, la de la Tabla I del informe).
+# Solo GRAVEDAD en la CV excluye el 0 en la comparación pareada (model_comparison.txt).
+AZUL_CLARO = "#9cbfe9"
 filas = [
-    ("¿Cuántos accidentes mañana?", C, "holdout", "Baseline · Poisson", "Ensamble (votación)", "d2_poisson",
-     "Ensamble: de {a:.3f} a {b:.3f} en el futuro no visto (abr–sep 2021)"),
-    ("¿Habrá un fatal?", H, "holdout", "Baseline · Reg. logística", "Baseline · Reg. logística", "pr_auc",
-     "La logística sigue arriba ({b:.3f}); los demás modelos quedan entre 0.157 y 0.160"),
-    ("¿Qué tan grave es?", G, "test", "Baseline · Reg. logística multinomial", "Random Forest (ajustado)", "macro_f1",
-     "Random Forest: de {a:.3f} a {b:.3f} (el ensamble llega a 0.447)"),
+    ("¿Cuántos accidentes mañana?\nEnsamble", C, "holdout", "Baseline · Poisson", "Ensamble (votación)", "d2_poisson"),
+    ("¿Habrá un fatal?\nLogística (todos empatan)", H, "holdout", "Baseline · Reg. logística",
+     "Baseline · Reg. logística", "pr_auc"),
+    ("¿Qué tan grave es?\nRandom Forest", G, "test", "Baseline · Reg. logística multinomial",
+     "Random Forest (ajustado)", "macro_f1"),
 ]
-fig, ax = plt.subplots(figsize=(13, 4.2))
-y = np.arange(len(filas))[::-1]
-for yi, (preg, t, val, ref, mod, col, nota) in zip(y, filas):
-    a, b = met(t, ref, val, col), met(t, mod, val, col)
-    mejora = 100 * (b / a - 1)
-    ax.barh(yi, mejora, color=AZUL if t == C else GRIS, height=0.6)
-    ax.text(mejora + 0.2, yi + 0.1, f"+{mejora:.0f} %" if round(mejora) else "0 %", va="center", fontsize=22,
-            fontweight="bold")
-    ax.text(mejora + 0.2, yi - 0.22, nota.format(a=a, b=b), va="center", fontsize=13, color=TINTA2)
-ax.set_yticks(y, [f[0] for f in filas], fontsize=17)
+fig, ax = plt.subplots(figsize=(13, 4.6))
+y = np.arange(len(filas))[::-1] * 1.0
+h = 0.36
+for yi, (preg, t, val, ref, mod, col) in zip(y, filas):
+    for dy, v, color, nombre in [(h / 2, "CV", AZUL_CLARO, "Validación cruzada"), (-h / 2, val, AZUL, "Prueba final")]:
+        a, b = met(t, ref, v, col), met(t, mod, v, col)
+        mejora = 100 * (b / a - 1)
+        ax.barh(yi + dy, mejora, color=color, height=h * 0.92, label=nombre if yi == y[0] else None)
+        txt = f"+{mejora:.0f} %" if round(mejora) else "0 %"
+        if t == G and v == "CV":
+            txt += "  · significativa (25 de 25)"
+        ax.text(mejora + 0.2, yi + dy, txt, va="center", fontsize=16, fontweight="bold")
+ax.set_yticks(y, [f[0] for f in filas], fontsize=15)
 ax.tick_params(axis="y", length=0)
-ax.set_xticks([]), ax.set_xlim(0, 22)
-ax.set_title("Mejora del modelo elegido sobre el baseline lineal en la prueba final", fontsize=16)
+ax.set_xticks([]), ax.set_xlim(0, 20)
+ax.legend(loc="lower right", fontsize=14, frameon=False)
+ax.set_title("Mejora del modelo elegido sobre el baseline lineal", fontsize=16)
 guardar(fig, "05_comparacion.png")
 
 # 6 · Ablación: cuánto empeora el modelo si se quita cada grupo (model_comparison.txt §ablación)
